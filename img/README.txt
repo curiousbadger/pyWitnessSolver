@@ -1,0 +1,1 @@
+This is a just a default directory to store any images created by the project. There should probably not be any images actually committed, unless maybe we want demo images here? /doc would probably be a better place though.

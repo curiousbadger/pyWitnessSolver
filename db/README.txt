@@ -1,0 +1,1 @@
+This is a a default directory to store any persistent data created by the project such as pickles, sqlite databases etc... Files generated during testing should probably not be committed, since they could be quite large and there's no reason for everyone to download them.
