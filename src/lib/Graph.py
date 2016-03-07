@@ -36,6 +36,8 @@ class Graph(dict):
     def color_generator(self):
         if not self._color_generator: self._color_generator = UniqueColorGenerator()
         return self._color_generator
+    def all_path_filename(self):
+        raise NotImplementedError
 
 class RectGridGraph(Graph):
     '''A Graph laid out in a rectangular gx*gy grid.
@@ -208,8 +210,19 @@ class RectGridGraph(Graph):
         jm = '\n'.join([l for l in m])
         return jm
 
+    # TODO: Come up with better naming convention for entrance/exit node variations?
+    # Probably better to put that info in a sqliteDB, this is getting too cumbersome
+    def paths_filename(self):
+        gx, gy = self.gx, self.gy
+        return '%dx%dRectGridGraph' % (gx, gy)
+        
+    def all_path_filename(self):
+        return self.paths_filename()+'_all'
+    
     def remove_inner_nbrs(self, seg):
-        '''For each Square on either side of the segment, remove it's neighbors'''
+        '''For each Square on either side of the segment, remove it's neighbors
+        TODO: Encapsulate in Edge class?
+        '''
         sorted_seg = frozenset(seg)
         squares = self.outer_to_inner[sorted_seg]
 
@@ -252,72 +265,46 @@ class RectGridGraph(Graph):
         jm = '\n'.join([''.join([str(y) for y in x]) for x in m])
         return jm
 
-    def generate_paths_to_file(self, overwrite=False):
-        '''Traverse all possible Paths.
-
-        TODO: Early dead-end detection?
-        '''
-        self.paths_txt = '../paths/10x10.txt'
-
-        if os.path.exists(self.paths_txt) and not overwrite:
-            return
-        self.paths_txt = open(self.paths_txt, 'w')
-
-        paths = self.paths = []
-        path = []
-        entrance_nodes = [n for n in self.values() if n.is_entrance]
-
-        for n in entrance_nodes:
-            #self.travel(n, path, paths)
-            self.travel_write_to_db(n, path)
-        print('Done! found:', len(paths), 'total paths')
-        self.paths_txt.close()
-
-    def generate_paths_to_db(self):
-        self.db = sqliteDB('10x10')
-
-        paths = self.paths = []
-        path = []
-        entrance_nodes = [n for n in self.values() if n.is_entrance]
-
-        for n in entrance_nodes:
-            #self.travel(n, path, paths)
-            self.travel_write_to_db(n, path)
-        print('Done! found:', len(paths), 'total paths')
-
     def load_paths(self):
+        if self.paths:
+            print('Warning: self.paths already loaded')
+            #raise Exception('self.paths already loaded')
         self.paths = self.all_paths_pickler.load()
-
+    
+    def add_path(self, new_path, to_obj=True, to_db=False):
+        if to_obj:
+            # TODO: make path a set based class with ordering
+            #self.paths.add(new_path)
+            self.paths.append(new_path)
+        if to_db:
+            pass
+    
     def generate_paths(self, overwrite=False):
         '''Traverse all possible Paths.
 
         TODO: Early dead-end detection?
         '''
-        if os.path.exists(self.all_path_filename()):
+        if self.all_paths_pickler.file_exists():
             if not overwrite:
+                print('Skipping path generation...')
                 return
             else:
-                print('overwriting')
+                print('overwriting:', self.all_path_filename())
+                
+        # TODO: make path a set based class with ordering (OrderedDict?)
+        #self.paths = set()
         self.paths = []
         path = []
         entrance_nodes = [n for n in self.values() if n.is_entrance]
 
         for n in entrance_nodes:
-            self.travel(n, path, self.paths)
-            #self.travel(n, path, paths)
+            self.travel(n, path)
+
         print('Done! found:', len(self.paths), 'total paths')
         self.all_paths_pickler.dump(self.paths)
 
-    # TODO: Come up with better naming convention for entrance/exit node variations
-    def path_filename(self):
-        gx, gy = self.gx, self.gy
-        return '%dx%dRectGridGraph' % (gx, gy)
-        return 'ent%d%dex%d%dgx%dgy%d' % (0, 0, gx - 1, gy - 1, gx, gy)
-        
-    def all_path_filename(self):
-        return self.path_filename()
 
-    def travel(self, n, path, paths):
+    def travel(self, n, path):
         ''' Depth-first traversal of all possible paths'''
         # A node cannot be entered twice
         if n.vec() in path:
@@ -328,12 +315,13 @@ class RectGridGraph(Graph):
 
         # Are we done yet?
         if n.is_exit:
-            paths.append(new_path)
+            self.add_path(new_path,to_obj=True, to_db=False)
+            # TODO: Assumes that there's only 1 exit
             return
 
         # head on down the line...
         for nxt in n.neighbors:
-            self.travel(nxt, new_path, paths)
+            self.travel(nxt, new_path)
 
     def travel_write_to_db(self, n, path):
         if n.vec() in path:
@@ -393,27 +381,29 @@ class RectGridGraph(Graph):
                 # print(n,'found shape violation')
                 if violation: break
         return violation
+    
     def shape_violation_check(self, n):
+        '''Returns True if n cannot reside in it's Partition.
+        TODO: Invert so that each Partition with MultiBlock shapes checks all
+        it's Nodes '''
         
-        # Find the partition that contains this GridSquare
-        if not n.been_partitioned:
-            self.generate_partition(n)
         
         current_partition=self.retreive_partition(n)
         if not current_partition: raise Exception('Unable to find partition for ', n)
         
         #print('Checking GridSquare:', n, 'in partition', current_partition)
 
+        # TODO: Make Partition a class that knows the rules, counts etc of it's Squares?
         # accumulate all MultiBlocks in this partition
         shapes = [n.rule_shape for n in current_partition if n.rule_shape]
+        
         #calculate the sum of all points in all shapes
         num_shape_points=sum([len(n) for n in shapes])
         #print('shapes', shapes,'num_shape_points',num_shape_points)
         # get all points with the partition
         partition_points = [n.pt for n in current_partition]
         #print('partition_points', partition_points)
-        # A set of points is a MultiBlock... (and a Grid and a Graph and
-        # ugh...)
+        # A set of points is a MultiBlock... (and a Grid and a Graph and ugh...)
         partition_multiblock = MultiBlock(
             partition_points, name='partition_multiblock', auto_shift_Q1=True)
         #print('partition_multiblock', partition_multiblock)
@@ -427,14 +417,6 @@ class RectGridGraph(Graph):
         '''
         if num_shape_points!=len(partition_multiblock):
             return True
-        
-        if len(shapes)==1:
-            if shapes[0]==partition_multiblock:
-                print ('single shape matches!',shapes[0].points_str())
-                #self.render()
-                for n in current_partition: 
-                    if n.rule_shape: n.passed_rule_check=True
-                return False
         
         return not self.compose_shapes(0, shapes, partition_multiblock, None)
     
@@ -482,7 +464,7 @@ class RectGridGraph(Graph):
             nbr = n.pop_any_partition_neighbor()
             self.travel_partition(nbr, partition)
             
-    def generate_partition(self,n):
+    def generate_partition(self, n, auto_color=True):
         '''Return the Partition that contains this GridSquare'''
         if not self.partitions:
             self.partitions=[]
@@ -490,9 +472,9 @@ class RectGridGraph(Graph):
         self.travel_partition(n, new_partition)
         finalized_new_partition=frozenset(new_partition)
         self.partitions.append(finalized_new_partition)
+        
         # Optionally color partitions
-        color_partitions = True
-        if color_partitions == True:
+        if auto_color == True:
             partition_color = self.color_generator().get()
             for n in finalized_new_partition:
                 n.color = partition_color
@@ -501,7 +483,12 @@ class RectGridGraph(Graph):
         return finalized_new_partition
     
     def retreive_partition(self,n):
+        # Find the partition that contains this Node (for now just GridSquares)
         found_partition=None
+        
+        if not n.been_partitioned:
+            found_partition=self.generate_partition(n)
+        
         for p in self.partitions:
             if n in p: found_partition=p
         if found_partition is None:
@@ -530,7 +517,7 @@ class RectGridGraph(Graph):
 
 def graph_print(*args):
     pass
-print=graph_print
+#print=graph_print
 
 class GridGraph(Graph):
     ''' A Graph where each Node can be described with (x,y) coordinates.

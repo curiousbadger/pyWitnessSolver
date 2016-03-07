@@ -2,6 +2,9 @@
 Created on Feb 23, 2016
 
 @author: charper
+
+The idea here was to keep the image rendering stuff in a separate class so people could use this
+without Pillow (PIL). I'm tempted to scrap that separation since Pillow is so easy to install.
 '''
 from PIL import Image as PILImage
 from PIL import ImageDraw as PILImageDraw
@@ -9,11 +12,12 @@ from PIL import ImageFont
 from lib.Graph import RectGridGraph
 from math import ceil
 from lib.Node import GridNode, GridSquare
-from lib.Geometry import MultiBlock
 from lib.util import UniqueNumberGenerator
+
+
 class chImg(object):
     
-    defaultImgDir='../img/'
+    defaultImgDir='../../img/'
     defaultImgExt='.png'
     
     def __init__(self,size=(1000,1000),mode='RGBA',color='black'):
@@ -23,10 +27,10 @@ class chImg(object):
         self.d=PILImageDraw.Draw(self.im)
     
     
-    def save(self,filename,directory=None,title=None):
+    def save(self,paths_filename,directory=None,title=None):
         d=directory if directory else chImg.defaultImgDir
         ext=chImg.defaultImgExt
-        p=d+filename+ext
+        p=d+paths_filename+ext
         
         flipped_im=self.flipped()
         if title:
@@ -66,22 +70,22 @@ class GraphImage(RectGridGraph):
     A RectGridGraph with extra functionality for rendering/display.
     '''
     
-
     def __init__(self, gx, gy, *args):
         super().__init__(gx, gy)
         self.ung=UniqueNumberGenerator()
 
     def render_solution(self,title=None):
-        filename=self.filename()+str(self.ung.get())
-        self.render(filename,title)
+        paths_filename=self.paths_filename()+str(self.ung.get())
+        self.render(paths_filename,title)
         
-    def render(self,filename=None,title=None):
-        print ('rendering...')
+    def render(self,paths_filename=None,title=None):
+        print ('rendering...',paths_filename)
         node_width=GridNode.rendering_weight
         square_width=GridSquare.rendering_weight
         
         total_w=(self.gx*node_width)+(self.gx-1)*square_width
         
+        # Default canvas size
         cw,ch=2000.0,2000.0
         canvas=[cw,ch]
         im=chImg(canvas)
@@ -113,25 +117,22 @@ class GraphImage(RectGridGraph):
             #print('new_rects',new_rects)
             for r in new_rects:
                 im.polygon(r.abs_coords(scalar), r.color, 'red')
-        if not filename:
-            filename=self.filename()
+        if not paths_filename:
+            paths_filename=self.paths_filename()
         if title is None:
-            title=filename
+            title=paths_filename
         
-        im.save(filename,None,title)
+        im.save(paths_filename,None,title)
         
-    def filename(self):
-        return self.class_name()+'_'+self.cust_string()
+#     def paths_filename(self):
+#         return self.class_name()+'_'+self.cust_string()
     def class_name(self): return 'sqareGraph'
     def cust_string(self):
         return 'gx'+str(self.gx)+'gy'+str(self.gy)
     
 if __name__=='__main__':
     
-    exit(0)
+    gi=GraphImage(5,5)
     
-    exit(0)
-    gi=GraphImage(7,8)
-    gi.inner_grid[2,1].color='purple'
     print(gi.render_both())
     gi.render()

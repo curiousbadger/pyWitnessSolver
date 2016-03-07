@@ -6,9 +6,7 @@ Created on Feb 24, 2016
 import os
 from lib.Graph import RectGridGraph
 from lib.Geometry import MultiBlock
-#import pickle
 from lib.GraphImage import GraphImage
-#import configparser
 from lib.util import simplePickler
 import unittest
 
@@ -38,19 +36,28 @@ class RectangleGridPuzzle(GraphImage):
     def __init__(self, gx, gy, puzzle_name):
         self.puzzle_name = puzzle_name
         super().__init__(gx, gy)
-        
+
         self.filtered_paths_pickler = simplePickler(
             self.filtered_paths_filename())
 
+    def filtered_paths_filename(self):
+        return self.paths_filename() + '_filtered'
 
+    def paths_filename(self):
+        return '%s_%s' % (self.puzzle_name, super().paths_filename())
+    
     def filter_paths(self, overwrite=False):
         '''filter paths to those containing segments bounding adjacent differing colors'''
         if not self.paths:
             self.load_paths()
 
-        if os.path.exists(self.filtered_paths_filename()) and not overwrite:
-            self.potential_paths = self.filtered_paths_pickler.load()
-            return
+        if self.filtered_paths_pickler.file_exists():
+            if not overwrite:
+                self.potential_paths = self.filtered_paths_pickler.load()
+                print('Skipping filter_paths...')
+                return
+            else:
+                print('Overwriting filter_paths...')
         # get a list of all boundaries between adjacent differing colors
         color_boundaries = [s.different_color_boundaries for s in self.inner_grid.values(
         ) if s.different_color_boundaries]
@@ -73,35 +80,32 @@ class RectangleGridPuzzle(GraphImage):
               'paths to', len(self.potential_paths))
         self.filtered_paths_pickler.dump(self.potential_paths)
 
-    def filtered_paths_filename(self):
-        return self.filename()+'filtered'
 
-    def filename(self):
-        return '%s' % (self.puzzle_name)
-    
-    
     def solve(self, break_on_first=False):
-        
+        ''' Iterate over every potential path and check each GridSquare
+        with a rule for violations. 
+        '''
+        # Auto-load paths if they have been previously generated
+        if not self.paths:
+            self.generate_paths()
         if not self.potential_paths:
-            self.potential_paths=self.paths
-            if len(self.paths) == 0:
-                self.generate_paths()
-                
-                if len(self.potential_paths)==0:
-                    raise Exception('Unable to find any paths')
+            self.potential_paths = self.paths
+            if not self.potential_paths:
+                raise Exception('Unable to find any paths')
+
         
         for p in self.potential_paths:
-            print(p)
+            print('evaluating potential_path:', p)
             self.set_current_path(p)
             for n in self.inner_grid.values():
                 n.prepare_for_partitioning()
             self.color_generator().reset()
             # Innocent until proven guilty ;)
             solution = True
-            
+
             if self.find_any_shape_violation():
                 solution = False
-            
+
             # TODO: Wrap in find_any_color_violation()
             for n in self.inner_grid.values():
                 if n.has_rule:
@@ -116,24 +120,25 @@ class RectangleGridPuzzle(GraphImage):
                 self.render_solution()
                 if break_on_first:
                     break
-        print('Found',len(self.solutions),'total solutions!')
+        print('Found', len(self.solutions), 'total solutions!')
+
 
 class Test(unittest.TestCase):
 
     def test2Ishapes(self):
         # 4x4 Grid with a 3-block "I" shape in the center and one on the left
-        g=RectangleGridPuzzle(4,4,'Ishape3test') 
-        Ishape3=MultiBlock([(0,0),(0,1),(0,2)],'Ishape3')
-        
-        g.inner_grid[1,1].set_rule_shape(Ishape3)
-        g.inner_grid[0,0].set_rule_shape(Ishape3)
-        g.lower_left().is_entrance=True
-        g.upper_right().is_exit=True
+        g = RectangleGridPuzzle(4, 4, 'Ishape3test')
+        Ishape3 = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3')
+
+        g.inner_grid[1, 1].set_rule_shape(Ishape3)
+        g.inner_grid[0, 0].set_rule_shape(Ishape3)
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
         g.generate_paths()
         g.load_paths()
         g.solve()
         self.assertEqual(len(g.solutions), 2, g.solutions)
-        
+
     def testColor0(self):
         # Color Puzzle 1
         cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
@@ -162,7 +167,6 @@ class Test(unittest.TestCase):
 
         cp1.finalize()
         override = False
-        # print(cp1.path_filename())
         # Generate all possible paths
         cp1.generate_paths(override)
         # Filter paths (if possible)
@@ -182,12 +186,14 @@ class Test(unittest.TestCase):
     def testShape0(self):
         pass
 
+    # TODO: Path generation will take forever, need to work on early dead-end detection
     def xtest10x10(self):
         g = RectGridGraph(10, 10)
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
-        g.generate_paths_to_db()
+        g.generate_paths()
         print(g.render_both())
+
 
 def pass_print(*args):
     pass
@@ -198,66 +204,79 @@ if __name__ == '__main__':
         Accumulate Shapes
         Place all shapes in all possible positions
             Test for violations'''
-    
-    
-    print=pass_print
+
+    print = pass_print
     # 4x4 Grid with a "T" shape and two singles
-    g=RectangleGridPuzzle(5,5,'Tblock2Singles') 
+    g = RectangleGridPuzzle(5, 5, 'Tblock2Singles')
 
     '''  X
         XXX '''
-    TshapeUp=MultiBlock([(0,0),(1,0),(2,0),(1,1)],'TshapeUp')
+    TshapeUp = MultiBlock([(0, 0), (1, 0), (2, 0), (1, 1)], 'TshapeUp')
+    ''' XXX
+         X  '''
+    TshapeDown = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'TshapeDown')
     '''  X
         XX 
          X'''
-    TshapeRight=MultiBlock([(0,1),(1,0),(1,1),(1,2)],'TshapeUp')
-    Single0=MultiBlock([(0,1)],'Single0')
-    Single1=MultiBlock([(0,2)],'Single1')
-    g.inner_grid[0,0].set_rule_shape(TshapeUp)
-    g.inner_grid[1,0].set_rule_shape(Single0)
-    g.inner_grid[2,0].set_rule_shape(Single1)
-    g.inner_grid[3,1].set_rule_shape(TshapeRight)
-    g.lower_left().is_entrance=True
-    g.upper_right().is_exit=True
+    TshapeLeft = MultiBlock([(0, 1), (1, 0), (1, 1), (1, 2)], 'TshapeLeft')
+    '''  X
+         XX 
+         X    '''
+    TshapeRight = MultiBlock([(0, 0), (0, 1), (0, 2), (1, 1)], 'TshapeRight')
+    Single0 = MultiBlock([(0, 1)], 'Single0')
+    Single1 = MultiBlock([(0, 2)], 'Single1')
+    Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+    g.inner_grid[0, 0].set_rule_shape(TshapeUp)
+    g.inner_grid[1, 3].set_rule_shape(TshapeDown)
+    #g.inner_grid[1, 0].set_rule_shape(Single0)
+    #g.inner_grid[2, 0].set_rule_shape(Ishape3Vert)
+    g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
+    
+    g.lower_left().is_entrance = True
+    g.upper_right().is_exit = True
     g.generate_paths()
     g.load_paths()
     g.solve()
 
+
+
+
+
+
     exit(0)
     # 4x4 Grid with a "T" shape
-    g=RectangleGridPuzzle(5,5,'Tblock') 
-    Ishape3=MultiBlock([(0,0),(0,1),(0,2)],'Ishape3')
-    Tblock=MultiBlock([(0,1),(1,1),(2,1),(1,0)],'Tblock')
-    
-    #g.inner_grid[1,1].set_rule_shape(Ishape3)
-    g.inner_grid[1,2].set_rule_shape(Tblock)
-    g.lower_left().is_entrance=True
-    g.upper_right().is_exit=True
+    g = RectangleGridPuzzle(5, 5, 'Tblock')
+    Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+    Tblock = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'Tblock')
+
+    # g.inner_grid[1,1].set_rule_shape(Ishape3)
+    g.inner_grid[1, 2].set_rule_shape(Tblock)
+    g.lower_left().is_entrance = True
+    g.upper_right().is_exit = True
     g.generate_paths()
     g.load_paths()
     g.solve()
 
     exit(0)
     unittest.main()
-    #g.render()
+    # g.render()
     #for p in g.partitions: print(p)
     exit(0)
-    
+
     # Shape test
-    g = RectangleGridPuzzle(6, 5,'shape0')
+    g = RectangleGridPuzzle(6, 5, 'shape0')
     # Initialize the entrance/exit Nodes
     g.lower_left().is_entrance = True
     g.upper_right().is_exit = True
-    
+
     g.generate_paths(True)
     g.load_paths()
     for i in range(1):
-        p=g.paths[i+10000]
+        p = g.paths[i + 10000]
         g.set_current_path(p)
         g.generate_all_partitions()
         g.render()
-        
-    
-    #print(g.render_both())
-    print( len(g.paths))
-    
+
+    # print(g.render_both())
+    print(len(g.paths))
+
