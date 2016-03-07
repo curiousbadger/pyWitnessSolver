@@ -6,7 +6,6 @@ Created on Feb 23, 2016
 from collections import defaultdict
 import itertools
 import os
-import pickle
 import string
 
 from lib.Geometry import MultiBlock
@@ -32,12 +31,18 @@ class Graph(dict):
         self.partitions = None
         self.all_paths_pickler = simplePickler(self.all_path_filename())
         self._color_generator = None
-    
+
+    def set_nodes(self, node_list):
+        for n in node_list:
+            self[n.vec()]=n
     def color_generator(self):
-        if not self._color_generator: self._color_generator = UniqueColorGenerator()
+        if not self._color_generator:
+            self._color_generator = UniqueColorGenerator()
         return self._color_generator
+
     def all_path_filename(self):
         raise NotImplementedError
+
 
 class RectGridGraph(Graph):
     '''A Graph laid out in a rectangular gx*gy grid.
@@ -55,37 +60,27 @@ class RectGridGraph(Graph):
 
         self.is_outer = is_outer
 
-        # Create Rectangle Grid
+        # Create the list of Nodes
+        node_list=[]
         for y in range(gy):
             for x in range(gx):
                 #print (x,y)
-                n = GridNode(x, y, gx, gy) if is_outer else GridSquare(
-                    x, y, gx, gy)
-                self[x, y] = n
-                #self[x, y].nType = 'out' if is_outer else 'in'
-
+                # "Outer" vs "Interior" Nodes have different behaviour, though currently Inner is a sub-class
+                if self.is_outer:
+                    n = GridNode(x, y, gx, gy) 
+                else:
+                    n= GridSquare(x, y, gx, gy)
+                node_list.append(n)
+        
+        self.set_nodes(node_list)
+        
         ''' Setup a list of sorted keys for when we want to iterate in order
         The sort key is just the GridNode vector reversed (y,x) so that we can return
         the lowest row left-right then continue up.
         '''
         self.sorted_keys = sorted(self.keys(), key=lambda k: (k[1], k[0]))
 
-        # teach each node it's neighbors
-        for iy in range(self.gy):
-            for ix in range(self.gx):
-                n = self[ix, iy]
-                # top nbr ex iy=gy-1
-                if iy < gy - 1:
-                    n.add_neighbor(self[ix, iy + 1])
-                # add bottom ex iy=0
-                if iy > 0:
-                    n.add_neighbor(self[ix, iy - 1])
-                # add right ex ix=0
-                if ix < gx - 1:
-                    n.add_neighbor(self[ix + 1, iy])
-                # add left ex ix=0
-                if ix > 0:
-                    n.add_neighbor(self[ix - 1, iy])
+        self.assign_neighbors()
 
         '''BEGIN: Outer-Grid specific setup '''
         if is_outer == True:
@@ -101,22 +96,41 @@ class RectGridGraph(Graph):
             self.assign_keys()
 
             # some paths are best avoided...
-            for iy in range(self.gy):
-                for ix in range(self.gx):
-                    n = self[ix, iy]
+            for y in range(self.gy):
+                for x in range(self.gx):
+                    n = self[x, y]
                     # Remove left neighbor from bottom row
-                    if iy == 0 and ix > 0:
-                        n.remove_traversable_no_err(self[ix - 1, iy])
+                    if y == 0 and x > 0:
+                        n.remove_traversable_no_err(self[x - 1, y])
                     # Remove left neighbor from top row
-                    if iy == gy - 1 and ix > 0:
-                        n.remove_traversable_no_err(self[ix - 1, iy])
-                    # Remove bottom neighbor from left row
-                    if (ix == 0 or ix == gx - 1) and iy > 0:
-                        n.remove_traversable_no_err(self[ix, iy - 1])
-                    # Remove bottom neighbor from right row
+                    if y == gy - 1 and x > 0:
+                        n.remove_traversable_no_err(self[x - 1, y])
+                    # Remove bottom neighbor from left or row
+                    if (x == 0 or x == gx - 1) and y > 0:
+                        n.remove_traversable_no_err(self[x, y - 1])
+                    
         '''END: Outer-Grid specific setup '''
     '''END: __init__ '''
 
+    def assign_neighbors(self):
+        gx,gy=self.gx,self.gy
+        # teach each node it's neighbors, mind the borders
+        for y in range(gy):
+            for x in range(gx):
+                n = self[x, y]
+                # add top neighbor unless this is the top row: y=gy-1
+                if y < gy - 1:
+                    n.add_neighbor(self[x, y + 1])
+                # add bottom ex y=0
+                if y > 0:
+                    n.add_neighbor(self[x, y - 1])
+                # add right ex x=0
+                if x < gx - 1:
+                    n.add_neighbor(self[x + 1, y])
+                # add left ex x=0
+                if x > 0:
+                    n.add_neighbor(self[x - 1, y])
+                    
     def create_edge_to_square_map(self):
         ''' For each pair of Outer Nodes, setup a dictionary that returns 
         the Inner Squares they touch. This answers the question, what Squares
@@ -211,14 +225,15 @@ class RectGridGraph(Graph):
         return jm
 
     # TODO: Come up with better naming convention for entrance/exit node variations?
-    # Probably better to put that info in a sqliteDB, this is getting too cumbersome
+    # Probably better to put that info in a sqliteDB, this is getting too
+    # cumbersome
     def paths_filename(self):
         gx, gy = self.gx, self.gy
         return '%dx%dRectGridGraph' % (gx, gy)
-        
+
     def all_path_filename(self):
-        return self.paths_filename()+'_all'
-    
+        return self.paths_filename() + '_all'
+
     def remove_inner_nbrs(self, seg):
         '''For each Square on either side of the segment, remove it's neighbors
         TODO: Encapsulate in Edge class?
@@ -270,15 +285,15 @@ class RectGridGraph(Graph):
             print('Warning: self.paths already loaded')
             #raise Exception('self.paths already loaded')
         self.paths = self.all_paths_pickler.load()
-    
+
     def add_path(self, new_path, to_obj=True, to_db=False):
         if to_obj:
             # TODO: make path a set based class with ordering
-            #self.paths.add(new_path)
+            # self.paths.add(new_path)
             self.paths.append(new_path)
         if to_db:
             pass
-    
+
     def generate_paths(self, overwrite=False):
         '''Traverse all possible Paths.
 
@@ -290,7 +305,7 @@ class RectGridGraph(Graph):
                 return
             else:
                 print('overwriting:', self.all_path_filename())
-                
+
         # TODO: make path a set based class with ordering (OrderedDict?)
         #self.paths = set()
         self.paths = []
@@ -303,7 +318,6 @@ class RectGridGraph(Graph):
         print('Done! found:', len(self.paths), 'total paths')
         self.all_paths_pickler.dump(self.paths)
 
-
     def travel(self, n, path):
         ''' Depth-first traversal of all possible paths'''
         # A node cannot be entered twice
@@ -315,7 +329,7 @@ class RectGridGraph(Graph):
 
         # Are we done yet?
         if n.is_exit:
-            self.add_path(new_path,to_obj=True, to_db=False)
+            self.add_path(new_path, to_obj=True, to_db=False)
             # TODO: Assumes that there's only 1 exit
             return
 
@@ -373,82 +387,98 @@ class RectGridGraph(Graph):
             self.remove_inner_nbrs(seg)
             self.current_path.append(frozenset(seg))
 
+    def has_rule_shapes(self):
+        return any(n.has_rule and n.has_rule_shape for n in self.inner_grid.values())
+    
     def find_any_shape_violation(self):
-        violation=False
+        
+        if not self.has_rule_shapes():
+            return False
+        
+        violation = False
+        self.color_generator().reset()
+        for n in self.inner_grid.values():
+            n.prepare_for_partitioning()
+                
         for n in self.inner_grid.values():
             if n.has_rule_shape and not n.passed_rule_check:
+                # TODO: probably no need to check for further violations, but leaving in while working out bugs
                 violation = self.shape_violation_check(n)
                 # print(n,'found shape violation')
-                if violation: break
+                if violation:
+                    break
         return violation
-    
+
     def shape_violation_check(self, n):
         '''Returns True if n cannot reside in it's Partition.
         TODO: Invert so that each Partition with MultiBlock shapes checks all
         it's Nodes '''
-        
-        
-        current_partition=self.retreive_partition(n)
-        if not current_partition: raise Exception('Unable to find partition for ', n)
-        
+
+        current_partition = self.retreive_partition(n)
+        if not current_partition:
+            raise Exception('Unable to find partition for ', n)
+
         #print('Checking GridSquare:', n, 'in partition', current_partition)
 
         # TODO: Make Partition a class that knows the rules, counts etc of it's Squares?
         # accumulate all MultiBlocks in this partition
         shapes = [n.rule_shape for n in current_partition if n.rule_shape]
-        
-        #calculate the sum of all points in all shapes
-        num_shape_points=sum([len(n) for n in shapes])
+
+        # calculate the sum of all points in all shapes
+        num_shape_points = sum([len(n) for n in shapes])
         #print('shapes', shapes,'num_shape_points',num_shape_points)
         # get all points with the partition
         partition_points = [n.pt for n in current_partition]
         #print('partition_points', partition_points)
-        # A set of points is a MultiBlock... (and a Grid and a Graph and ugh...)
+        # A set of points is a MultiBlock... (and a Grid and a Graph and
+        # ugh...)
         partition_multiblock = MultiBlock(
             partition_points, name='partition_multiblock', auto_shift_Q1=True)
         #print('partition_multiblock', partition_multiblock)
-        
+
         # Check the easy violations first
-        
+
         '''If this partition doesn't have the same number of Squares as the 
         sum of the number of points in the shapes, there's no way they will
         fit.
         TODO: Until of course I add the blue "subtraction shapes"...
         '''
-        if num_shape_points!=len(partition_multiblock):
+        if num_shape_points != len(partition_multiblock):
             return True
-        
+
         return not self.compose_shapes(0, shapes, partition_multiblock, None)
-    
-    def compose_shapes(self,counter, shapes_list, partition, last_offset):
+
+    def compose_shapes(self, counter, shapes_list, partition, last_offset):
         #print('START compose_shapes')
         #print('    counter',counter)
         #print('    partition',partition.part_off())
-        cur_shape=shapes_list[counter]
-        
-        # Remember the last offset, if we find a solution this helps with rendering
-        cur_shape.last_offset=partition.last_offset
-        
+        cur_shape = shapes_list[counter]
+
+        # Remember the last offset, if we find a solution this helps with
+        # rendering
+        cur_shape.last_offset = partition.last_offset
+
         # Iterate over all possible positions this shape could occupy
-        for remaining_partition_points,new_offset in cur_shape.compose(partition):
-            
-            #print('remaining_partition_points',remaining_partition_points)
+        for remaining_partition_points, new_offset in cur_shape.compose(partition):
+
+            # print('remaining_partition_points',remaining_partition_points)
             if not remaining_partition_points:
-                if counter==len(shapes_list)-1:
-                    #print('Found solution!!') 
+                if counter == len(shapes_list) - 1:
+                    #print('Found solution!!')
                     return True
                 else:
                     #print('Ran out of room')
                     return False
-            elif counter < len(shapes_list)-1:
-                remaining_partition=MultiBlock(remaining_partition_points)
-                remaining_partition.last_offset+=partition.last_offset
-                #print('remaining_partition.last_offset',remaining_partition.last_offset)
-                ret = self.compose_shapes(counter+1, shapes_list, remaining_partition, new_offset)
-                if ret==True:
+            elif counter < len(shapes_list) - 1:
+                remaining_partition = MultiBlock(remaining_partition_points)
+                remaining_partition.last_offset += partition.last_offset
+                # print('remaining_partition.last_offset',remaining_partition.last_offset)
+                ret = self.compose_shapes(
+                    counter + 1, shapes_list, remaining_partition, new_offset)
+                if ret == True:
                     return True
-                else: 
-                    #print('counter',counter,'cur_shape',cur_shape)
+                else:
+                    # print('counter',counter,'cur_shape',cur_shape)
                     pass
             else:
                 #print('counter',counter,'at end of shape list')
@@ -463,38 +493,39 @@ class RectGridGraph(Graph):
         while n.partition_neighbors:
             nbr = n.pop_any_partition_neighbor()
             self.travel_partition(nbr, partition)
-            
+
     def generate_partition(self, n, auto_color=True):
         '''Return the Partition that contains this GridSquare'''
         if not self.partitions:
-            self.partitions=[]
+            self.partitions = []
         new_partition = set()
         self.travel_partition(n, new_partition)
-        finalized_new_partition=frozenset(new_partition)
+        finalized_new_partition = frozenset(new_partition)
         self.partitions.append(finalized_new_partition)
-        
+
         # Optionally color partitions
         if auto_color == True:
             partition_color = self.color_generator().get()
             for n in finalized_new_partition:
                 n.color = partition_color
                 # print(p,self.inner_grid[nvec].vec())
-                    
+
         return finalized_new_partition
-    
-    def retreive_partition(self,n):
+
+    def retreive_partition(self, n):
         # Find the partition that contains this Node (for now just GridSquares)
-        found_partition=None
-        
+        found_partition = None
+
         if not n.been_partitioned:
-            found_partition=self.generate_partition(n)
-        
+            found_partition = self.generate_partition(n)
+
         for p in self.partitions:
-            if n in p: found_partition=p
+            if n in p:
+                found_partition = p
         if found_partition is None:
             raise Exception('Unable to find partition for', n)
         return found_partition
-    
+
     def generate_all_partitions(self):
         '''Returns a list of Partitions.
         A Partition is a sub-set of one or more GridSquares bounded by the Path and the outer border.
@@ -512,12 +543,12 @@ class RectGridGraph(Graph):
                 # print(new_partition)
                 self.partitions.append(frozenset(new_partition))
         #print('partitions generated', self.partitions)
-        
 
 
 def graph_print(*args):
     pass
-#print=graph_print
+# print=graph_print
+
 
 class GridGraph(Graph):
     ''' A Graph where each Node can be described with (x,y) coordinates.
@@ -531,4 +562,5 @@ class GridGraph(Graph):
             self[n.vec()] = n
 
 if __name__ == '__main__':
-    pass
+    rgg=RectGridGraph(4,4)
+    print(rgg.render_both())

@@ -74,6 +74,8 @@ class simplePickler(object):
     
     def file_exists(self):
         return os.path.exists(self.fn)
+    def filename(self):
+        return self.fn
     
 class UniqueNumberGenerator(object):
     def __init__(self):

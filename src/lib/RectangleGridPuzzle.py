@@ -46,7 +46,7 @@ class RectangleGridPuzzle(GraphImage):
     def paths_filename(self):
         return '%s_%s' % (self.puzzle_name, super().paths_filename())
     
-    def filter_paths(self, overwrite=False):
+    def filter_paths(self, overwrite=False, expecting_filtered=False):
         '''filter paths to those containing segments bounding adjacent differing colors'''
         if not self.paths:
             self.load_paths()
@@ -58,29 +58,42 @@ class RectangleGridPuzzle(GraphImage):
                 return
             else:
                 print('Overwriting filter_paths...')
+        
         # get a list of all boundaries between adjacent differing colors
-        color_boundaries = [s.different_color_boundaries for s in self.inner_grid.values(
-        ) if s.different_color_boundaries]
-
+        color_boundaries = set([s.different_color_boundaries for s in self.inner_grid.values(
+        ) if s.different_color_boundaries])
+        for s in self.inner_grid.values():
+            if s.different_color_boundaries:
+                print('square',s,'different_color_boundaries',s.different_color_boundaries)
+        print('color_boundaries',color_boundaries)
         self.potential_paths = []
         # iterate over each path
+        print('Attempting to filter:',len(self.paths),'total paths')
         for p in self.paths:
             # for our purposes, path direction doesn't matter, only which segments (Node-Node) were traversed
             # build a list of sorted segments
-            sorted_path_segs = [
-                tuple(sorted([p[i], p[i + 1]])) for i in range(len(p) - 1)]
-
+            sorted_path_segs = set([
+                frozenset([p[i],p[i + 1]]) for i in range(len(p) - 1)])
+            
             # if the path contains all of the segments we know MUST be
             # traversed, append it
+            
             if all([cb in sorted_path_segs for cb in color_boundaries]):
+#                 for cb in color_boundaries:
+#                     print(cb,cb in sorted_path_segs)
+#                 print(sorted_path_segs)
+#                 exit(0)
                 self.potential_paths.append(p)
 
+        if not self.potential_paths and expecting_filtered:
+            print(sorted_path_segs)
+            raise Exception('No filtered paths')
         # print(cb_segs)
         print('filtered', len(self.paths),
               'paths to', len(self.potential_paths))
         self.filtered_paths_pickler.dump(self.potential_paths)
 
-
+    
     def solve(self, break_on_first=False):
         ''' Iterate over every potential path and check each GridSquare
         with a rule for violations. 
@@ -93,18 +106,16 @@ class RectangleGridPuzzle(GraphImage):
             if not self.potential_paths:
                 raise Exception('Unable to find any paths')
 
-        
+
         for p in self.potential_paths:
             print('evaluating potential_path:', p)
             self.set_current_path(p)
-            for n in self.inner_grid.values():
-                n.prepare_for_partitioning()
-            self.color_generator().reset()
             # Innocent until proven guilty ;)
             solution = True
 
-            if self.find_any_shape_violation():
-                solution = False
+
+#             if self.find_any_shape_violation():
+#                 solution = False
 
             # TODO: Wrap in find_any_color_violation()
             for n in self.inner_grid.values():
@@ -164,11 +175,12 @@ class Test(unittest.TestCase):
         square_grid[4, 1].set_rule_color('yellow')
         square_grid[4, 2].set_rule_color('yellow')
         square_grid[4, 3].set_rule_color('yellow')
-
+        
+        print('cp1.has_rule_shapes',cp1.has_rule_shapes())
         cp1.finalize()
-        override = False
+        override = True
         # Generate all possible paths
-        cp1.generate_paths(override)
+        cp1.generate_paths(False)
         # Filter paths (if possible)
         cp1.filter_paths(override)
         # Solve but do NOT break on first solution to make sure we don't find
@@ -199,13 +211,54 @@ def pass_print(*args):
     pass
 
 if __name__ == '__main__':
-    '''Divide the Graph into the Boundaries defined by the Path
-    For each boundary
-        Accumulate Shapes
-        Place all shapes in all possible positions
-            Test for violations'''
+    fs=frozenset([(0,0),(0,1)])
+    print(fs)
+    #exit(0)
+    #print = pass_print
+    # Color Puzzle 1
+    cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
+    # Initialize the entrance/exit Nodes
+    cp1.lower_left().is_entrance = True
+    cp1.upper_right().is_exit = True
 
-    print = pass_print
+    # Initialize the colored Squares
+    square_grid = cp1.inner_grid
+
+    square_grid[0, 1].set_rule_color('aqua')
+    square_grid[0, 2].set_rule_color('aqua')
+    square_grid[0, 3].set_rule_color('aqua')
+
+    square_grid[1, 3].set_rule_color('white')
+    square_grid[2, 3].set_rule_color('white')
+    square_grid[3, 0].set_rule_color('white')
+    square_grid[4, 0].set_rule_color('white')
+
+    square_grid[2, 1].set_rule_color('red')
+    square_grid[2, 2].set_rule_color('red')
+
+    square_grid[4, 1].set_rule_color('yellow')
+    square_grid[4, 2].set_rule_color('yellow')
+    square_grid[4, 3].set_rule_color('yellow')
+    
+    print('cp1.has_rule_shapes',cp1.has_rule_shapes())
+#     for n in cp1.inner_grid.values():
+#         if n.has_rule_color:
+#             print('color check',n,n.has_rule_color,n.color)
+    cp1.finalize()
+    override = True
+    # Generate all possible paths
+    cp1.generate_paths(False)
+    print(cp1.render_both())
+    # Filter paths (if possible)
+    cp1.filter_paths(override, True)
+    # Solve but do NOT break on first solution to make sure we don't find
+    # multiples
+    
+    cp1.solve(False)
+    
+    expected_solution = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (
+        2, 2), (2, 3), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (5, 4)]
+    exit(0)
     # 4x4 Grid with a "T" shape and two singles
     g = RectangleGridPuzzle(5, 5, 'Tblock2Singles')
 
@@ -237,11 +290,6 @@ if __name__ == '__main__':
     g.generate_paths()
     g.load_paths()
     g.solve()
-
-
-
-
-
 
     exit(0)
     # 4x4 Grid with a "T" shape

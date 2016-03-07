@@ -48,7 +48,7 @@ class Node(object):
         self.color='black'
         
     def finalize(self):
-        pass
+        raise NotImplementedError
     
     def has_rule(self):
         return self.has_rule
@@ -78,9 +78,11 @@ class Node(object):
     def remove_traversable(self, other):
         self.traversable_neighbors.remove(other)
         
+    # TODO: Why did I think this was ever a good idea? Added Exception, get rid of this eventually
     def remove_traversable_no_err(self, other, warn=True):
         if not other in self.traversable_neighbors:
             if warn: print(self.vec(),'does not have', other.vec())
+            raise Exception(self.vec(),'does not have', other.vec())
             return
         self.remove_traversable(other)
         
@@ -267,7 +269,7 @@ class GridSquare(GridNode):
     def get_different_color_boundaries(self):
         for n in self.neighbors:
             if self.different_color(n):
-                return frozenset(list(self.outer_node_rect) + list(n.outer_node_rect))
+                return frozenset(self.outer_node_coordinates & n.outer_node_coordinates)
 
     def overlay_traversable_rects(self):
         trl=[]
