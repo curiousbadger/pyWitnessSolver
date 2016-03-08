@@ -11,14 +11,12 @@ from lib.util import MasterUniqueNumberGenerator, MasterUniqueStringGenerator
 class Node(object):
     '''A generic Node (or vertex) in a Graph '''
     
-    def __hash__(self):
-        if self.hash_int is not None:
-            return self.hash_int
-
-    
-    def __eq__(self,other):
-        return self.__hash__() == other.__hash__()
-    
+#     def __hash__(self):
+#         return self.hash_int
+#     
+#     def __eq__(self,other):
+#         return self.__hash__() == other.__hash__()
+     
     def __repr__(self):
         '''Ideally a single character string that should be unique within the Graph.
 
@@ -35,8 +33,8 @@ class Node(object):
         
         #TODO: GridSquare only?
         self.been_partitioned = False
-        self.neighbors = []
-        self.traversable_neighbors = []
+        self.neighbors = set()
+        self.traversable_neighbors = set()
         self.has_rule=False
         self.has_rule_color=False
         self.has_rule_shape=False
@@ -54,26 +52,20 @@ class Node(object):
         return self.has_rule
     
     def add_neighbor(self, nbr, backref=False):
-        self.neighbors.append(nbr)
-        self.traversable_neighbors.append(nbr)
+        self.neighbors.add(nbr)
+        self.traversable_neighbors.add(nbr)
         if backref:
             nbr.backref_nbrs.append(self)
     
-    #TODO: Needed?
-    def reset_checked(self):
-        self.my_checked_nbrs = self.traversable_neighbors
-    # returns True if any of my neighbors have NOT been traversed
-
     # Get a random neighbor
     def get_rand_nbr(self):
         return self.neighbors[random.randint(0, len(self.neighbors) - 1)]
     
     def reset(self):
         self.been_traversed = False
-        self.traversable_neighbors = list(self.neighbors)
+        self.traversable_neighbors = set(self.neighbors)
         # TODO: Redundant?
         self.been_partitioned = False
-        
         
     def remove_traversable(self, other):
         self.traversable_neighbors.remove(other)
@@ -89,12 +81,8 @@ class Node(object):
     def pop_any_traversable(self):
         return self.traversable_neighbors.pop()
 
-    def pop_checked(self, other):
-        if other in self.my_checked_nbrs:
-            # print(self,'removing',other)
-            self.my_checked_nbrs.remove(other)
-            
-    # TODO: If we want to do any fancy internal stuff when we get traversed, do it here
+    # TODO: If we want to do any fancy internal stuff when we get traversed, do it here?
+    # TODO: No, we should do this in the Edge class
     def traverse(self, backref=True):
         if backref:
             for n in self.backref_nbrs:
@@ -142,12 +130,16 @@ class GridNode(Node):
         self.rendering_weight=GridNode.rendering_weight
         # TODO: move to sub-class
         self.color='blue'
-        self.nType='out'
+        #self.nType='out'
+        self.has_rule=None
+        
     def finalize(self):
+        self.neighbors=frozenset(self.neighbors)
         if self.hash_int is None:
             self.hash_int=MasterUniqueNumberGenerator.get()
         if self.sym=='!':
             self.sym=MasterUniqueStringGenerator.get()
+            
     # TODO: possibly should make GridNode a sub-class of Point?
     def strict_left(self, other):
         return self.pt.x < other.pt.x
@@ -166,11 +158,13 @@ class GridNode(Node):
         offset = self.x*(GridSquare.rendering_weight+1),self.y*(GridSquare.rendering_weight+1)
         return Point(offset)
     
+    def get_color(self):
+        return self.color
     def get_imgRect(self,scalar=1):
-        raw_rect=Rectangle(self.dimensions(),self.offset(),self.color).abs_coords(scalar)
+        raw_rect=Rectangle(self.dimensions(),self.offset(),self.get_color()).abs_coords(scalar)
         return raw_rect
     
-    #TODO: Stubs
+    #TODO: Stubs, should put in Edge class anyways
     def left_path_traversed(self): return False
     def right_path_traversed(self): return False
     def upper_path_traversed(self): return False
@@ -218,29 +212,36 @@ class GridSquare(GridNode):
         self.outer_node_coordinates = frozenset([p for p in self.outer_node_rect])
         
         self.color=GridSquare.default_color
+        
         self.rendering_weight=GridSquare.rendering_weight
         self.been_partitioned=False
         self.partition_neighbors=[]
         self.rule_shape=None
+        self.rule_color=None
+        self.partition_color=None
     
     def set_rule_shape(self, shape):
         self.has_rule=True
         self.has_rule_shape=True
         self.rule_shape=shape
         
-        
+    
     def finalize(self):
+        
         self.different_color_boundaries = self.get_different_color_boundaries()
     
     def prepare_for_partitioning(self):    
         self.been_partitioned=False
-        self.color=GridSquare.default_color
+        #self.color=GridSquare.default_color
+        self.partition_color=None
         self.partition_neighbors=list(self.traversable_neighbors)
+        
     def pop_any_partition_neighbor(self):
         nbr=self.partition_neighbors.pop()
         # And don't come back! *ptew*
         nbr.partition_neighbors.remove(self)
         return nbr
+    
     def reset(self):
         super().reset()
         self.prepare_for_partitioning()
@@ -249,6 +250,7 @@ class GridSquare(GridNode):
     def reset_rule_check(self):
         self.been_partitioned=False
         self.passed_rule_check=False
+        
     def offset(self):
         # The weight of a PathNode and a GridSquare
         total_weight=GridSquare.rendering_weight+GridNode.rendering_weight
@@ -256,14 +258,21 @@ class GridSquare(GridNode):
         offset= (x*total_weight)+1, (y*total_weight)+1
         return Point(offset)
     
+    def get_color(self):
+        if self.rule_color:
+            return self.rule_color
+        if self.partition_color:
+            return self.partition_color
+        return self.color
     def set_rule_color(self,color):
         self.has_rule=True
         self.has_rule_color=True
-        self.color=color
+        #self.color=color
+        self.rule_color=color
     
     # colors are only "different" if both squares actually have a rule_color
     def different_color(self, other):
-        return (self.has_rule and other.has_rule and self.color != other.color)
+        return (self.has_rule and other.has_rule and self.rule_color != other.rule_color)
 
     # the "outer nodes" I share with neighbor squares of a different color
     def get_different_color_boundaries(self):

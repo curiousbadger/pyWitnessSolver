@@ -39,14 +39,14 @@ class chImg(object):
             new_sz=(self.size[0], self.size[1]+title_height)
             title_sz=(self.size[0], title_height)
             bigger_image=PILImage.new('RGBA',new_sz,(255,255,255,0))
-            print('new_sz',new_sz)
+            #print('new_sz',new_sz)
             title_image=PILImage.new('RGBA',title_sz,(255,255,255,0))
             td=PILImageDraw.Draw(title_image)
             font = ImageFont.truetype(font='arial', size=50)
             td.text((10,10), title, fill='white', font=font)
             bigger_image.paste(title_image, (0,0), mask=None)
             bigger_image.paste(flipped_im,(0,title_height), mask=None)
-            print(bigger_image.size)
+            
             #flipped_im.paste(title_image, (0,title_height))
             
         print('Saving image:',p)
@@ -90,10 +90,10 @@ class GraphImage(RectGridGraph):
         canvas=[cw,ch]
         im=chImg(canvas)
         scalar=cw/total_w
-        print('cw',cw,'scalar',scalar,'total_w',total_w)
+        #print('cw',cw,'scalar',scalar,'total_w',total_w)
         render_list=[n.get_imgRect().abs_coords(scalar) for n in self.iter_all()]
         
-        for  n in render_list:
+        for n in render_list:
             im.polygon(n,n.color)
         
         if self.current_path:

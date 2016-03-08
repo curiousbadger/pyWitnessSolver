@@ -88,8 +88,8 @@ class RectangleGridPuzzle(GraphImage):
         if not self.potential_paths and expecting_filtered:
             print(sorted_path_segs)
             raise Exception('No filtered paths')
-        # print(cb_segs)
-        print('filtered', len(self.paths),
+
+        print('Filtered', len(self.paths),
               'paths to', len(self.potential_paths))
         self.filtered_paths_pickler.dump(self.potential_paths)
 
@@ -106,22 +106,21 @@ class RectangleGridPuzzle(GraphImage):
             if not self.potential_paths:
                 raise Exception('Unable to find any paths')
 
-
+        print('Checking',len(self.potential_paths),'paths...')
         for p in self.potential_paths:
-            print('evaluating potential_path:', p)
+            #print('evaluating potential_path:', p)
             self.set_current_path(p)
             # Innocent until proven guilty ;)
             solution = True
 
-
-#             if self.find_any_shape_violation():
-#                 solution = False
+            if self.find_any_shape_violation():
+                solution = False
 
             # TODO: Wrap in find_any_color_violation()
             for n in self.inner_grid.values():
                 if n.has_rule:
                     if n.has_rule_color:
-                        if self.inner_grid.check_colors(n, n.color):
+                        if self.inner_grid.check_colors(n, n.rule_color):
                             solution = False
                             break
 
@@ -131,6 +130,8 @@ class RectangleGridPuzzle(GraphImage):
                 self.render_solution()
                 if break_on_first:
                     break
+            #self.render_solution()
+            #exit(0)
         print('Found', len(self.solutions), 'total solutions!')
 
 
@@ -148,7 +149,7 @@ class Test(unittest.TestCase):
         g.generate_paths()
         g.load_paths()
         g.solve()
-        self.assertEqual(len(g.solutions), 2, g.solutions)
+        self.assertEqual(len(g.solutions), 4, g.solutions)
 
     def testColor0(self):
         # Color Puzzle 1
@@ -156,33 +157,32 @@ class Test(unittest.TestCase):
         # Initialize the entrance/exit Nodes
         cp1.lower_left().is_entrance = True
         cp1.upper_right().is_exit = True
-
+ 
         # Initialize the colored Squares
         square_grid = cp1.inner_grid
-
+ 
         square_grid[0, 1].set_rule_color('aqua')
         square_grid[0, 2].set_rule_color('aqua')
         square_grid[0, 3].set_rule_color('aqua')
-
+ 
         square_grid[1, 3].set_rule_color('white')
         square_grid[2, 3].set_rule_color('white')
         square_grid[3, 0].set_rule_color('white')
         square_grid[4, 0].set_rule_color('white')
-
+ 
         square_grid[2, 1].set_rule_color('red')
         square_grid[2, 2].set_rule_color('red')
-
+ 
         square_grid[4, 1].set_rule_color('yellow')
         square_grid[4, 2].set_rule_color('yellow')
         square_grid[4, 3].set_rule_color('yellow')
-        
-        print('cp1.has_rule_shapes',cp1.has_rule_shapes())
+         
         cp1.finalize()
-        override = True
+        override = False
         # Generate all possible paths
         cp1.generate_paths(False)
         # Filter paths (if possible)
-        cp1.filter_paths(override)
+        cp1.filter_paths(override, expecting_filtered=True)
         # Solve but do NOT break on first solution to make sure we don't find
         # multiples
         cp1.solve(False)
@@ -193,7 +193,7 @@ class Test(unittest.TestCase):
         sol = cp1.solutions[0]
         self.assertEqual(
             sol, expected_solution, 'Unexpected solution:\n%s' % (str(sol)))
-        cp1.render()
+        #cp1.render()
 
     def testShape0(self):
         pass
@@ -211,6 +211,7 @@ def pass_print(*args):
     pass
 
 if __name__ == '__main__':
+    unittest.main()
     fs=frozenset([(0,0),(0,1)])
     print(fs)
     #exit(0)
@@ -245,7 +246,7 @@ if __name__ == '__main__':
 #         if n.has_rule_color:
 #             print('color check',n,n.has_rule_color,n.color)
     cp1.finalize()
-    override = True
+    override = False
     # Generate all possible paths
     cp1.generate_paths(False)
     print(cp1.render_both())

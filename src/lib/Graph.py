@@ -251,10 +251,16 @@ class RectGridGraph(Graph):
             s2.remove_traversable(s1)
 
     def finalize(self):
+        print('Finalizing Grid:', str(self))
         for n in self.iter_all():
             n.finalize()
 
+    def prepare_for_partitioning(self):
+        self.color_generator().reset()
+        self.reset()
+        
     def reset(self):
+        self.color_generator().reset()
         for n in self.values():
             n.reset()
 
@@ -336,7 +342,25 @@ class RectGridGraph(Graph):
         # head on down the line...
         for nxt in n.neighbors:
             self.travel(nxt, new_path)
+            
+    def set_current_path(self, path):
+        # Restore all traversable links between Squares
+        self.prepare_for_partitioning()
+        self.inner_grid.prepare_for_partitioning()
+        self.current_path = []
+        # Traverse the path, removing neighbors from Squares accordingly
+        for i in range(len(path) - 1):
+            # For each Segment in the Path (technically an edge between Outer
+            # Nodes)
+            seg = list(path[i:i + 2])
 
+            # Sever the link between 2 Squares (unless on Graph border)
+            self.remove_inner_nbrs(seg)
+            self.current_path.append(frozenset(seg))
+        
+        for n in self.inner_grid.values():
+            n.prepare_for_partitioning()
+    
     def travel_write_to_db(self, n, path):
         if n.vec() in path:
             return
@@ -351,11 +375,20 @@ class RectGridGraph(Graph):
             self.travel_write_to_db(nxt, new_path)
 
     def check_colors(self, n, color):
+        
+        partition=self.retreive_partition(n)
+        #print('partition', partition)
+        distinct_colors=set([self[n.vec()].rule_color for n in partition if self[n.vec()].rule_color])
+        #print('distinct_colors',distinct_colors)
+        if len(distinct_colors) > 1:
+            return True
+        else:
+            return False
         ''' Recursively iterate over every neighbor of n, at each point check 
         for a difference in color. On first violation, return True. 
         If no violations are found, return False. 
 
-        PRE: Colors have been assigned to squares. 
+        PRE: Colors have been assigned to squares.
         '''
         # TOOD: Sloppy to use has_rule, should detect ColorSquare subclass of
         # GridNode?
@@ -365,6 +398,7 @@ class RectGridGraph(Graph):
         # TODO: Should not actually occur since it's much more efficient to
         # call this with all and only colored squares
         if n.has_rule and color is None:
+            raise Exception('color null')
             color = n.color
 
         while n.traversable_neighbors:
@@ -373,19 +407,6 @@ class RectGridGraph(Graph):
                 return True
         return False
 
-    def set_current_path(self, path):
-        # Restore all traversable links between Squares
-        self.inner_grid.reset()
-        self.current_path = []
-        # Traverse the path, removing neighbors from Squares accordingly
-        for i in range(len(path) - 1):
-            # For each Segment in the Path (technically an edge between Outer
-            # Nodes)
-            seg = list(path[i:i + 2])
-
-            # Sever the link between 2 Squares (unless on Graph border)
-            self.remove_inner_nbrs(seg)
-            self.current_path.append(frozenset(seg))
 
     def has_rule_shapes(self):
         return any(n.has_rule and n.has_rule_shape for n in self.inner_grid.values())
@@ -396,9 +417,9 @@ class RectGridGraph(Graph):
             return False
         
         violation = False
-        self.color_generator().reset()
-        for n in self.inner_grid.values():
-            n.prepare_for_partitioning()
+        
+#         for n in self.inner_grid.values():
+#             n.prepare_for_partitioning()
                 
         for n in self.inner_grid.values():
             if n.has_rule_shape and not n.passed_rule_check:
@@ -507,7 +528,7 @@ class RectGridGraph(Graph):
         if auto_color == True:
             partition_color = self.color_generator().get()
             for n in finalized_new_partition:
-                n.color = partition_color
+                n.partition_color = partition_color
                 # print(p,self.inner_grid[nvec].vec())
 
         return finalized_new_partition
