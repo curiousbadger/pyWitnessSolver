@@ -44,6 +44,15 @@ class Graph(dict):
     def all_path_filename(self):
         raise NotImplementedError
 
+class GridGraph(Graph):
+    ''' A Graph where each Node can be described with (x,y) coordinates.
+
+    This is not necessarily a rectangle (see below).
+
+    '''
+    def __init__(self, node_list):
+        for n in node_list:
+            self[n.vec()] = n
 
 class RectGridGraph(Graph):
     '''A Graph laid out in a rectangular gx*gy grid.
@@ -282,7 +291,7 @@ class RectGridGraph(Graph):
         if to_obj:
             # TODO: make path a set based class with ordering
             # self.paths.add(new_path)
-            self.paths.append(new_path)
+            self.paths.append(list(new_path))
         if to_db:
             pass
 
@@ -336,11 +345,10 @@ class RectGridGraph(Graph):
         self.current_path = []
         
         # Traverse the path, removing neighbors from Squares accordingly
-        path_list=list(path)
         # For each Segment in the Path (technically an edge between Outer
         # Nodes)
-        for i in range(len(path_list)-1):
-            seg=frozenset(path_list[i:i+2])
+        for i in range(len(path)-1):
+            seg=frozenset(path[i:i+2])
             # Sever the link between 2 Squares (unless on Graph border)
             self.remove_inner_nbrs(seg)
             self.current_path.append(seg)
@@ -375,41 +383,16 @@ class RectGridGraph(Graph):
             return
         for nxt in n.traversable_neighbors:
             self.travel_write_to_db(nxt, new_path)
-
+    
     def check_colors(self, n, color):
         
         partition=self.retreive_partition(n)
         #print('partition', partition)
-        distinct_colors=set([self[n.vec()].rule_color for n in partition if self[n.vec()].rule_color])
-        #print('distinct_colors',distinct_colors)
-        if len(distinct_colors) > 1:
+        
+        if any(n.different_color(p_nbr) for p_nbr in partition):
             return True
-        else:
-            return False
-        ''' Recursively iterate over every neighbor of n, at each point check 
-        for a difference in color. On first violation, return True. 
-        If no violations are found, return False. 
-
-        PRE: Colors have been assigned to squares.
-        '''
-        # TOOD: Sloppy to use has_rule, should detect ColorSquare subclass of
-        # GridNode?
-        if n.has_rule and n.color != color:
-            return True
-
-        # TODO: Should not actually occur since it's much more efficient to
-        # call this with all and only colored squares
-        if n.has_rule and color is None:
-            raise Exception('color null')
-            color = n.color
-
-        while n.traversable_neighbors:
-            nbr = n.pop_any_traversable()
-            if self.check_colors(nbr, color):
-                return True
         return False
-
-
+        
     def has_rule_shapes(self):
         return any(n.has_rule and n.has_rule_shape for n in self.inner_grid.values())
     
@@ -571,18 +554,6 @@ class RectGridGraph(Graph):
 def graph_print(*args):
     pass
 # print=graph_print
-
-
-class GridGraph(Graph):
-    ''' A Graph where each Node can be described with (x,y) coordinates.
-
-    This is not necessarily a rectangle (see below).
-
-    '''
-
-    def __init__(self, node_list):
-        for n in node_list:
-            self[n.vec()] = n
 
 if __name__ == '__main__':
     rgg=RectGridGraph(4,4)

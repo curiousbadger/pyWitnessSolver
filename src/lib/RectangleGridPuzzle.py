@@ -72,32 +72,22 @@ class RectangleGridPuzzle(GraphImage):
         print('Attempting to filter:',len(self.paths),'total paths')
         
         # iterate over each path
-        for p in self.paths:
+        for path in self.paths:
             # for our purposes, path direction doesn't matter, only which segments (Node-Node) were traversed
-            # build a list of sorted segments
-            #sorted_path_segs = set([
-                #frozenset([p[i],p[i + 1]]) for i in range(len(p) - 1)])
-            cb_copy=set(color_boundaries)
-            segment_deque=deque()
-            for n in p:
-                segment_deque.append(n)
-                if len(segment_deque)==2:
-                    segment_set=set(segment_deque)
-                    if segment_set in cb_copy:
-                        cb_copy.remove(segment_set)
-                    if len(cb_copy)==0:
-                        self.potential_paths.append(p)
-                        break
-                    segment_deque.popleft()
-            
-                
             # if the path contains all of the segments we know MUST be
             # traversed, append it
-#             if all(cb in sorted_path_segs for cb in color_boundaries):
-#                 self.potential_paths.append(p)
+            cb_copy=set(color_boundaries)
+            for i in range(len(path)-1):
+                seg=frozenset(path[i:i+2])
+                if seg in cb_copy:
+                    cb_copy.remove(seg)
+                if len(cb_copy)==0:
+                    self.potential_paths.append(path)
+                    break
+                    
 
         if not self.potential_paths and expecting_filtered:
-            print(sorted_path_segs)
+            #print(sorted_path_segs)
             raise Exception('No filtered paths')
 
         print('Filtered', len(self.paths),
@@ -128,12 +118,13 @@ class RectangleGridPuzzle(GraphImage):
                 solution = False
 
             # TODO: Wrap in find_any_color_violation()
-            for n in self.inner_grid.values():
-                if n.has_rule:
-                    if n.has_rule_color:
-                        if self.inner_grid.check_colors(n, n.rule_color):
-                            solution = False
-                            break
+            # Should use Partition class to count distinct rule_colors during creation
+            # sloppy to check every Node with rule color...
+            for n in self.inner_grid.values():                
+                if n.has_rule_color:
+                    if self.check_colors(n, n.rule_color):
+                        solution = False
+                        break
 
             if solution:
                 self.solutions.append(p)
