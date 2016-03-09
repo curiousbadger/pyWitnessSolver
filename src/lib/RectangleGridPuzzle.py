@@ -9,6 +9,7 @@ from lib.Geometry import MultiBlock
 from lib.GraphImage import GraphImage
 from lib.util import simplePickler
 import unittest
+from _collections import deque
 
 
 class PuzzleConfiguration(object):
@@ -60,30 +61,40 @@ class RectangleGridPuzzle(GraphImage):
                 print('Overwriting filter_paths...')
         
         # get a list of all boundaries between adjacent differing colors
-        color_boundaries = set([s.different_color_boundaries for s in self.inner_grid.values(
-        ) if s.different_color_boundaries])
-        for s in self.inner_grid.values():
-            if s.different_color_boundaries:
-                print('square',s,'different_color_boundaries',s.different_color_boundaries)
+        color_boundaries = frozenset(s.different_color_boundaries for s in self.inner_grid.values(
+        ) if s.different_color_boundaries)
+#         for s in self.inner_grid.values():
+#             if s.different_color_boundaries:
+#                 print('square',s,'different_color_boundaries',s.different_color_boundaries)
         print('color_boundaries',color_boundaries)
         self.potential_paths = []
-        # iterate over each path
+        
         print('Attempting to filter:',len(self.paths),'total paths')
+        
+        # iterate over each path
         for p in self.paths:
             # for our purposes, path direction doesn't matter, only which segments (Node-Node) were traversed
             # build a list of sorted segments
-            sorted_path_segs = set([
-                frozenset([p[i],p[i + 1]]) for i in range(len(p) - 1)])
+            #sorted_path_segs = set([
+                #frozenset([p[i],p[i + 1]]) for i in range(len(p) - 1)])
+            cb_copy=set(color_boundaries)
+            segment_deque=deque()
+            for n in p:
+                segment_deque.append(n)
+                if len(segment_deque)==2:
+                    segment_set=set(segment_deque)
+                    if segment_set in cb_copy:
+                        cb_copy.remove(segment_set)
+                    if len(cb_copy)==0:
+                        self.potential_paths.append(p)
+                        break
+                    segment_deque.popleft()
             
+                
             # if the path contains all of the segments we know MUST be
             # traversed, append it
-            
-            if all([cb in sorted_path_segs for cb in color_boundaries]):
-#                 for cb in color_boundaries:
-#                     print(cb,cb in sorted_path_segs)
-#                 print(sorted_path_segs)
-#                 exit(0)
-                self.potential_paths.append(p)
+#             if all(cb in sorted_path_segs for cb in color_boundaries):
+#                 self.potential_paths.append(p)
 
         if not self.potential_paths and expecting_filtered:
             print(sorted_path_segs)
@@ -152,6 +163,18 @@ class Test(unittest.TestCase):
         self.assertEqual(len(g.solutions), 4, g.solutions)
 
     def testColor0(self):
+        '''-------------------
+        o p q r s t
+         J K L M N
+        i j k l m n
+         E F G H I
+        c d e f g h
+         z A B C D
+        6 7 8 9 a b
+         u v w x y
+        0 1 2 3 4 5
+        ********************
+        '''
         # Color Puzzle 1
         cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
         # Initialize the entrance/exit Nodes
@@ -180,11 +203,12 @@ class Test(unittest.TestCase):
         cp1.finalize()
         override = False
         # Generate all possible paths
-        cp1.generate_paths(False)
+        cp1.generate_paths(override)
         # Filter paths (if possible)
         cp1.filter_paths(override, expecting_filtered=True)
         # Solve but do NOT break on first solution to make sure we don't find
         # multiples
+        print(cp1.render_both())
         cp1.solve(False)
         expected_solution = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (
             2, 2), (2, 3), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (5, 4)]
@@ -192,7 +216,7 @@ class Test(unittest.TestCase):
             '\n'.join([''.join(str(s)) for s in cp1.solutions])))
         sol = cp1.solutions[0]
         self.assertEqual(
-            sol, expected_solution, 'Unexpected solution:\n%s' % (str(sol)))
+            list(sol), expected_solution, 'Unexpected solution:\n%s' % (str(sol)))
         #cp1.render()
 
     def testShape0(self):
@@ -212,53 +236,53 @@ def pass_print(*args):
 
 if __name__ == '__main__':
     unittest.main()
-    fs=frozenset([(0,0),(0,1)])
-    print(fs)
-    #exit(0)
-    #print = pass_print
-    # Color Puzzle 1
-    cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
-    # Initialize the entrance/exit Nodes
-    cp1.lower_left().is_entrance = True
-    cp1.upper_right().is_exit = True
-
-    # Initialize the colored Squares
-    square_grid = cp1.inner_grid
-
-    square_grid[0, 1].set_rule_color('aqua')
-    square_grid[0, 2].set_rule_color('aqua')
-    square_grid[0, 3].set_rule_color('aqua')
-
-    square_grid[1, 3].set_rule_color('white')
-    square_grid[2, 3].set_rule_color('white')
-    square_grid[3, 0].set_rule_color('white')
-    square_grid[4, 0].set_rule_color('white')
-
-    square_grid[2, 1].set_rule_color('red')
-    square_grid[2, 2].set_rule_color('red')
-
-    square_grid[4, 1].set_rule_color('yellow')
-    square_grid[4, 2].set_rule_color('yellow')
-    square_grid[4, 3].set_rule_color('yellow')
-    
-    print('cp1.has_rule_shapes',cp1.has_rule_shapes())
-#     for n in cp1.inner_grid.values():
-#         if n.has_rule_color:
-#             print('color check',n,n.has_rule_color,n.color)
-    cp1.finalize()
-    override = False
-    # Generate all possible paths
-    cp1.generate_paths(False)
-    print(cp1.render_both())
-    # Filter paths (if possible)
-    cp1.filter_paths(override, True)
-    # Solve but do NOT break on first solution to make sure we don't find
-    # multiples
-    
-    cp1.solve(False)
-    
-    expected_solution = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (
-        2, 2), (2, 3), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (5, 4)]
+#     fs=frozenset([(0,0),(0,1)])
+#     print(fs)
+#     #exit(0)
+#     #print = pass_print
+#     # Color Puzzle 1
+#     cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
+#     # Initialize the entrance/exit Nodes
+#     cp1.lower_left().is_entrance = True
+#     cp1.upper_right().is_exit = True
+# 
+#     # Initialize the colored Squares
+#     square_grid = cp1.inner_grid
+# 
+#     square_grid[0, 1].set_rule_color('aqua')
+#     square_grid[0, 2].set_rule_color('aqua')
+#     square_grid[0, 3].set_rule_color('aqua')
+# 
+#     square_grid[1, 3].set_rule_color('white')
+#     square_grid[2, 3].set_rule_color('white')
+#     square_grid[3, 0].set_rule_color('white')
+#     square_grid[4, 0].set_rule_color('white')
+# 
+#     square_grid[2, 1].set_rule_color('red')
+#     square_grid[2, 2].set_rule_color('red')
+# 
+#     square_grid[4, 1].set_rule_color('yellow')
+#     square_grid[4, 2].set_rule_color('yellow')
+#     square_grid[4, 3].set_rule_color('yellow')
+#     
+#     print('cp1.has_rule_shapes',cp1.has_rule_shapes())
+# #     for n in cp1.inner_grid.values():
+# #         if n.has_rule_color:
+# #             print('color check',n,n.has_rule_color,n.color)
+#     cp1.finalize()
+#     override = False
+#     # Generate all possible paths
+#     cp1.generate_paths(False)
+#     print(cp1.render_both())
+#     # Filter paths (if possible)
+#     cp1.filter_paths(override, True)
+#     # Solve but do NOT break on first solution to make sure we don't find
+#     # multiples
+#     print(cp1.render_both())
+#     cp1.solve(False)
+#     
+#     expected_solution = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (
+#         2, 2), (2, 3), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (5, 4)]
     exit(0)
     # 4x4 Grid with a "T" shape and two singles
     g = RectangleGridPuzzle(5, 5, 'Tblock2Singles')

@@ -13,6 +13,7 @@ from lib.Node import GridNode, Rectangle, Point, GridSquare
 from lib.util import simplePickler, UniqueColorGenerator,\
     MasterUniqueColorGenerator
 from lib.util import sqliteDB
+from _collections import OrderedDict, deque
 
 
 class Graph(dict):
@@ -234,21 +235,6 @@ class RectGridGraph(Graph):
     def all_path_filename(self):
         return self.paths_filename() + '_all'
 
-    def remove_inner_nbrs(self, seg):
-        '''For each Square on either side of the segment, remove it's neighbors
-        TODO: Encapsulate in Edge class?
-        '''
-        sorted_seg = frozenset(seg)
-        squares = self.outer_to_inner[sorted_seg]
-
-        if not squares:
-            raise Exception('no squares', seg)
-
-        # only do this if the segment is not on the border
-        if len(squares) == 2:
-            s1, s2 = squares
-            s1.remove_traversable(s2)
-            s2.remove_traversable(s1)
 
     def finalize(self):
         print('Finalizing Grid:', str(self))
@@ -315,7 +301,7 @@ class RectGridGraph(Graph):
         # TODO: make path a set based class with ordering (OrderedDict?)
         #self.paths = set()
         self.paths = []
-        path = []
+        path = OrderedDict()
         entrance_nodes = [n for n in self.values() if n.is_entrance]
 
         for n in entrance_nodes:
@@ -330,8 +316,8 @@ class RectGridGraph(Graph):
         if n.vec() in path:
             return
         # Append the new node to the new path
-        new_path = list(path)
-        new_path.append(n.vec())
+        new_path = OrderedDict(path)
+        new_path[n.vec()]=None
 
         # Are we done yet?
         if n.is_exit:
@@ -348,18 +334,34 @@ class RectGridGraph(Graph):
         self.prepare_for_partitioning()
         self.inner_grid.prepare_for_partitioning()
         self.current_path = []
+        
         # Traverse the path, removing neighbors from Squares accordingly
-        for i in range(len(path) - 1):
-            # For each Segment in the Path (technically an edge between Outer
-            # Nodes)
-            seg = list(path[i:i + 2])
-
+        path_list=list(path)
+        # For each Segment in the Path (technically an edge between Outer
+        # Nodes)
+        for i in range(len(path_list)-1):
+            seg=frozenset(path_list[i:i+2])
             # Sever the link between 2 Squares (unless on Graph border)
             self.remove_inner_nbrs(seg)
-            self.current_path.append(frozenset(seg))
-        
+            self.current_path.append(seg)
+            
         for n in self.inner_grid.values():
             n.prepare_for_partitioning()
+            
+    def remove_inner_nbrs(self, seg):
+        '''For each Square on either side of the segment, remove it's neighbors
+        TODO: Encapsulate in Edge class?
+        '''
+        sorted_seg = frozenset(seg)
+        squares = self.outer_to_inner[sorted_seg]
+#         if not squares:
+#             raise Exception('no squares', seg)
+        # only do this if the segment is not on the border
+        if len(squares) == 2:
+            s1, s2 = squares
+            #print('s1',s1,'s2',s2)
+            s1.remove_traversable(s2)
+            s2.remove_traversable(s1)
     
     def travel_write_to_db(self, n, path):
         if n.vec() in path:

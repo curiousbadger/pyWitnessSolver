@@ -58,7 +58,7 @@ class Node(object):
             nbr.backref_nbrs.append(self)
     
     # Get a random neighbor
-    def get_rand_nbr(self):
+    def get_random_traversable_neighbor(self):
         return self.neighbors[random.randint(0, len(self.neighbors) - 1)]
     
     def reset(self):
@@ -293,6 +293,11 @@ class GridSquare(GridNode):
         return trl
     
 if __name__ == '__main__':
+    a=None
+    b='purple'
+    #b=None
+    print(a and b and a!=b)
+    exit(0)
     n = GridNode(1, 0, gx=7, gy=5)
     n2 = GridNode(1, 1, gx=7, gy=5)
     n.finalize(),n2.finalize()
