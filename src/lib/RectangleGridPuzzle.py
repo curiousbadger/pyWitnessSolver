@@ -94,8 +94,8 @@ class RectangleGridPuzzle(GraphImage):
               'paths to', len(self.potential_paths))
         self.filtered_paths_pickler.dump(self.potential_paths)
 
-    
     def solve(self, break_on_first=False):
+        
         ''' Iterate over every potential path and check each GridSquare
         with a rule for violations. 
         '''
@@ -148,6 +148,7 @@ class Test(unittest.TestCase):
         g.inner_grid[0, 0].set_rule_shape(Ishape3)
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
+        g.finalize()
         g.generate_paths()
         g.load_paths()
         g.solve()
@@ -192,7 +193,7 @@ class Test(unittest.TestCase):
         square_grid[4, 3].set_rule_color('yellow')
          
         cp1.finalize()
-        override = False
+        override = True
         # Generate all possible paths
         cp1.generate_paths(override)
         # Filter paths (if possible)
@@ -208,6 +209,7 @@ class Test(unittest.TestCase):
         sol = cp1.solutions[0]
         self.assertEqual(
             list(sol), expected_solution, 'Unexpected solution:\n%s' % (str(sol)))
+        self.assertEqual(len(cp1.paths), 79384, 'path number')
         #cp1.render()
 
     def testShape0(self):
@@ -226,7 +228,11 @@ def pass_print(*args):
     pass
 
 if __name__ == '__main__':
+    t=Test()
+    #t.test2Ishapes()
     unittest.main()
+    #exit(0)
+    #
 #     fs=frozenset([(0,0),(0,1)])
 #     print(fs)
 #     #exit(0)

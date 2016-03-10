@@ -16,25 +16,24 @@ class Node(object):
 #     
 #     def __eq__(self,other):
 #         return self.__hash__() == other.__hash__()
-     
+    def vec(self):
+        return ''
     def __repr__(self):
-        '''Ideally a single character string that should be unique within the Graph.
-
-        Useful for rendering in ASCII art'''
-        return self.sym
+        return '%s:%s %s' % ('Node',self.sym,str(self.vec()))
     
     def __init__(self, hash_int=None):
         self.hash_int = hash_int or MasterUniqueNumberGenerator.get()
         self.sym = '!'
         self.is_exit = None
         self.is_entrance = None
-        
+        self.edges = set()
         self.been_traversed = False
         
         #TODO: GridSquare only?
         self.been_partitioned = False
         self.neighbors = set()
         self.traversable_neighbors = set()
+        self.finalized_traversable_neighbors = set()
         self.has_rule=False
         self.has_rule_color=False
         self.has_rule_shape=False
@@ -46,7 +45,15 @@ class Node(object):
         self.color='black'
         
     def finalize(self):
-        raise NotImplementedError
+        #raise NotImplementedError
+        if self.sym=='!':
+            self.sym=MasterUniqueStringGenerator.get()
+        if len(self.traversable_neighbors)==0:
+            raise Exception('No traversable_neighbors',str(self))
+        self.finalized_traversable_neighbors=frozenset(self.traversable_neighbors)
+        self.neighbors=frozenset(self.neighbors)
+        self.edges=frozenset(self.edges)
+        
     
     def has_rule(self):
         return self.has_rule
@@ -63,18 +70,20 @@ class Node(object):
     
     def reset(self):
         self.been_traversed = False
-        self.traversable_neighbors = set(self.neighbors)
+        self.traversable_neighbors = set(self.finalized_traversable_neighbors)
         # TODO: Redundant?
         self.been_partitioned = False
         
     def remove_traversable(self, other):
-        self.traversable_neighbors.remove(other)
+        try:
+            self.traversable_neighbors.remove(other)
+        except KeyError:
+            raise Exception('%s does not have %s in traversable_neighbors' % (self, other))
         
-    # TODO: Why did I think this was ever a good idea? Added Exception, get rid of this eventually
     def remove_traversable_no_err(self, other, warn=True):
         if not other in self.traversable_neighbors:
             if warn: print(self.vec(),'does not have', other.vec())
-            raise Exception(self.vec(),'does not have', other.vec())
+            #raise Exception(str(self),'does not have', other.vec())
             return
         self.remove_traversable(other)
         
@@ -134,11 +143,8 @@ class GridNode(Node):
         self.has_rule=None
         
     def finalize(self):
-        self.neighbors=frozenset(self.neighbors)
-        if self.hash_int is None:
-            self.hash_int=MasterUniqueNumberGenerator.get()
-        if self.sym=='!':
-            self.sym=MasterUniqueStringGenerator.get()
+        super().finalize()
+        
             
     # TODO: possibly should make GridNode a sub-class of Point?
     def strict_left(self, other):
@@ -196,7 +202,8 @@ class GridNode(Node):
         return not self.on_upper_boundary \
             and any([(self.x, self.y + 1) == n.vec() for n in self.traversable_neighbors])
     
-    def str(self): return str(self.x) + ',' + str(self.y)+self.color
+    def str(self): 
+        return self.__repr__()
 
 class GridSquare(GridNode):
     
@@ -227,13 +234,18 @@ class GridSquare(GridNode):
         
     
     def finalize(self):
-        
+        super().finalize()
         self.different_color_boundaries = self.get_different_color_boundaries()
     
     def prepare_for_partitioning(self):    
         self.been_partitioned=False
         #self.color=GridSquare.default_color
         self.partition_color=None
+        if not self.finalized_traversable_neighbors:
+            raise Exception('foo')
+        #self.traversable_neighbors=set(self.finalized_traversable_neighbors)
+    
+    def set_partition_neighbors(self):
         self.partition_neighbors=list(self.traversable_neighbors)
         
     def pop_any_partition_neighbor(self):

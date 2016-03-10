@@ -14,6 +14,7 @@ from lib.util import simplePickler, UniqueColorGenerator,\
     MasterUniqueColorGenerator
 from lib.util import sqliteDB
 from _collections import OrderedDict, deque
+from lib.Edge import Edge
 
 
 class Graph(dict):
@@ -32,6 +33,7 @@ class Graph(dict):
         self.partitions = None
         self.all_paths_pickler = simplePickler(self.all_path_filename())
         self._color_generator = None
+        self.edges=None
 
     def set_nodes(self, node_list):
         for n in node_list:
@@ -43,6 +45,9 @@ class Graph(dict):
 
     def all_path_filename(self):
         raise NotImplementedError
+    
+    def get_edge(self, na, nb):
+        return self.edges[frozenset([na,nb])]
 
 class GridGraph(Graph):
     ''' A Graph where each Node can be described with (x,y) coordinates.
@@ -91,7 +96,7 @@ class RectGridGraph(Graph):
         self.sorted_keys = sorted(self.keys(), key=lambda k: (k[1], k[0]))
 
         self.assign_neighbors()
-
+        
         '''BEGIN: Outer-Grid specific setup '''
         if is_outer == True:
 
@@ -101,46 +106,73 @@ class RectGridGraph(Graph):
             # Create mapping from Segment in a Path to bordering Squares
             self.create_edge_to_square_map()
 
-            # Assign each GridNode a unique hash value and symbol (if possible)
-            # within this Graph
+            # Assign each GridNode a unique symbol (if possible) within this Graph
             self.assign_keys()
-
+            
             # some paths are best avoided...
-            for y in range(self.gy):
-                for x in range(self.gx):
-                    n = self[x, y]
-                    # Remove left neighbor from bottom row
-                    if y == 0 and x > 0:
-                        n.remove_traversable_no_err(self[x - 1, y])
-                    # Remove left neighbor from top row
-                    if y == gy - 1 and x > 0:
-                        n.remove_traversable_no_err(self[x - 1, y])
-                    # Remove bottom neighbor from left or row
-                    if (x == 0 or x == gx - 1) and y > 0:
-                        n.remove_traversable_no_err(self[x, y - 1])
-                    
+            self.remove_dead_ends()
         '''END: Outer-Grid specific setup '''
     '''END: __init__ '''
 
     def assign_neighbors(self):
+        self.edges=dict()
         gx,gy=self.gx,self.gy
         # teach each node it's neighbors, mind the borders
         for y in range(gy):
             for x in range(gx):
                 n = self[x, y]
+                nbr=None
+                nbr_list=[]
+                # Figure out which neighbors this Node has
                 # add top neighbor unless this is the top row: y=gy-1
                 if y < gy - 1:
-                    n.add_neighbor(self[x, y + 1])
+                    nbr_list.append(self[x, y + 1])
                 # add bottom ex y=0
                 if y > 0:
-                    n.add_neighbor(self[x, y - 1])
+                    nbr_list.append(self[x, y - 1])
                 # add right ex x=0
                 if x < gx - 1:
-                    n.add_neighbor(self[x + 1, y])
+                    nbr_list.append(self[x + 1, y])
                 # add left ex x=0
                 if x > 0:
-                    n.add_neighbor(self[x - 1, y])
-                    
+                    nbr_list.append(self[x - 1, y])
+#                 if n.vec()==(0,1):
+#                     print('n',n,'nbr',nbr)
+                
+                # Each node-neighbor pair corresponds to an Edge 
+                for nbr in nbr_list:
+                    # Teach the node it's neighbor directly TODO: May just use Node.edges later?
+                    n.add_neighbor(nbr)
+                    # Order doesn't really matter for an Edge's Nodes, use a frozenset
+                    node_set=frozenset([n,nbr])
+                    # Have we already encountered this pair?
+                    if node_set in self.edges:
+                        #print('already created', node_set)
+                        cur_edge=self.edges[node_set]
+                    else:
+                        cur_edge=Edge(node_set)
+                    # The address of each Edge is 2 Nodes
+                    self.edges[node_set]=cur_edge
+                    # Add the Edge to the Node's internal set of Edges as well
+                    n.edges.add(cur_edge)
+    
+    
+    def remove_dead_ends(self):
+        # TODO: This only applies to low-left entrance, upper-right exit...
+        gx,gy=self.gx,self.gy
+        for y in range(gy):
+            for x in range(gx):
+                n = self[x, y]
+                nbr=None
+                # Remove left neighbor from top and bottom row
+                if x > 0 and y in (0, gy-1):
+                    nbr=self[x - 1, y]
+                # Remove bottom neighbor from left and right rows
+                elif y > 0 and x in (0, gx-1):
+                    nbr=self[x, y - 1]
+                if nbr:
+                    n.remove_traversable_no_err(nbr)
+                      
     def create_edge_to_square_map(self):
         ''' For each pair of Outer Nodes, setup a dictionary that returns 
         the Inner Squares they touch. This answers the question, what Squares
@@ -251,7 +283,6 @@ class RectGridGraph(Graph):
             n.finalize()
 
     def prepare_for_partitioning(self):
-        self.color_generator().reset()
         self.reset()
         
     def reset(self):
@@ -353,8 +384,9 @@ class RectGridGraph(Graph):
             self.remove_inner_nbrs(seg)
             self.current_path.append(seg)
             
+        
         for n in self.inner_grid.values():
-            n.prepare_for_partitioning()
+            n.set_partition_neighbors()
             
     def remove_inner_nbrs(self, seg):
         '''For each Square on either side of the segment, remove it's neighbors
@@ -368,8 +400,8 @@ class RectGridGraph(Graph):
         if len(squares) == 2:
             s1, s2 = squares
             #print('s1',s1,'s2',s2)
-            s1.remove_traversable(s2)
-            s2.remove_traversable(s1)
+            s1.remove_traversable_no_err(s2)
+            s2.remove_traversable_no_err(s1)
     
     def travel_write_to_db(self, n, path):
         if n.vec() in path:
@@ -557,4 +589,19 @@ def graph_print(*args):
 
 if __name__ == '__main__':
     rgg=RectGridGraph(4,4)
+    rgg.finalize()
     print(rgg.render_both())
+    for k,v in rgg.edges.items():
+        print('k,v',k,v)
+#     for ie in rgg.inner_grid.edges:
+#         print('ie',ie)
+    fs=frozenset([rgg[0,0],rgg[0,1]])
+#     print('fs', fs)
+#     for k in rgg.edges.keys():
+#         print(k)
+#     for n in rgg.iter_sorted():
+#         print(n,'n.edges',n.edges)
+#     
+    print(len(rgg.edges))
+    print(max(len(n.edges) for n in rgg.values()))
+    
