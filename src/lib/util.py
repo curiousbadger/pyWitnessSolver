@@ -86,7 +86,7 @@ class UniqueNumberGenerator(object):
         return next(self.generator)
     
 class UniqueColorGenerator(object):
-    ColorList=['white','aqua','red','yellow','blue','green','purple','orange','indigo','violet','cyan']
+    ColorList=['indigo','violet','cyan','white','aqua','red','yellow','blue','green','purple','orange']
     ColorDict=dict(enumerate(ColorList,start=1))
     def __init__(self):
         self.generator=iter(UniqueColorGenerator.ColorList)
@@ -117,7 +117,7 @@ class UniqueStringGenerator(object):
 MasterUniqueNumberGenerator=UniqueNumberGenerator()
 MasterUniqueStringGenerator=UniqueStringGenerator()
 MasterUniqueColorGenerator=UniqueColorGenerator()
-
+WastedCounter=UniqueNumberGenerator()
 
 if __name__=='__main__':
     pass

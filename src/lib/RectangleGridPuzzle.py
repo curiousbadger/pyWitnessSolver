@@ -7,8 +7,11 @@ import os
 from lib.Graph import RectGridGraph
 from lib.Geometry import MultiBlock
 from lib.GraphImage import GraphImage
-from lib.util import simplePickler
+from lib.util import simplePickler, WastedCounter
 import unittest
+import cProfile
+import pstats
+import io
 from _collections import deque
 
 
@@ -109,8 +112,18 @@ class RectangleGridPuzzle(GraphImage):
 
         print('Checking',len(self.potential_paths),'paths...')
         for p in self.potential_paths:
+#             if frozenset(p)==set([(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)]):
+#                 print('foo')
+#                 print('self.current_path', self.current_path)
+#                 print('p', p)
+#             self.render_solution('oops')
             #print('evaluating potential_path:', p)
             self.set_current_path(p)
+#             if frozenset(p)==set([(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)]):
+# #                 for e in self.inner_grid.edges.values():
+# #                     print('con',e.short_str())
+#                 print('self.current_path', self.current_path)
+            
             # Innocent until proven guilty ;)
             solution = True
 
@@ -129,7 +142,7 @@ class RectangleGridPuzzle(GraphImage):
             if solution:
                 self.solutions.append(p)
                 print('Found solution!', p)
-                self.render_solution()
+                #self.render_solution()
                 if break_on_first:
                     break
             #self.render_solution()
@@ -138,8 +151,29 @@ class RectangleGridPuzzle(GraphImage):
 
 
 class Test(unittest.TestCase):
-
+    def setUp(self):
+        """init each test"""
+        
+        self.pr = cProfile.Profile()
+        self.pr.enable()
+        print( "\n<<<---")
+    
+    def tearDown(self):
+        """finish any test"""
+        p = pstats.Stats (self.pr)
+        p.strip_dirs()
+        p.sort_stats ('cumtime')
+        p.print_stats ()
+        print('Wasted:', WastedCounter.get())
+        #print "\n--->>>"
     def test2Ishapes(self):
+        '''c d e f
+            m n o
+           8 9 a b
+            j k l
+           4 5 6 7
+            g h i
+           0 1 2 3'''
         # 4x4 Grid with a 3-block "I" shape in the center and one on the left
         g = RectangleGridPuzzle(4, 4, 'Ishape3test')
         Ishape3 = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3')
@@ -152,8 +186,16 @@ class Test(unittest.TestCase):
         g.generate_paths()
         g.load_paths()
         g.solve()
+        print('g.solutions', g.solutions)
+        exp_sols=[[(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)], [(0,0), (0,1), (0,2), (0,3), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (1,1), (1,2), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)]]
+        exp_sols=set(frozenset(p) for p in exp_sols)
+        actual_sols=set(frozenset(p) for p in g.solutions)
+        missing_sol = exp_sols - actual_sols
+        extra_solutions = actual_sols - exp_sols
+        self.assertTrue(len(missing_sol)==0, 'Missing solutions:'+','.join(str(s) for s in missing_sol))
+        self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
         self.assertEqual(len(g.solutions), 4, g.solutions)
-
+        #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
     def testColor0(self):
         '''-------------------
         o p q r s t
@@ -193,7 +235,7 @@ class Test(unittest.TestCase):
         square_grid[4, 3].set_rule_color('yellow')
          
         cp1.finalize()
-        override = True
+        override = False
         # Generate all possible paths
         cp1.generate_paths(override)
         # Filter paths (if possible)
@@ -229,57 +271,13 @@ def pass_print(*args):
 
 if __name__ == '__main__':
     t=Test()
-    #t.test2Ishapes()
-    unittest.main()
-    #exit(0)
-    #
-#     fs=frozenset([(0,0),(0,1)])
-#     print(fs)
-#     #exit(0)
-#     #print = pass_print
-#     # Color Puzzle 1
-#     cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
-#     # Initialize the entrance/exit Nodes
-#     cp1.lower_left().is_entrance = True
-#     cp1.upper_right().is_exit = True
-# 
-#     # Initialize the colored Squares
-#     square_grid = cp1.inner_grid
-# 
-#     square_grid[0, 1].set_rule_color('aqua')
-#     square_grid[0, 2].set_rule_color('aqua')
-#     square_grid[0, 3].set_rule_color('aqua')
-# 
-#     square_grid[1, 3].set_rule_color('white')
-#     square_grid[2, 3].set_rule_color('white')
-#     square_grid[3, 0].set_rule_color('white')
-#     square_grid[4, 0].set_rule_color('white')
-# 
-#     square_grid[2, 1].set_rule_color('red')
-#     square_grid[2, 2].set_rule_color('red')
-# 
-#     square_grid[4, 1].set_rule_color('yellow')
-#     square_grid[4, 2].set_rule_color('yellow')
-#     square_grid[4, 3].set_rule_color('yellow')
-#     
-#     print('cp1.has_rule_shapes',cp1.has_rule_shapes())
-# #     for n in cp1.inner_grid.values():
-# #         if n.has_rule_color:
-# #             print('color check',n,n.has_rule_color,n.color)
-#     cp1.finalize()
-#     override = False
-#     # Generate all possible paths
-#     cp1.generate_paths(False)
-#     print(cp1.render_both())
-#     # Filter paths (if possible)
-#     cp1.filter_paths(override, True)
-#     # Solve but do NOT break on first solution to make sure we don't find
-#     # multiples
-#     print(cp1.render_both())
-#     cp1.solve(False)
-#     
-#     expected_solution = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (
-#         2, 2), (2, 3), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (5, 4)]
+    
+    t.setUp()
+    t.test2Ishapes()
+    t.testColor0()
+    t.tearDown()
+    #unittest.main()
+  
     exit(0)
     # 4x4 Grid with a "T" shape and two singles
     g = RectangleGridPuzzle(5, 5, 'Tblock2Singles')
