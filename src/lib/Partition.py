@@ -75,7 +75,7 @@ class Partition(Graph):
                     if remaining_partition_points:
                         if not rule_shapes:
                             print( 'still points')
-                            raise Exception('still points')
+                            #raise Exception('still points')
                         else:
                             print('keep on truckin...')
                             new_partition=MultiBlock(remaining_partition_points,auto_shift_Q1=False)

@@ -13,7 +13,7 @@ from lib.Node import GridNode, Rectangle, Point, GridSquare
 from lib.util import simplePickler, UniqueColorGenerator,\
     MasterUniqueColorGenerator
 from lib.util import sqliteDB
-from _collections import OrderedDict, deque
+from collections import OrderedDict, deque
 from lib.Edge import Edge, OuterEdge, InnerEdge
 
 
@@ -559,11 +559,8 @@ class RectGridGraph(Graph):
                 n.partition_color = partition_color
                 # print(p,self.inner_grid[nvec].vec())
         
-        
-        
         #self.real_partitions.append(rp)
         return rp
-        return finalized_new_partition
 
     def retreive_partition(self, n):
         # Find the partition that contains this Node (for now just GridSquares)
