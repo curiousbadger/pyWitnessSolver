@@ -98,7 +98,7 @@ class RectangleGridPuzzle(GraphImage):
               'paths to', len(self.potential_paths))
         self.filtered_paths_pickler.dump(self.potential_paths)
 
-    def solve(self, break_on_first=False):
+    def solve(self, break_on_first=False, render_all=False):
         
         ''' Iterate over every potential path and check each GridSquare
         with a rule for violations. 
@@ -113,10 +113,11 @@ class RectangleGridPuzzle(GraphImage):
 
         print('Checking',len(self.potential_paths),'paths...')
         for p in self.potential_paths:
-            if p != [(0,0), (0,1), (1,1), (1,2), (2,2), (2,3), (1,3), (1,4), (2,4), (3,4), (4,4)]: # MultipleShapes soution 
+         
             #[(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (2,1), (2,2), (2,3)]:
-                continue
-            print('evaluating potential_path:', p)
+#             if p!= [(0,0), (1,0), (1,1), (2,1), (2,2), (3,2), (3,1), (4,1), (4,2), (4,3), (4,4)]:
+#                 continue
+            #print('evaluating potential_path:', p)
             
             self.set_current_path(p)
 
@@ -126,7 +127,7 @@ class RectangleGridPuzzle(GraphImage):
                 if self.find_any_shape_violation():
                     solution = False
             except Exception as e:
-                print('ECXEPTION:::',e)
+                print('EXCEPTION:::',e)
                 #self.render_solution('oops')
                 solution=False
             # TODO: Wrap in find_any_color_violation()
@@ -144,13 +145,13 @@ class RectangleGridPuzzle(GraphImage):
                 self.render_solution()
                 if break_on_first:
                     break
-            #self.render_solution()
-            #exit(0)
+            if render_all:
+                self.render_solution('render_all')
         print('Found', len(self.solutions), 'total solutions!')
 
 
 class Test(unittest.TestCase):
-        
+    
     def test2Ishapes(self):
         '''c d e f
             m n o
@@ -257,12 +258,16 @@ class Test(unittest.TestCase):
         Single0 = MultiBlock([(0, 1)], 'Single0')
         Single1 = MultiBlock([(0, 2)], 'Single1')
         Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+
+# Alternate arrangement        
+#         [(0,0), (0,1), (1,1), (1,2), (2,2), (2,3), (1,3), (1,4), (2,4), (3,4), (4,4)]: # MultipleShapes soution
+#         g.inner_grid[0, 0].set_rule_shape(TshapeUp)
+#         g.inner_grid[1, 3].set_rule_shape(TshapeDown)
+#         g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
+
         g.inner_grid[0, 0].set_rule_shape(TshapeRight)
         g.inner_grid[1, 3].set_rule_shape(TshapeDown)
-        #g.inner_grid[1, 0].set_rule_shape(Single0)
-        #g.inner_grid[2, 0].set_rule_shape(Ishape3Vert)
         g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
-        
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
         g.generate_paths()
@@ -273,6 +278,7 @@ class Test(unittest.TestCase):
         actual_solution=g.solutions[0]
 
         expected_solution=[(0,0), (1,0), (1,1), (2,1), (2,2), (3,2), (3,1), (4,1), (4,2), (4,3), (4,4)]
+        
         self.assertEqual(
             list(actual_solution), expected_solution, 'Unexpected solution:\n%s' % (str(actual_solution)))
         
@@ -310,7 +316,6 @@ class Test(unittest.TestCase):
         
         g.inner_grid[2, 3].set_rule_shape(TshapeUp)
         g.inner_grid[1, 1].set_rule_shape(TshapeDown)
-        
         
         g.inner_grid[0, 3].set_rule_shape(Single0)
         g.inner_grid[2, 2].set_rule_shape(Single1)
@@ -369,11 +374,11 @@ if __name__ == '__main__':
     t.setUp()
     
 #     t.test2Ishapes()
-#     t.testColor0()
+    t.testColor0()
     t.testMultipleShapesInPartition()
-#     t.testRotationShapes()
+    t.testRotationShapes()
 #     
-    #t.testSinglePartition()
+    t.testSinglePartition()
     t.tearDown()
     #unittest.main()
   

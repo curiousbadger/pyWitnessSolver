@@ -99,24 +99,8 @@ class GraphImage(RectGridGraph):
         
         # Iterate over all Nodes (Outer and Inner)
         render_list=[n.get_imgRect().abs_coords(scalar) for n in self.iter_all()]
-        
         for n in render_list:
             im.polygon(n,n.color)
-        
-        if self.current_path:
-            #self.inner_grid.reset()
-            #self.set_current_path(self.current_path)
-        
-            # Draw path
-            for e in self.current_path:
-                f,s=e.nodes
-                #print('f',f,'s',s)
-                
-                new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
-                
-                #print('new_rect',new_rect)
-                im.polygon(new_rect, 'purple')
-            
         
         #Draw traversable links for each square
         for sq in self.inner_grid.values():
@@ -142,26 +126,28 @@ class GraphImage(RectGridGraph):
                 im.polygon(coords, col, 'green')
         
         
+        # Draw Partitions
+        from lib.Partition import Partition
+        Partition.cg.reset()
         transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
         d=PILImageDraw.Draw(transp_layer)
-        # Draw Partitions
-        
         for p in self.partitions:
             print('!!!!!!!!!p.solution_shapes', p.solution_shapes)
             for pt,col in p.get_img_rects():
                 print('pt',pt)
                 
                 offset = pt.x * \
-                    (GridSquare.rendering_weight + 1) + 1, pt.y * \
-                    (GridSquare.rendering_weight + 1) + 1
+                    (GridSquare.rendering_weight + 1), pt.y * \
+                    (GridSquare.rendering_weight + 1)
+                
                 from lib.Geometry import Rectangle, Point
                 
-                offset=Point(offset)
+                offset=Point(offset)+Point([1,1])
                 
                 pl=[[0,0],[3,0],[3,3],[0,3]]
                 plp=[Point(p) for p in pl]
                 col=list(ImageColor.getrgb(col))
-                col.append(128)
+                col.append(200)
                 col=tuple(col)
                 squ_and_n_rect=Rectangle(plp,offset,col).abs_coords(scalar)
                 
@@ -170,7 +156,25 @@ class GraphImage(RectGridGraph):
                 #.abs_coords(scalar)
                 print('squ_and_n_rect', squ_and_n_rect)
         im.im=PILImage.alpha_composite(im.im, transp_layer)
-           
+        
+        # Draw path
+        if self.current_path:
+            #self.inner_grid.reset()
+            #self.set_current_path(self.current_path)
+        
+            # Draw path
+            transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
+            d=PILImageDraw.Draw(transp_layer)
+            for e in self.current_path:
+                f,s=e.nodes
+                #print('f',f,'s',s)
+                
+                new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
+                col=(255,255,255,128)
+                #print('new_rect',new_rect)
+                d.polygon(new_rect, col)
+            im.im=PILImage.alpha_composite(im.im, transp_layer)
+            
         #PILImage.alpha_composite(bb, square_traversable_layer)
         #square_traversable_layer.save('../../img/test_transp.png')
         #comp=PILImage.alpha_composite(im.im, square_traversable_layer)
