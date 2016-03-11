@@ -73,7 +73,6 @@ class Edge(object):
         
     def connect(self):
         if self.connected==True:
-            pass
             WastedCounter.get()
         self.connected=True
         
@@ -110,16 +109,15 @@ class Edge(object):
         return self.b if from_node==self.a else self.a
     
     def traverse_from_node(self, from_node):
-        '''If this Edge is connected from from_node to the other, sever the connection
-        and return the other node, else return None'''
+        ''' PRE: This Edge is traversable from from_node
+            POST: The connection from from_node to other_node has been cut
+                (or possibly both ways have been cut)'''
+        #TODO: Sanity check
+        if not self.is_connected(from_node):
+            raise Exception('Edge not connected')
         self.disconnect(from_node)
         return self.get_other_node(from_node)
-        return None
-    
-        if self.is_connected(from_node):
-            self.sever(from_node)
-            return self.get_other_node(from_node)
-        return None
+
         
     def __repr__(self):
         return 'Edge:(%s)' % ','.join(str(n) for n in self.nodes)
@@ -152,7 +150,11 @@ class InnerEdge(Edge):
         self.connected=False
     def repair_both(self):
         raise NotImplementedError
-    
+    def connect(self):
+        Edge.connect(self)
+        for n in self.nodes:
+            n.prepare_for_partitioning()
+        
     def disconnect(self, from_node=None):
         self.connected=False
 if __name__=='__main__':

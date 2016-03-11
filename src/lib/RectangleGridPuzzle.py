@@ -113,15 +113,21 @@ class RectangleGridPuzzle(GraphImage):
 
         print('Checking',len(self.potential_paths),'paths...')
         for p in self.potential_paths:
-            #print('evaluating potential_path:', p)
+#             if p != [(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (2,1), (2,2), (2,3)]:
+#                 continue
+            print('evaluating potential_path:', p)
+            
             self.set_current_path(p)
 
             # Innocent until proven guilty ;)
             solution = True
-
-            if self.find_any_shape_violation():
-                solution = False
-
+            try:
+                if self.find_any_shape_violation():
+                    solution = False
+            except Exception as e:
+                print('ECXEPTION:::',e)
+                #self.render_solution('oops')
+                solution=False
             # TODO: Wrap in find_any_color_violation()
             # Should use Partition class to count distinct rule_colors during creation
             # sloppy to check every Node with rule color...
@@ -143,24 +149,6 @@ class RectangleGridPuzzle(GraphImage):
 
 
 class Test(unittest.TestCase):
-    
-    def setUp(self):
-        self.pr = cProfile.Profile()
-        self.pr.enable()
-        
-        # Remove all images
-        search_pattern=chImg.defaultImgDir+'*'+chImg.defaultImgExt
-        r=glob.glob(search_pattern)
-        for f in r:
-            #print (f)
-            os.remove(f)
-    
-    def tearDown(self):
-        p = pstats.Stats (self.pr)
-        p.strip_dirs()
-        p.sort_stats ('cumtime')
-        p.print_stats ()
-        print('Wasted:', WastedCounter.get())
         
     def test2Ishapes(self):
         '''c d e f
@@ -185,6 +173,7 @@ class Test(unittest.TestCase):
         print('g.solutions', g.solutions)
         exp_sols=[[(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)], [(0,0), (0,1), (0,2), (0,3), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (1,1), (1,2), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)]]
         exp_sols=set(frozenset(p) for p in exp_sols)
+        print('exp_sols:',len(exp_sols))
         actual_sols=set(frozenset(p) for p in g.solutions)
         missing_sol = exp_sols - actual_sols
         extra_solutions = actual_sols - exp_sols
@@ -286,6 +275,21 @@ class Test(unittest.TestCase):
         self.assertEqual(
             list(actual_solution), expected_solution, 'Unexpected solution:\n%s' % (str(actual_solution)))
         
+    def testSinglePartition(self):
+        g = RectangleGridPuzzle(3,4, 'testSinglePartition')
+        Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+        Ishape2Vert = MultiBlock([(0, 0), (0, 1)], 'Ishape2Vert')
+        #Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+        g.inner_grid[1,2].set_rule_shape(Ishape2Vert)
+        g.inner_grid[1,1].set_rule_shape(Ishape3Vert)
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        g.generate_paths()
+        g.load_paths()
+        g.solve()
+        for p in g.partitions:
+            print('Real Partition',p)
+        
     def testRotationShapes(self):
         ''' Put a rotatable TshapeUp in a 3x4 Grid (2x3 Squares) with 2 Singles.
             SS
@@ -329,21 +333,46 @@ class Test(unittest.TestCase):
         g.generate_paths()
         print(g.render_both())
 
+    
+    def setUp(self):
+        self.pr = cProfile.Profile()
+        self.pr.enable()
+        
+        # Remove all images
+        search_pattern=chImg.defaultImgDir+'*'+chImg.defaultImgExt
+        r=glob.glob(search_pattern)
+        for f in r:
+            #print (f)
+            os.remove(f)
+    
+    def tearDown(self):
+        s = io.StringIO()
+        p = pstats.Stats(self.pr, stream=s)
+        p.strip_dirs()
+        p.sort_stats('tottime')
+        p.print_stats()
+        stats_output=s.getvalue().split('\n')
+        
+        for l in stats_output[:20]:
+            if l:
+                print(l)
+        print('Wasted:', WastedCounter.get())
+    
 
 def pass_print(*args):
     pass
 
 if __name__ == '__main__':
-    
-        
-    
     t=Test()
     
     t.setUp()
-    #t.test2Ishapes()
-    #t.testColor0()
-    #t.testMultipleShapesInPartition()
-    t.testRotationShapes()
+    
+#     t.test2Ishapes()
+#     t.testColor0()
+    t.testMultipleShapesInPartition()
+#     t.testRotationShapes()
+#     
+    t.testSinglePartition()
     t.tearDown()
     #unittest.main()
   

@@ -101,10 +101,15 @@ class Rectangle(tuple):
         #TODO: Needed here?
         self.color=color
     
-    def shift(self,vector):
-        shift_vector=Point(vector)-self.offset
-        shifted_points=[p-shift_vector for p in self]
-        return Rectangle(shifted_points,shift_vector)
+    
+#     def shift(self, vector):
+#         '''Return a Rectangle shifted such that it's lower-left point is at vector '''
+#         if vector == self.offset:
+#             return
+#         shift_vector=vector-self.offset
+#         shifted_points=[p-shift_vector for p in self]
+#         self = Rectangle(shifted_points,vector)
+    
     # TODO: __add__ and get_bounding_rectangle are begging to be combined...
     def __add__(self,other):
         # Given 2 rectangles, return the smallest Rectangle that includes all of both
@@ -156,7 +161,8 @@ class Rectangle(tuple):
 
 class MultiBlock(set):
     MultiBlockColorGenerator=MasterUniqueColorGenerator
-    
+    def could_contain(self,other):
+        return self.bounding_rectangle.could_contain(other.bounding_rectangle)
     def rotate(self,angle):
         '''
         In general if:
@@ -221,6 +227,7 @@ class MultiBlock(set):
         for p in self.point_list:
             self.add(p)
         self.bounding_rectangle=Rectangle.get_bounding_rectangle(self.point_list)
+        
         self.can_rotate=can_rotate
         self.last_rotation=-1
         self.rotations=[self]
@@ -231,6 +238,18 @@ class MultiBlock(set):
                 r_shape=MultiBlock(new_points,name=new_name,color=color,can_rotate=False)
                 self.rotations.append(r_shape)
     
+    def offset_point(self):
+        return self.bounding_rectangle.offset
+    
+    def upper_right(self):
+        return self.bounding_rectangle.upper_right
+    
+    def set_offset(self, new_offset):       
+        self.bounding_rectangle.offset = new_offset
+
+    def get_absolute_point_set(self):
+        op=self.offset_point()
+        return set([p+op for p in self])
     
     @staticmethod
     def yield_all_arrangements(partition, shape):
@@ -270,6 +289,11 @@ class MultiBlock(set):
                 yield remaining_partition_points,shift_vector
     
 
+    def yield_rotations(self):
+        for rotation in self.rotations:
+            self.last_rotation=(self.last_rotation+1) % len(self.rotations)
+            yield rotation
+            
     def compose(self, partition):
         '''Given a partition, return all possible locations this shape could occupy
         within that partition'''
@@ -291,7 +315,7 @@ class MultiBlock(set):
         if self.name: return self.name + self.point_str()
         return ''.join([str(p) for p in self.point_list])
     def point_str(self):
-        return ''.join([str(p) for p in self.point_list]) +' '+ str(self.last_offset)
+        return ''.join([str(p) for p in self.point_list]) +' ofst:'+ str(self.offset_point())
 
     def part_off(self):
         return self.__repr__()+' '+str(self.last_offset)

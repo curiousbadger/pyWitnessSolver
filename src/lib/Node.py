@@ -19,6 +19,7 @@ class Node(object):
 #     def __eq__(self,other):
 #         return self.__hash__() == other.__hash__()
     def vec(self):
+        raise NotImplementedError
         return ''
 
     def __repr__(self):
@@ -96,19 +97,18 @@ class Node(object):
     def pop_any_traversable(self):
         return self.traversable_neighbors.pop()
     
-    def traversable_nodes(self):
+    def traversable_edges(self):
         for e in self.edges:
-            if e.is_connected(self):
-                yield e.traverse_from_node(self)
-    # TODO: If we want to do any fancy internal stuff when we get traversed, do it here?
-    # TODO: No, we should do this in the Edge class
-    def traverse(self, backref=True):
-        if backref:
-            for n in self.backref_nbrs:
-                n.traversable_neighbors.remove(self)
+            if e.is_connected():
+                yield e
+                
+    def traversable_nodes(self):
+        for e in self.traversable_edges():
+            yield e.traverse_from_node(self)
+            
 
-    def print_nbrs(self):
-        return [n.str() for n in self.traversable_neighbors]
+#     def print_nbrs(self):
+#         return [n.str() for n in self.traversable_neighbors]
 
 
 class GridNode(Node):

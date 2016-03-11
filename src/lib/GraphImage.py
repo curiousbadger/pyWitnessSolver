@@ -140,6 +140,37 @@ class GraphImage(RectGridGraph):
                 coords,col=rule_rect.abs_coords(scalar), rule_rect.color
                 #print('col',col)
                 im.polygon(coords, col, 'green')
+        
+        
+        transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
+        d=PILImageDraw.Draw(transp_layer)
+        # Draw Partitions
+        
+        for p in self.partitions:
+            print('!!!!!!!!!p.solution_shapes', p.solution_shapes)
+            for pt,col in p.get_img_rects():
+                print('pt',pt)
+                
+                offset = pt.x * \
+                    (GridSquare.rendering_weight + 1) + 1, pt.y * \
+                    (GridSquare.rendering_weight + 1) + 1
+                from lib.Geometry import Rectangle, Point
+                
+                offset=Point(offset)
+                
+                pl=[[0,0],[3,0],[3,3],[0,3]]
+                plp=[Point(p) for p in pl]
+                col=list(ImageColor.getrgb(col))
+                col.append(128)
+                col=tuple(col)
+                squ_and_n_rect=Rectangle(plp,offset,col).abs_coords(scalar)
+                
+                #im.polygon(squ_and_n_rect, col, 'red')
+                d.polygon(squ_and_n_rect, col, 'purple')
+                #.abs_coords(scalar)
+                print('squ_and_n_rect', squ_and_n_rect)
+        im.im=PILImage.alpha_composite(im.im, transp_layer)
+           
         #PILImage.alpha_composite(bb, square_traversable_layer)
         #square_traversable_layer.save('../../img/test_transp.png')
         #comp=PILImage.alpha_composite(im.im, square_traversable_layer)
