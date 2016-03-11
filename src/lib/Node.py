@@ -40,7 +40,7 @@ class Node(object):
         self.has_rule = False
         self.has_rule_color = False
         self.has_rule_shape = False
-        self.passed_rule_check = False
+        #self.passed_rule_check = False
 
         # A list of all the nodes that have me as a neighbor
         self.backref_nbrs = []
@@ -72,10 +72,11 @@ class Node(object):
         return self.neighbors[random.randint(0, len(self.neighbors) - 1)]
 
     def reset_node(self):
-        self.been_traversed = False
+        pass
+        #self.been_traversed = False
         #self.traversable_neighbors = set(self.finalized_traversable_neighbors)
         # TODO: Redundant?
-        self.been_partitioned = False
+        #self.been_partitioned = False
 
     def remove_traversable(self, other):
         try:
@@ -97,8 +98,8 @@ class Node(object):
     
     def traversable_nodes(self):
         for e in self.edges:
-            if e.connected:
-                yield e.attempt_traversal(self)
+            if e.is_connected(self):
+                yield e.traverse_from_node(self)
     # TODO: If we want to do any fancy internal stuff when we get traversed, do it here?
     # TODO: No, we should do this in the Edge class
     def traverse(self, backref=True):
@@ -121,6 +122,7 @@ class GridNode(Node):
     ColorDict = dict(enumerate(ColorList, start=1))
 
     rendering_weight = 1
+    
 
     @property
     def x(self): return self.pt[0]
@@ -132,11 +134,13 @@ class GridNode(Node):
         Node.__init__(self)
 
         self.pt = Point((x, y))
-
+        self.edge_map={'left':None,'upper':None,'right':None,'lower':None}
         self.on_left_boundary = False
         self.on_right_boundary = False
         self.on_lower_boundary = False
         self.on_upper_boundary = False
+        
+        
         if x == 0:
             self.on_left_boundary = True
         elif x == gx - 1:
@@ -149,7 +153,7 @@ class GridNode(Node):
         self.rendering_weight = GridNode.rendering_weight
         # TODO: move to sub-class
         self.color = 'blue'
-        # self.nType='out'
+        
         self.has_rule = None
 
     def finalize(self):
@@ -186,15 +190,6 @@ class GridNode(Node):
             self.dimensions(), self.offset(), self.get_color()).abs_coords(scalar)
         return raw_rect
 
-    # TODO: Stubs, should put in Edge class anyways
-    def left_path_traversed(self): return False
-
-    def right_path_traversed(self): return False
-
-    def upper_path_traversed(self): return False
-
-    def lower_path_traversed(self): return False
-
     def get_rectangle_points(self, w, h):
         pl = [[0, 0], [w, 0], [w, h], [0, h]]
         # print(offset)
@@ -206,23 +201,21 @@ class GridNode(Node):
 
     def vec(self):
         return self.pt
+    def add_edge(self, e, direction):
+        self.edges.add(e)
+        self.edge_map[direction]=e
 
-    # TODO: finding traversable_neighbors is sloppy
     def has_right_traversable_nbr(self):
-        return not self.on_right_boundary \
-            and any([(self.x + 1, self.y) == n.vec() for n in self.traversable_neighbors])
+        return self.edge_map['right'] and self.edge_map['right'].is_connected()
 
     def has_left_traversable_nbr(self):
-        return not self.on_left_boundary \
-            and any([(self.x - 1, self.y) == n.vec() for n in self.traversable_neighbors])
+        return self.edge_map['left'] and self.edge_map['left'].is_connected()
 
     def has_lower_traversable_nbr(self):
-        return not self.on_lower_boundary \
-            and any([(self.x, self.y - 1) == n.vec() for n in self.traversable_neighbors])
+        return self.edge_map['lower'] and self.edge_map['lower'].is_connected()
 
     def has_upper_traversable_nbr(self):
-        return not self.on_upper_boundary \
-            and any([(self.x, self.y + 1) == n.vec() for n in self.traversable_neighbors])
+        return self.edge_map['upper'] and self.edge_map['upper'].is_connected()
 
     def str(self):
         return self.__repr__()
@@ -263,12 +256,7 @@ class GridSquare(GridNode):
         self.different_color_boundaries = self.get_different_color_boundaries()
 
     def prepare_for_partitioning(self):
-        self.been_partitioned = False
-        # self.color=GridSquare.default_color
         self.partition_color = None
-        if not self.finalized_traversable_neighbors:
-            raise Exception('foo')
-        # self.traversable_neighbors=set(self.finalized_traversable_neighbors)
 
     def set_partition_neighbors(self):
         self.partition_neighbors = list(self.traversable_neighbors)
@@ -282,11 +270,7 @@ class GridSquare(GridNode):
     def reset_node(self):
         super().reset_node()
         self.prepare_for_partitioning()
-        self.passed_rule_check = False
-
-    def reset_rule_check(self):
-        self.been_partitioned = False
-        self.passed_rule_check = False
+        #self.passed_rule_check = False
 
     def offset(self):
         # The weight of a PathNode and a GridSquare
@@ -296,11 +280,11 @@ class GridSquare(GridNode):
         return Point(offset)
 
     def get_color(self):
+        if self.partition_color:
+            return self.partition_color
+        return self.color
         if self.rule_color:
             return self.rule_color
-#         if self.partition_color:
-#             return self.partition_color
-        return self.color
 
     def set_rule_color(self, color):
         self.has_rule = True
@@ -311,7 +295,7 @@ class GridSquare(GridNode):
     # colors are only "different" if both squares actually have a rule_color
     def different_color(self, other):
         return (self.has_rule and other.has_rule and self.rule_color != other.rule_color)
-
+    
     # the "outer nodes" I share with neighbor squares of a different color
     def get_different_color_boundaries(self):
         for n in self.neighbors:
@@ -322,21 +306,26 @@ class GridSquare(GridNode):
         trl = []
         if self.has_left_traversable_nbr():
             trl.append(
-                Rectangle(self.get_sqare_points(1), self.offset() + Point((0, 1)), 'pink'))
+                Rectangle(self.get_sqare_points(1), self.offset() + Point((-1, 1)), 'pink'))
         if self.has_right_traversable_nbr():
             trl.append(
-                Rectangle(self.get_sqare_points(1), self.offset() + Point((2, 1)), 'pink'))
+                Rectangle(self.get_sqare_points(1), self.offset() + Point((3, 1)), 'pink'))
         if self.has_lower_traversable_nbr():
             trl.append(
-                Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 0)), 'pink'))
+                Rectangle(self.get_sqare_points(1), self.offset() + Point((1, -1)), 'pink'))
         if self.has_upper_traversable_nbr():
             trl.append(
-                Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 2)), 'pink'))
-        if self.partition_color:
-            trl.append(
-                Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 1)), self.partition_color))
+                Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 3)), 'pink'))
         return trl
-
+    
+    def overlay_rule(self):
+        c=self.color
+        if self.rule_color:
+            c=self.rule_color
+        elif self.rule_shape:
+            c=self.rule_shape.get_color()
+        
+        return Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 1)), c)
 if __name__ == '__main__':
     a = None
     b = 'purple'

@@ -4,6 +4,38 @@ Created on Feb 26, 2016
 @author: charper
 '''
 from math import hypot
+from lib.util import MasterUniqueColorGenerator
+def old_compose_shapes(counter, shapes_list, partition, last_offset):
+    print('START compose_shapes')
+    print('    counter',counter)
+    print('    partition',partition.part_off())
+    cur_shape=shapes_list[counter]
+    
+    # Remember the last offset, if we find a solution this helps with rendering
+    cur_shape.last_offset=partition.last_offset
+    
+    # Iterate over all possible positions this shape could occupy
+    for remaining_partition_points,new_offset in cur_shape.compose(partition):
+        
+        print('remaining_partition_points',remaining_partition_points)
+        if not remaining_partition_points:
+            
+            print('Found solution!!') 
+            return True
+        elif counter < len(shapes_list)-1:
+            remaining_partition=MultiBlock(remaining_partition_points)
+            remaining_partition.last_offset+=partition.last_offset
+            print('remaining_partition.last_offset',remaining_partition.last_offset)
+            
+            ret = compose_shapes(counter+1, shapes_list, remaining_partition, new_offset)
+            if ret==True:
+                return True
+            else: 
+                #print('counter',counter,'cur_shape',cur_shape)
+                pass
+        else:
+            print('counter',counter,'at end of shape list')
+    return False
 
 class Point(tuple):
     
@@ -123,6 +155,8 @@ class Rectangle(tuple):
         return 'Rectangle: %s to %s offset: %s color: %s' % (self.lower_left,self.upper_right,self.offset,self.color) 
 
 class MultiBlock(set):
+    MultiBlockColorGenerator=MasterUniqueColorGenerator
+    
     def rotate(self,angle):
         '''
         In general if:
@@ -173,90 +207,154 @@ class MultiBlock(set):
     It's kind of like Tetris.
     
     '''
-    def __init__(self, point_list,name=None,auto_shift_Q1=True):
+    def __init__(self, point_list,name=None,auto_shift_Q1=True,color=None,can_rotate=False):
         '''PRE: Each Point has been assigned it's relative coordinates within the
         MultiBlock.
         
-        
         '''
         self.name=name
+        self.color=color
         self.point_list=[Point(p) for p in point_list]
-        print('MultiBlock self.point_list',self.point_list)
+        #print('MultiBlock self.point_list',self.point_list)
         if auto_shift_Q1:
             self.point_list,self.last_offset=Point.get_Q1_shifted(self.point_list)
         for p in self.point_list:
             self.add(p)
         self.bounding_rectangle=Rectangle.get_bounding_rectangle(self.point_list)
-        
-        
-    def compose(self, partition):
-        '''Given a partition, return all possible locations this shape could occupy
-        within that partition'''
-        my_rect=self.bounding_rectangle
+        self.can_rotate=can_rotate
+        self.last_rotation=-1
+        self.rotations=[self]
+        if self.can_rotate:
+            for i in range(3):
+                new_points=self.rotate(i)
+                new_name='%s_r%d' % (self.name, i+1)
+                r_shape=MultiBlock(new_points,name=new_name,color=color,can_rotate=False)
+                self.rotations.append(r_shape)
+    
+    
+    @staticmethod
+    def yield_all_arrangements(partition, shape):
+        shape_rect=shape.bounding_rectangle
         p_rect=partition.bounding_rectangle
+        #print('shape', shape)
+        #print('partition', partition)
         # Can we fit inside this partition at all?
-        if not p_rect.could_contain(my_rect):
+        if not p_rect.could_contain(shape_rect):
             return None
-        max_shift_point=p_rect.upper_right-my_rect.upper_right
-        print('max_shift_point',max_shift_point)
+        max_shift_point=p_rect.upper_right-shape_rect.upper_right
+        #print('max_shift_point',max_shift_point)
         for y in range(max_shift_point.y+1):
             for x in range(max_shift_point.x+1):
                 shift_vector=Point((x,y))
                 # Shift all the shape's Points
-                shifted_points=frozenset([p+shift_vector for p in self])
-                print('shifted_points',shifted_points)
+                shifted_points=frozenset([p+shift_vector for p in shape])
+                #print('shifted_points',shifted_points)
+                '''There are now several possibilities:
+                1. The shifted points completely cover the partition points
+                    We're done no matter what. If the last shape has been placed then
+                    this is a solution. If not, then we ran out of space.
+                2. The shifted points are a proper subset of the partition points.
+                    This is fine, pass the remaining points back to see if further shapes can fill them
+                3. The shifted points are not a subset of the partition points, ie.
+                    some lie outside the partition points.
+                    Invalid, discard and move on
+                
+                '''
+                outside_points=shifted_points - partition
+                if outside_points:
+                    #print('outside_points', outside_points)
+                    continue
                 # Return all the points in the partition that are left
-                remaining_points=partition - shifted_points
-                print('remaining_points',remaining_points)
-                yield remaining_points,shift_vector
+                remaining_partition_points=partition - shifted_points
+                #print('remaining_partition_points',remaining_partition_points)
+                yield remaining_partition_points,shift_vector
     
 
-    def points_str(self):
-        return ','.join([str(tuple(p)) for p in self.point_list])
+    def compose(self, partition):
+        '''Given a partition, return all possible locations this shape could occupy
+        within that partition'''
+        
+        for rotation in self.rotations:
+            self.last_rotation= (self.last_rotation+1) % len(self.rotations)
+            for rp,sv in MultiBlock.yield_all_arrangements(partition, rotation):
+                #self.last_offset=sv
+                yield rp,sv
+        return
+    
+    def get_color(self):
+        if not self.color:
+            self.color=MultiBlock.MultiBlockColorGenerator.get()
+        return self.color
+    def get_last_rotation(self):
+        return self.rotations[self.last_rotation]
     def __repr__(self):
-        if self.name: return self.name
+        if self.name: return self.name + self.point_str()
         return ''.join([str(p) for p in self.point_list])
+    def point_str(self):
+        return ''.join([str(p) for p in self.point_list]) +' '+ str(self.last_offset)
+
     def part_off(self):
         return self.__repr__()+' '+str(self.last_offset)
-    
+
 def compose_shapes(counter, shapes_list, partition, last_offset):
-    print('START compose_shapes')
-    print('    counter',counter)
-    print('    partition',partition.part_off())
-    cur_shape=shapes_list[counter]
-    
-    # Remember the last offset, if we find a solution this helps with rendering
-    cur_shape.last_offset=partition.last_offset
-    
-    # Iterate over all possible positions this shape could occupy
-    for remaining_partition_points,new_offset in cur_shape.compose(partition):
-        
-        print('remaining_partition_points',remaining_partition_points)
-        if not remaining_partition_points:
-            
-            print('Found solution!!') 
-            return True
-        elif counter < len(shapes_list):
-            remaining_partition=MultiBlock(remaining_partition_points)
-            remaining_partition.last_offset+=partition.last_offset
-            print('remaining_partition.last_offset',remaining_partition.last_offset)
-            ret = compose_shapes(counter+1, shapes_list, remaining_partition, new_offset)
-            if ret==True:
-                return True
-            else: 
-                #print('counter',counter,'cur_shape',cur_shape)
+        print('START compose_shapes')
+        print('    counter',counter)
+        print('    partition',partition.part_off())
+        print('    shapes_list',shapes_list)
+        cur_shape = shapes_list[counter]
+
+        # Remember the last offset, if we find a solution this helps with
+        # rendering
+        cur_shape.last_offset = partition.last_offset
+
+        # Iterate over all possible positions this shape could occupy
+        for remaining_partition_points, new_offset in cur_shape.compose(partition):
+
+            # print('remaining_partition_points',remaining_partition_points)
+            if not remaining_partition_points:
+                # We filled up the partition, but have we placed all shapes?
+                if counter == len(shapes_list) - 1:
+                    #print('Found solution!!')
+                    return True
+                else:
+                    #print('Ran out of room')
+                    return False
+            elif counter < len(shapes_list) - 1:
+                remaining_partition = MultiBlock(remaining_partition_points)
+                remaining_partition.last_offset += partition.last_offset
+                # print('remaining_partition.last_offset',remaining_partition.last_offset)
+                ret = compose_shapes(
+                    counter + 1, shapes_list, remaining_partition, new_offset)
+                if ret == True:
+                    return True
+                else:
+                    # print('counter',counter,'cur_shape',cur_shape)
+                    pass
+            else:
+                #print('counter',counter,'at end of shape list')
                 pass
-        else:
-            print('counter',counter,'at end of shape list')
-    return False
+        return False
+    
 
 def geom_print(*args):
     pass
-print=geom_print
+#print=geom_print
 if __name__=='__main__':
 
     r3x3=MultiBlock([(x,y) for x in range(3) for y in range(3)])
     r3x2=MultiBlock([(x,y) for x in range(3) for y in range(2)])
+    r2x3=MultiBlock([(x,y) for x in range(2) for y in range(3)])
+    ''' XXX
+         X  '''
+    TshapeDown = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'TshapeDown')
+    '''  X
+        XX 
+         X'''
+    TshapeLeft = MultiBlock([(0, 1), (1, 0), (1, 1), (1, 2)], 'TshapeLeft')
+    '''  X
+         XX 
+         X    '''
+    TshapeRight = MultiBlock([(0, 0), (0, 1), (0, 2), (1, 1)], 'TshapeRight')
     '''   X
         XXX'''
     LshapeUpRight=MultiBlock([(0,0),(1,0),(2,0),(2,1)])
@@ -268,23 +366,29 @@ if __name__=='__main__':
     LshapeDownRight=MultiBlock([(0,1),(1,1),(2,1),(2,0)])
     '''  X
         XXX '''
-    TshapeUp=MultiBlock([(0,0),(1,0),(2,0),(1,1)])
+    TshapeUp=MultiBlock([(0,0),(1,0),(2,0),(1,1)],name='TshapeUp',color='red',can_rotate=True)
     ''' XX '''
     IshapeHoriz2=MultiBlock([(0,0),(1,0)])
     Single0=MultiBlock([(0,0)])
     Single1=MultiBlock([(0,0)])
     
-    shape_list=[LshapeUpRight,IshapeHoriz2]
-    shape_list=[LshapeUpLeft,Single0,Single1]
-    
     ''' STS
         TTT '''
+    
+    
+    shape_list=[LshapeUpRight,IshapeHoriz2]
+    shape_list=[LshapeUpLeft,Single0,Single1]
     shape_list=[TshapeUp,Single0,Single1]
-    partition=r3x2
+    
+    
+    partition=r2x3
     cs_ret=compose_shapes(0, shape_list, partition,None)
     print('cs_ret',cs_ret)
     for s in shape_list:
         print(s,'last_offset',s.last_offset)
+#         for r in s.rotations:
+#             print('r', r,r.point_str())
+    
     exit(0)
     ishape3=[(0,0),(0,1),(0,2)]
     mb=MultiBlock(ishape3)

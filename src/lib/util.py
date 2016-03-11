@@ -8,7 +8,7 @@ import string
 import pickle
 import os
 import sqlite3
-
+from PIL.ImageColor import colormap
 class sqliteDB(object):
     def __init__(self,puzzle_name):
         self.conn = sqlite3.connect('../../db/pyWitnessSolver.sqlite3')
@@ -86,8 +86,10 @@ class UniqueNumberGenerator(object):
         return next(self.generator)
     
 class UniqueColorGenerator(object):
-    ColorList=['indigo','violet','cyan','white','aqua','red','yellow','blue','green','purple','orange']
-    ColorDict=dict(enumerate(ColorList,start=1))
+    #ColorList=['indigo','violet','cyan','white','aqua','red','yellow','blue','green','purple','orange']
+    #ColorList=['wheat', 'darkslateblue', 'rosybrown', 'darkblue', 'black', 'aliceblue', 'blanchedalmond', 'darkslategray', 'darkslategrey', 'lightblue', 'mediumorchid', 'violet', 'olivedrab', 'magenta', 'saddlebrown', 'lightgray', 'ivory', 'plum', 'darkorchid', 'snow', 'firebrick', 'yellowgreen', 'steelblue', 'mediumpurple', 'aqua', 'lightcyan', 'darkgreen', 'lightgoldenrodyellow', 'ghostwhite', 'indianred', 'lightslategrey', 'lightgreen', 'dimgrey', 'lightskyblue', 'turquoise', 'limegreen', 'linen', 'salmon', 'cyan', 'cadetblue', 'oldlace', 'green', 'peru', 'khaki', 'aquamarine', 'lightsalmon', 'coral', 'darkgoldenrod', 'hotpink', 'lightsteelblue', 'mistyrose', 'azure', 'mediumaquamarine', 'sandybrown', 'lightcoral', 'mediumseagreen', 'lemonchiffon', 'dimgray', 'whitesmoke', 'honeydew', 'beige', 'seagreen', 'silver', 'maroon', 'springgreen', 'darkcyan', 'gainsboro', 'lightpink', 'lawngreen', 'papayawhip', 'peachpuff', 'lavender', 'sienna', 'navy', 'yellow', 'greenyellow', 'mediumblue', 'floralwhite', 'grey', 'gold', 'palegoldenrod', 'lime', 'darkturquoise', 'pink', 'cornflowerblue', 'palegreen', 'darkseagreen', 'lightgrey', 'tan', 'darkgray', 'thistle', 'powderblue', 'darkmagenta', 'mediumslateblue', 'lightseagreen', 'gray', 'red', 'burlywood', 'palevioletred', 'mediumvioletred', 'tomato', 'olive', 'darkviolet', 'goldenrod', 'brown', 'blueviolet', 'purple', 'bisque', 'teal', 'paleturquoise', 'fuchsia', 'blue', 'orangered', 'lightyellow', 'cornsilk', 'forestgreen', 'dodgerblue', 'chartreuse', 'lavenderblush', 'orchid', 'deeppink', 'midnightblue', 'darkred', 'royalblue', 'darkgrey', 'mintcream', 'chocolate', 'seashell', 'white', 'mediumspringgreen', 'orange', 'navajowhite', 'moccasin', 'darksalmon', 'darkolivegreen', 'slategrey', 'mediumturquoise', 'skyblue', 'slategray', 'darkorange', 'antiquewhite', 'crimson', 'indigo', 'slateblue', 'deepskyblue', 'darkkhaki', 'lightslategray']
+    ColorList=['red','green','blue','yellow','orange','indigo','violet','wheat', 'darkslateblue', 'rosybrown', 'darkblue', 'black', 'aliceblue', 'blanchedalmond', 'darkslategray', 'darkslategrey', 'lightblue', 'mediumorchid', 'violet', 'olivedrab', 'magenta', 'saddlebrown', 'lightgray', 'ivory', 'plum', 'darkorchid', 'snow', 'firebrick', 'yellowgreen', 'steelblue', 'mediumpurple', 'aqua', 'lightcyan', 'darkgreen', 'lightgoldenrodyellow', 'ghostwhite', 'indianred', 'lightslategrey', 'lightgreen', 'dimgrey', 'lightskyblue', 'turquoise', 'limegreen', 'linen', 'salmon', 'cyan', 'cadetblue', 'oldlace', 'green', 'peru', 'khaki', 'aquamarine', 'lightsalmon', 'coral', 'darkgoldenrod', 'hotpink', 'lightsteelblue', 'mistyrose', 'azure', 'mediumaquamarine', 'sandybrown', 'lightcoral', 'mediumseagreen', 'lemonchiffon', 'dimgray', 'whitesmoke', 'honeydew', 'beige', 'seagreen', 'silver', 'maroon', 'springgreen', 'darkcyan', 'gainsboro', 'lightpink', 'lawngreen', 'papayawhip', 'peachpuff', 'lavender', 'sienna', 'navy', 'yellow', 'greenyellow', 'mediumblue', 'floralwhite', 'grey', 'gold', 'palegoldenrod', 'lime', 'darkturquoise', 'pink', 'cornflowerblue', 'palegreen', 'darkseagreen', 'lightgrey', 'tan', 'darkgray', 'thistle', 'powderblue', 'darkmagenta', 'mediumslateblue', 'lightseagreen', 'gray', 'red', 'burlywood', 'palevioletred', 'mediumvioletred', 'tomato', 'olive', 'darkviolet', 'goldenrod', 'brown', 'blueviolet', 'purple', 'bisque', 'teal', 'paleturquoise', 'fuchsia', 'blue', 'orangered', 'lightyellow', 'cornsilk', 'forestgreen', 'dodgerblue', 'chartreuse', 'lavenderblush', 'orchid', 'deeppink', 'midnightblue', 'darkred', 'royalblue', 'darkgrey', 'mintcream', 'chocolate', 'seashell', 'white', 'mediumspringgreen', 'orange', 'navajowhite', 'moccasin', 'darksalmon', 'darkolivegreen', 'slategrey', 'mediumturquoise', 'skyblue', 'slategray', 'darkorange', 'antiquewhite', 'crimson', 'indigo', 'slateblue', 'deepskyblue', 'darkkhaki', 'lightslategray']
+    
     def __init__(self):
         self.generator=iter(UniqueColorGenerator.ColorList)
     def reset(self):
@@ -120,4 +122,6 @@ MasterUniqueColorGenerator=UniqueColorGenerator()
 WastedCounter=UniqueNumberGenerator()
 
 if __name__=='__main__':
-    pass
+    #print(UniqueColorGenerator.ColorList)
+    for i in range(30):
+        print(MasterUniqueColorGenerator.get())

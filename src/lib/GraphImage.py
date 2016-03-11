@@ -8,7 +8,8 @@ without Pillow (PIL). I'm tempted to scrap that separation since Pillow is so ea
 '''
 from PIL import Image as PILImage
 from PIL import ImageDraw as PILImageDraw
-from PIL import ImageFont
+from PIL import ImageFont,ImageColor
+
 from lib.Graph import RectGridGraph
 from math import ceil
 from lib.Node import GridNode, GridSquare
@@ -84,13 +85,19 @@ class GraphImage(RectGridGraph):
         square_width=GridSquare.rendering_weight
         
         total_w=(self.gx*node_width)+(self.gx-1)*square_width
-        
+        total_h=(self.gy*node_width)+(self.gy-1)*square_width
+        print('total_w', total_w)
+        print('total_h', total_h)
+        max_dim=max([total_w,total_h])
         # Default canvas size
         cw,ch=2000.0,2000.0
         canvas=[cw,ch]
+        int_canvas=[int(d) for d in canvas]
         im=chImg(canvas)
-        scalar=cw/total_w
+        scalar=cw/max_dim
         #print('cw',cw,'scalar',scalar,'total_w',total_w)
+        
+        # Iterate over all Nodes (Outer and Inner)
         render_list=[n.get_imgRect().abs_coords(scalar) for n in self.iter_all()]
         
         for n in render_list:
@@ -101,22 +108,42 @@ class GraphImage(RectGridGraph):
             #self.set_current_path(self.current_path)
         
             # Draw path
-            for seg in self.current_path:
-                f,s=seg
+            for e in self.current_path:
+                f,s=e.nodes
                 #print('f',f,'s',s)
-                n1,n2=self[f],self[s]
-                new_rect=n1.get_imgRect(scalar)+n2.get_imgRect(scalar)
+                
+                new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
                 
                 #print('new_rect',new_rect)
                 im.polygon(new_rect, 'purple')
             
+        
         #Draw traversable links for each square
         for sq in self.inner_grid.values():
             #print('sq',sq)
             new_rects=sq.overlay_traversable_rects()
             #print('new_rects',new_rects)
             for r in new_rects:
-                im.polygon(r.abs_coords(scalar), r.color, 'red')
+                coords,col=r.abs_coords(scalar), r.color
+                col=list(ImageColor.getrgb(col))
+                col.append(128)
+                col=tuple(col)
+                #print(col)
+                
+                im.polygon(coords, col, 'red')
+                #sd.polygon(coords, col, 'green')
+        
+        # Draw rule shapes/colors
+        for sq in self.inner_grid.values():
+            rule_rect=sq.overlay_rule()
+            if rule_rect:
+                coords,col=rule_rect.abs_coords(scalar), rule_rect.color
+                #print('col',col)
+                im.polygon(coords, col, 'green')
+        #PILImage.alpha_composite(bb, square_traversable_layer)
+        #square_traversable_layer.save('../../img/test_transp.png')
+        #comp=PILImage.alpha_composite(im.im, square_traversable_layer)
+        #comp.save('../../img/test_transp_blue.png')
         if not paths_filename:
             paths_filename=self.paths_filename()
         if title is None:

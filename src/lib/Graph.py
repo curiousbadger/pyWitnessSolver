@@ -14,7 +14,7 @@ from lib.util import simplePickler, UniqueColorGenerator,\
     MasterUniqueColorGenerator
 from lib.util import sqliteDB
 from _collections import OrderedDict, deque
-from lib.Edge import Edge
+from lib.Edge import Edge, OuterEdge, InnerEdge
 
 
 class Graph(dict):
@@ -39,6 +39,7 @@ class Graph(dict):
         for n in node_list:
             self[n.vec()]=n
     def color_generator(self):
+        return MasterUniqueColorGenerator
         if not self._color_generator:
             self._color_generator = UniqueColorGenerator()
         return self._color_generator
@@ -126,19 +127,19 @@ class RectGridGraph(Graph):
                 # Figure out which neighbors this Node has
                 # add top neighbor unless this is the top row: y=gy-1
                 if y < gy - 1:
-                    nbr_list.append(self[x, y + 1])
+                    nbr_list.append([self[x, y + 1],'upper'])
                 # add bottom ex y=0
                 if y > 0:
-                    nbr_list.append(self[x, y - 1])
+                    nbr_list.append([self[x, y - 1],'lower'])
                 # add right ex x=0
                 if x < gx - 1:
-                    nbr_list.append(self[x + 1, y])
+                    nbr_list.append([self[x + 1, y],'right'])
                 # add left ex x=0
                 if x > 0:
-                    nbr_list.append(self[x - 1, y])
+                    nbr_list.append([self[x - 1, y],'left'])
                 
                 # Each node-neighbor pair corresponds to an Edge 
-                for nbr in nbr_list:
+                for nbr,direction in nbr_list:
                     # Teach the node it's neighbor directly TODO: May just use Node.edges later?
                     n.add_neighbor(nbr)
                     # Order doesn't really matter for an Edge's Nodes, use a frozenset
@@ -148,11 +149,14 @@ class RectGridGraph(Graph):
                         #print('already created', node_set)
                         cur_edge=self.edges[node_set]
                     else:
-                        cur_edge=Edge(node_set)
+                        if self.is_outer:
+                            cur_edge=OuterEdge(node_set)
+                        else:
+                            cur_edge=InnerEdge(node_set)
                     # The address of each Edge is 2 Nodes
                     self.edges[node_set]=cur_edge
                     # Add the Edge to the Node's internal set of Edges as well
-                    n.edges.add(cur_edge)
+                    n.add_edge(cur_edge, direction)
     
     
     def remove_path_dead_ends(self):
@@ -175,53 +179,36 @@ class RectGridGraph(Graph):
                     n.remove_traversable_no_err(nbr)
                       
     def associate_outer_to_inner(self):
-        ''' For each pair of Outer Nodes, setup a dictionary that returns 
-        the Inner Squares they touch. This answers the question, what Squares
-        are on either side of any given Segment (Edge) in a Path?
+        ''' 
         '''
-        oid = self.outer_to_inner = defaultdict(list)
-        for n in self.values():
-            for nbr in n.neighbors:
-                # sort the node and neighbor so that they are always in left-right
-                # or lower-upper order
-                first, second = sorted([n, nbr], key=lambda x: x.pt)
-                node_set=frozenset([first,second])
-                cur_edge=self.get_edge(n, nbr)
-                
-                segment = frozenset([first.pt, second.pt])
-                
-                if segment not in oid:
-                    inner_edge=None
-                    left_square,right_square=None,None
-                    lower_square,upper_square=None,None
-                    # vertical segment, add left-right squares
-                    if first.is_vertical_with(second):
-                        # add the left square if it exists
-                        if not first.on_left_boundary:
-                            left_square=self.inner_grid[first.x - 1, first.y]
-                            oid[segment].append(left_square)
-                        # add the right square if not on right edge
-                        if not first.on_right_boundary:
-                            right_square=self.inner_grid[first.x, first.y]
-                            oid[segment].append(right_square)
-                    # horizontal segment, add above-below squares
-                    elif first.is_horizontal_with(second):
-                        # Lower square
-                        if not first.on_lower_boundary:
-                            lower_square=self.inner_grid[first.x, first.y - 1]
-                            oid[segment].append(lower_square)
-                        # Upper square
-                        if not first.on_upper_boundary:
-                            upper_square=self.inner_grid[first.x, first.y]
-                            oid[segment].append(upper_square)
-                            
-                    if lower_square and upper_square:
-                        inner_edge=self.inner_grid.get_edge(lower_square,upper_square)
-                    elif left_square and right_square:
-                        inner_edge=self.inner_grid.get_edge(left_square,right_square)    
-                    #print('cur_edge', cur_edge)
-                    #print('inner_edge', inner_edge)
-                    cur_edge.set_inner_edge(inner_edge)
+        
+        for cur_edge in self.edges.values():
+            # Sort the nodes so that they are always in lower-upper or left-right order
+            first_node, second_node = sorted([outer_node for outer_node in cur_edge.nodes], key=lambda x: x.pt)
+            inner_edge=None
+            first_square,second_square=None,None
+            
+            # vertical segment, add left-right squares if they exist
+            if first_node.is_vertical_with(second_node):
+                if not first_node.on_left_boundary:
+                    first_square=self.inner_grid[first_node.x-1, first_node.y]
+                if not first_node.on_right_boundary:
+                    second_square=self.inner_grid[first_node.x, first_node.y]
+                    
+            # horizontal segment, add above-below squares
+            elif first_node.is_horizontal_with(second_node):
+                if not first_node.on_lower_boundary:
+                    first_square=self.inner_grid[first_node.x, first_node.y-1]
+                if not first_node.on_upper_boundary:
+                    second_square=self.inner_grid[first_node.x, first_node.y]
+            
+            # If there is an Inner GridSquare on both sides of the cur_edge,
+            # tie it to the InnerEdge that runs "beneath" it
+            if first_square and second_square:
+                inner_edge=self.inner_grid.get_edge(first_square,second_square)    
+                #print('cur_edge', cur_edge,'inner_edge', inner_edge)
+                cur_edge.set_inner_edge(inner_edge)
+        
     
     def assign_keys(self):
         '''Should assign a unique hash value and optionally an ASCII string
@@ -297,8 +284,8 @@ class RectGridGraph(Graph):
             n.finalize()
         for e in self.edges.values():
             e.assign_default_state()
-        for e in self.inner_grid.edges.values():
-            e.assign_default_state()
+#         for e in self.inner_grid.edges.values():
+#             e.assign_default_state()
 
     def prepare_for_partitioning(self):
         self.partitions=[]
@@ -390,20 +377,19 @@ class RectGridGraph(Graph):
             
     def set_current_path(self, path):
         
+        # Restore all traversable links between Squares
         if self.current_path:
             self.unset_current_path()
-        
-        # Restore all traversable links between Squares
-        self.prepare_for_partitioning()
-        self.inner_grid.prepare_for_partitioning()
+
+        self.color_generator().reset()
+        self.partitions=[]
         self.current_path = []
         
         # Traverse the path, removing neighbors from Squares accordingly
         # For each Segment in the Path (technically an edge between Outer
         # Nodes)
         for i in range(len(path)-1):
-            seg=frozenset(path[i:i+2])
-            nodes=[self[n] for n in seg]
+            nodes=[self[n] for n in path[i:i+2]]
             # Sever the link between 2 Squares (unless on Graph border)
             #print(self.edges)
             cur_edge=self.get_edge(*nodes)
@@ -411,7 +397,7 @@ class RectGridGraph(Graph):
             cur_edge.sever_inner()
             
             #self.remove_inner_nbrs(seg)
-            self.current_path.append(seg)
+            self.current_path.append(cur_edge)
             
         # Now each GridSquare has had it's traversable_neighbors set
         # Copy those as partition_neighbors
@@ -421,48 +407,17 @@ class RectGridGraph(Graph):
     def unset_current_path(self):
         for p in self.partitions:
             for n in p:
+                n.prepare_for_partitioning()
                 for e in n.edges:
-                    e.connect_both()
-#         for e in self.inner_grid.edges.values():
-#             e.connect_both()
-        for seg in self.current_path:
-            cur_edge=self.get_edge(*[self[n] for n in seg])
-            cur_edge.reset_inner()
+                    e.connect()
+        for e in self.current_path:
+            e.reset_inner()
         
 #         # Sanity test....
 #         for e in self.inner_grid.edges.values():
 #             if not e.is_fully_connected():
 #                 raise Exception('con',e.short_str())
         
-    # TODO: Replaced by Edge logic
-    def remove_inner_nbrs(self, seg):
-        '''For each Square on either side of the segment, remove it's neighbors
-        TODO: Encapsulate in Edge class?
-        '''
-        sorted_seg = frozenset(seg)
-        squares = self.outer_to_inner[sorted_seg]
-#         if not squares:
-#             raise Exception('no squares', seg)
-        # only do this if the segment is not on the border
-        if len(squares) == 2:
-            s1, s2 = squares
-            #print('s1',s1,'s2',s2)
-            s1.remove_traversable_no_err(s2)
-            s2.remove_traversable_no_err(s1)
-    
-    def travel_write_to_db(self, n, path):
-        if n.vec() in path:
-            return
-        new_path = list(path)
-        new_path.append(n.vec())
-        # Are we done yet?
-        if n.is_exit:
-            # self.paths_txt.write(str(new_path)+'\n')
-            self.db.write_path(path)
-            return
-        for nxt in n.traversable_neighbors:
-            self.travel_write_to_db(nxt, new_path)
-    
     def check_colors(self, n, color):
         
         partition=self.retreive_partition(n)
@@ -481,12 +436,9 @@ class RectGridGraph(Graph):
             return False
         
         violation = False
-        
-#         for n in self.inner_grid.values():
-#             n.prepare_for_partitioning()
-                
+                        
         for n in self.inner_grid.values():
-            if n.has_rule_shape and not n.passed_rule_check:
+            if n.has_rule_shape:
                 # TODO: probably no need to check for further violations, but leaving in while working out bugs
                 violation = self.shape_violation_check(n)
                 # print(n,'found shape violation')
@@ -521,8 +473,6 @@ class RectGridGraph(Graph):
             partition_points, name='partition_multiblock', auto_shift_Q1=True)
         #print('partition_multiblock', partition_multiblock)
 
-        # Check the easy violations first
-
         '''If this partition doesn't have the same number of Squares as the 
         sum of the number of points in the shapes, there's no way they will
         fit.
@@ -532,7 +482,13 @@ class RectGridGraph(Graph):
             return True
 
         return not self.compose_shapes(0, shapes, partition_multiblock, None)
-
+    '''
+    Given a Partition, which is a set of Points
+        For each Shape in the Partition
+            Find each possible position of the Shape within the Partition
+            
+            
+    '''
     def compose_shapes(self, counter, shapes_list, partition, last_offset):
         #print('START compose_shapes')
         #print('    counter',counter)
@@ -548,6 +504,7 @@ class RectGridGraph(Graph):
 
             # print('remaining_partition_points',remaining_partition_points)
             if not remaining_partition_points:
+                # We filled up the partition, but have we placed all shapes?
                 if counter == len(shapes_list) - 1:
                     #print('Found solution!!')
                     return True
@@ -574,7 +531,7 @@ class RectGridGraph(Graph):
         if n in partition:
             return
         
-        n.been_partitioned = True # TODO: Needed?
+        #n.been_partitioned = True # TODO: Needed?
         partition.add(n)
 
         for nbr in n.traversable_nodes():
@@ -605,33 +562,34 @@ class RectGridGraph(Graph):
         # Find the partition that contains this Node (for now just GridSquares)
         found_partition = None
 
-        if not n.been_partitioned:
-            found_partition = self.generate_partition(n)
-
         for p in self.partitions:
             if n in p:
                 found_partition = p
+                
+        if not found_partition:
+            found_partition = self.generate_partition(n)
+
         if found_partition is None:
             raise Exception('Unable to find partition for', n)
         return found_partition
 
-    def generate_all_partitions(self):
-        '''Returns a list of Partitions.
-        A Partition is a sub-set of one or more GridSquares bounded by the Path and the outer border.
-        Each GridSquare in a Partition must be connected to all other GridSquares in the Partition
-        through the traversable_neighbor list. 
-
-        PRE: self.current_path has been set, so GridSquares have had their traversable_neighbors removed.'''
-        self.partitions = []
-        for n in self.inner_grid.values():
-            n.prepare_for_partitioning()
-        for n in self.inner_grid.values():
-            if not n.been_partitioned:
-                new_partition = set()
-                self.travel_partition(n, new_partition)
-                # print(new_partition)
-                self.partitions.append(frozenset(new_partition))
-        #print('partitions generated', self.partitions)
+#     def generate_all_partitions(self):
+#         '''Returns a list of Partitions.
+#         A Partition is a sub-set of one or more GridSquares bounded by the Path and the outer border.
+#         Each GridSquare in a Partition must be connected to all other GridSquares in the Partition
+#         through the traversable_neighbor list. 
+# 
+#         PRE: self.current_path has been set, so GridSquares have had their traversable_neighbors removed.'''
+#         self.partitions = []
+#         for n in self.inner_grid.values():
+#             n.prepare_for_partitioning()
+#         for n in self.inner_grid.values():
+#             if not n.been_partitioned:
+#                 new_partition = set()
+#                 self.travel_partition(n, new_partition)
+#                 # print(new_partition)
+#                 self.partitions.append(frozenset(new_partition))
+#         #print('partitions generated', self.partitions)
 
 
 def graph_print(*args):
