@@ -170,7 +170,7 @@ class GraphImage(RectGridGraph):
                 #print('f',f,'s',s)
                 
                 new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
-                col=(255,255,255,128)
+                col=(255,255,255,200)
                 #print('new_rect',new_rect)
                 d.polygon(new_rect, col)
             im.im=PILImage.alpha_composite(im.im, transp_layer)
