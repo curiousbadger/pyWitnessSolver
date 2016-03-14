@@ -3,12 +3,16 @@ Created on Mar 9, 2016
 
 @author: charper
 '''
+from collections import Counter
+
 from lib.Graph import Graph
 from lib.Geometry import MultiBlock, Point
 from lib.util import UniqueColorGenerator
 
+
 class Partition(Graph):
     cg=UniqueColorGenerator()
+    
     def travel_partition(self, n):
         if n.vec() in self:
             return
@@ -19,9 +23,22 @@ class Partition(Graph):
                 self.edges[e.nodes]=e
             self.travel_partition(e.traverse_from_node(n))
 
+    def has_sun_violation(self):
+        
+        if self.sun_violation is not None:
+            return self.sun_violation
+        
+        for col in [n.sun_color for n in self.values() if n.sun_color]:
+            if col not in self.color_counter:
+                self.color_counter[col]=1
+            else:
+                self.color_counter[col]+=1
+        # Every sun needs a buddy...
+        self.sun_violation = any(cnt != 2 for cnt in self.color_counter.values())
+        return self.sun_violation
+    
     def get_rule_shapes(self):
         if self.rule_shapes is not None and len(self.rule_shapes)==0:
-            return []
             raise Exception('ruleshapes')
         if self.rule_shapes is None:
             self.rule_shapes=[]
@@ -43,7 +60,7 @@ class Partition(Graph):
             print('    cur_shape',cur_shape)
             # Is the shape bigger than the partition?
             if not partition_multiblock.could_contain(cur_shape):
-                print('            couldnt contain')
+                print('            %s can''t contain %s', partition_multiblock, cur_shape)
                 continue
             
             # Put the shape in the lower-left corner
@@ -53,7 +70,7 @@ class Partition(Graph):
             max_shift_point=partition_multiblock.upper_right()-cur_shape.upper_right()
             print('    max_shift_point', max_shift_point)
             
-            # TODO: Change to MultiBlock yield
+            # TODO: Change to MultiBlock yield?
             for y in range(max_shift_point.y+1):
                 for x in range(max_shift_point.x+1):
                     
@@ -106,8 +123,8 @@ class Partition(Graph):
         partition_multiblock=MultiBlock(self.keys(),name='partition_multiblock',auto_shift_Q1=False)
         
         self.shape_violation = not self.can_be_composed_of(rule_shapes,partition_multiblock, 0)
-        
         return self.shape_violation
+    
     def __init__(self, first_node=None):
         '''
         '''
@@ -118,6 +135,9 @@ class Partition(Graph):
         self.rule_shapes=None
         self.solution_shapes=[]
         self.total_rule_shape_points=0
+        self.color_violation=None
+        self.sun_violation=None
+        self.color_counter=Counter()
         
     def get_img_rects(self):
         for s in self.solution_shapes:
@@ -129,6 +149,10 @@ class Partition(Graph):
                 print('n', n)
                 #exit(0)
                 yield p,col
+
+def pass_print(*args):
+    pass
+print=pass_print
 if __name__=='__main__':
     pass
     
