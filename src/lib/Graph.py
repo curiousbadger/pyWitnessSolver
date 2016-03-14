@@ -321,12 +321,15 @@ class RectGridGraph(Graph):
             print('Warning: self.paths already loaded')
             #raise Exception('self.paths already loaded')
         self.paths = self.all_paths_pickler.load()
+        
 
     def add_path(self, new_path, to_obj=True, to_db=False):
         if to_obj:
             # TODO: make path a set based class with ordering
             # self.paths.add(new_path)
-            self.paths.append(list(new_path))
+            self.paths.add(new_path)
+            if not len(self.paths) % 10000:
+                print(len(self.paths))
         if to_db:
             pass
 
@@ -343,8 +346,8 @@ class RectGridGraph(Graph):
                 print('overwriting:', self.all_path_filename())
 
         # TODO: make path a set based class with ordering (OrderedDict?)
-        #self.paths = set()
-        self.paths = []
+        self.paths = set()
+        #self.paths = []
         path = OrderedDict()
         entrance_nodes = [n for n in self.values() if n.is_entrance]
 
@@ -365,9 +368,14 @@ class RectGridGraph(Graph):
 
         # Are we done yet?
         if n.is_exit:
-            self.add_path(new_path, to_obj=True, to_db=False)
+            
+            finalized_path=str(list(new_path))
+            if finalized_path in self.paths:
+                return
+            self.add_path(finalized_path, to_obj=True, to_db=False)
+            
             # TODO: Assumes that there's only 1 exit
-            return
+            #return
 
         # head on down the line...
         for nxt in n.neighbors:
@@ -426,7 +434,6 @@ class RectGridGraph(Graph):
     def check_colors(self, n, color):
         
         partition=self.retreive_partition(n)
-        #print('partition', partition)
         
         if any(n.different_color(p_nbr) for p_nbr in partition.values()):
             return True
