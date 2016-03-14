@@ -113,7 +113,10 @@ class RectangleGridPuzzle(GraphImage):
 
         print('Checking',len(self.potential_paths),'paths...')
         for p in self.potential_paths:
-         
+            # TODO: Hack...
+            from ast import literal_eval
+            
+            p=literal_eval(p)
             #[(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (2,1), (2,2), (2,3)]:
 #             if p!= [(0,0), (1,0), (1,1), (2,1), (2,2), (3,2), (3,1), (4,1), (4,2), (4,3), (4,4)]:
 #                 continue
@@ -133,9 +136,15 @@ class RectangleGridPuzzle(GraphImage):
             # TODO: Wrap in find_any_color_violation()
             # Should use Partition class to count distinct rule_colors during creation
             # sloppy to check every Node with rule color...
+#             for n in self.inner_grid.values():                
+#                 if n.has_rule_color:
+#                     if self.check_colors(n, n.rule_color):
+#                         solution = False
+#                         break
             for n in self.inner_grid.values():                
-                if n.has_rule_color:
-                    if self.check_colors(n, n.rule_color):
+                if n.sun_color:
+                    p = self.retreive_partition(n)
+                    if p.has_sun_violation():
                         solution = False
                         break
 
@@ -184,6 +193,7 @@ class Test(unittest.TestCase):
         self.assertEqual(len(g.solutions), 4, g.solutions)
         #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
     
+
     def testColor0(self, overwrite=False):
         '''o p q r s t
             J K L M N
@@ -351,6 +361,50 @@ class Test(unittest.TestCase):
             #print (f)
             os.remove(f)
     
+    def testTreehouse0(self):
+            
+            # 4x4 Grid with a 3-block "I" shape in the center and one on the left
+            g = RectangleGridPuzzle(6, 6, 'testTreehouse0')
+            Ishape2Vert = MultiBlock([(0, 0), (0, 1)], 'Ishape2Vert')
+            '''   X
+                XXX'''
+            LshapeUpRight=MultiBlock([(0,0),(1,0),(2,0),(2,1)],name='LshapeUpRight',can_rotate=True)
+            ''' X  
+                XXX'''
+            LshapeUpLeft=MultiBlock([(0,0),(1,0),(2,0),(0,1)],name='LshapeUpLeft',can_rotate=True)
+            
+            g.inner_grid[3, 0].set_rule_shape(Ishape2Vert)
+            g.inner_grid[1, 1].set_rule_shape(LshapeUpRight)
+            g.inner_grid[3, 2].set_rule_shape(LshapeUpLeft)
+            
+            g.inner_grid[4,0].sun_color='purple'
+            g.inner_grid[0,3].sun_color='purple'
+            
+            g.inner_grid[4,2].sun_color='green'
+            g.inner_grid[1,4].sun_color='green'
+            
+            g[2,0].is_entrance = True
+            g[3,0].is_entrance = True
+            
+            g[2,5].is_exit = True
+            g[3,5].is_exit = True
+            
+            g.finalize()
+            g.generate_paths(False)
+            g.load_paths()
+            g.solve()
+            print('g.solutions', g.solutions)
+            #exp_sols=[[(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)], [(0,0), (0,1), (0,2), (0,3), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (1,1), (1,2), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)]]
+            #exp_sols=set(frozenset(p) for p in exp_sols)
+            #print('exp_sols:',len(exp_sols))
+            actual_sols=set(frozenset(p) for p in g.solutions)
+            #missing_sol = exp_sols - actual_sols
+            #extra_solutions = actual_sols - exp_sols
+            #self.assertTrue(len(missing_sol)==0, 'Missing solutions:'+','.join(str(s) for s in missing_sol))
+            #self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
+            #self.assertEqual(len(g.solutions), 4, g.solutions)
+            #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
+
     def tearDown(self):
         s = io.StringIO()
         p = pstats.Stats(self.pr, stream=s)
@@ -374,12 +428,13 @@ if __name__ == '__main__':
     t.setUp()
     
 #     t.test2Ishapes()
-    t.testColor0()
-    t.testMultipleShapesInPartition()
-    t.testRotationShapes()
-#     
-    t.testSinglePartition()
-    t.tearDown()
+    #t.testColor0()
+    #t.testMultipleShapesInPartition()
+    #t.testRotationShapes() 
+    #t.testSinglePartition()
+    
+    t.testTreehouse0()
+    #t.tearDown()
     #unittest.main()
   
     exit(0)

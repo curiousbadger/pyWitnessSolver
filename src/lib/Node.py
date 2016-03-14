@@ -244,6 +244,7 @@ class GridSquare(GridNode):
         self.partition_neighbors = []
         self.rule_shape = None
         self.rule_color = None
+        self.sun_color = None
         self.partition_color = None
 
     def set_rule_shape(self, shape):
@@ -280,8 +281,11 @@ class GridSquare(GridNode):
         return Point(offset)
 
     def get_color(self):
-        if self.partition_color:
-            return self.partition_color
+        
+        if self.sun_color:
+            return self.sun_color
+#         if self.partition_color:
+#             return self.partition_color
         return self.color
         if self.rule_color:
             return self.rule_color
