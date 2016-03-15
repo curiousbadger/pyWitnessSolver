@@ -32,7 +32,7 @@ class Test(unittest.TestCase):
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
         g.finalize()
-        g.generate_paths(True)
+        g.generate_paths()
         g.load_paths()
         g.solve()
         print('g.solutions', g.solutions)
@@ -47,7 +47,6 @@ class Test(unittest.TestCase):
         self.assertEqual(len(g.solutions), 4, g.solutions)
         #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
     
-
     def testColor0(self, overwrite=False):
         '''o p q r s t
             J K L M N
@@ -137,7 +136,7 @@ class Test(unittest.TestCase):
         g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
-        g.generate_paths(True)
+        g.generate_paths()
         g.load_paths()
         g.solve()
         self.assertEqual(len(g.solutions), 1, 'Wrong number of solutions: %s' % (
@@ -205,27 +204,6 @@ class Test(unittest.TestCase):
         self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
         self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
         
-
-    def xtest10x10(self):
-        # TODO: Path generation will take forever, need to work on early dead-end detection
-        g = RectangleGridPuzzle(10, 10)
-        g.lower_left().is_entrance = True
-        g.upper_right().is_exit = True
-        g.generate_paths()
-        print(g.render_both())
-    
-    def setUp(self):
-        self.pr = cProfile.Profile()
-        self.pr.enable()
-        
-        # Remove all images
-        d,e=defaultValueServer.get_directory_extension_pair('image')
-        search_pattern=os.path.join(d,'*'+e)
-        r=glob.glob(search_pattern)
-        
-        for f in r:
-            #print (f)
-            os.remove(f)
     
     def testTreehouse0(self):
             
@@ -269,40 +247,99 @@ class Test(unittest.TestCase):
             first_solution=g.solutions[0]
             self.assertIsNotNone(first_solution)
             #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
-
-    def tearDown(self):
-        s = io.StringIO()
-        p = pstats.Stats(self.pr, stream=s)
-        p.strip_dirs()
-        p.sort_stats('tottime')
-        p.print_stats()
-        stats_output=[l for l in s.getvalue().split('\n') if l]
+    
+    def testRuleShapeRendering(self):
+        ''' Put 3 Tshapes in a 5x5 Grid to demo rules_shape rendering.'''
         
-        for l in stats_output[2:20]:
-            print(l)
-        for l in stats_output[0:3]:
-            print(l)
-        print('Wasted:', WastedCounter.get())
+        g = RectangleGridPuzzle(5, 5, 'testRuleShapeRendering')
+
+        TshapeDown = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'TshapeDown',can_rotate=False)
+        TshapeRight = MultiBlock([(0, 0), (0, 1), (0, 2), (1, 1)], 'TshapeRight')
+        TshapeLeft = MultiBlock([(0, 1), (1, 0), (1, 1), (1, 2)], 'TshapeLeft')
+        #Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+        
+        g.inner_grid[1, 3].set_rule_shape(TshapeDown)
+        g.inner_grid[0, 0].set_rule_shape(TshapeRight)
+        g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
+        
+        
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        g.render()
+        g.generate_paths()
+        g.load_paths()
+        g.solve()
+        
+        expected_solutions=[[(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4)]]
+        expected_solutions=set(frozenset(p) for p in expected_solutions)
+        
+        print('expected_solutions:',expected_solutions)
+        actual_solutions=set(frozenset(p) for p in g.solutions)
+        print('actual_solutions', actual_solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+        self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
+        self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
+        
+    def setUp(self, enable_profiler=True, clear_img_directory=True):
+        self.enable_profiler=enable_profiler
+        if self.enable_profiler:
+            self.pr = cProfile.Profile()
+            self.pr.enable()
+        
+        # Remove all images
+        if clear_img_directory:
+            d,e=defaultValueServer.get_directory_extension_pair('image')
+            search_pattern=os.path.join(d,'*'+e)
+            r=glob.glob(search_pattern)
+            for f in r:
+                #print (f)
+                os.remove(f)
+                
+    def tearDown(self):
+        if self.enable_profiler:
+            s = io.StringIO()
+            p = pstats.Stats(self.pr, stream=s)
+            p.strip_dirs()
+            p.sort_stats('tottime')
+            p.print_stats()
+            stats_output=[l for l in s.getvalue().split('\n') if l]
+            
+            for l in stats_output[2:20]:
+                print(l)
+            for l in stats_output[0:3]:
+                print(l)
+        
+        if WastedCounter.get()>1:
+            print('Wasted:', WastedCounter.get())
     
 
 def pass_print(*args):
     pass
 
-if __name__ == '__main__':
-
-    #exit(0)
+def test_singles():
     t=Test()
     
-    t.setUp()
+    t.setUp(enable_profiler=True)
     
-    t.test2Ishapes()
-    t.testColor0()
-    t.testMultipleShapesInPartition()
-    t.testRotationShapes() 
-    t.testSinglePartition()
-    
-    t.testTreehouse0()
-    t.tearDown()
-    #unittest.main()
+#     t.test2Ishapes()
+#     t.testColor0()
+#     t.testMultipleShapesInPartition()
+#     t.testRotationShapes() 
+#     t.testSinglePartition()
+#      
+#     t.testTreehouse0()
 
- 
+    t.testRuleShapeRendering()
+    
+    t.tearDown()
+
+def test_all():
+    unittest.main()
+    
+if __name__ == '__main__':
+
+    test_singles()
+    #test_all()
+    
+

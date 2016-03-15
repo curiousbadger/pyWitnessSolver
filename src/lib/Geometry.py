@@ -5,37 +5,6 @@ Created on Feb 26, 2016
 '''
 from math import hypot
 from lib.util import MasterUniqueColorGenerator
-def old_compose_shapes(counter, shapes_list, partition, last_offset):
-    print('START compose_shapes')
-    print('    counter',counter)
-    print('    partition',partition.part_off())
-    cur_shape=shapes_list[counter]
-    
-    # Remember the last offset, if we find a solution this helps with rendering
-    cur_shape.last_offset=partition.last_offset
-    
-    # Iterate over all possible positions this shape could occupy
-    for remaining_partition_points,new_offset in cur_shape.compose(partition):
-        
-        print('remaining_partition_points',remaining_partition_points)
-        if not remaining_partition_points:
-            
-            print('Found solution!!') 
-            return True
-        elif counter < len(shapes_list)-1:
-            remaining_partition=MultiBlock(remaining_partition_points)
-            remaining_partition.last_offset+=partition.last_offset
-            print('remaining_partition.last_offset',remaining_partition.last_offset)
-            
-            ret = compose_shapes(counter+1, shapes_list, remaining_partition, new_offset)
-            if ret==True:
-                return True
-            else: 
-                #print('counter',counter,'cur_shape',cur_shape)
-                pass
-        else:
-            print('counter',counter,'at end of shape list')
-    return False
 
 class Point(tuple):
     
@@ -43,6 +12,7 @@ class Point(tuple):
     def get_subtraction_vector(point_list):
         '''Given a list of points find the leftmost x and lowest y value. '''
         return Point((min([p.x for p in point_list]),min([p.y for p in point_list])))
+    
     @staticmethod
     def get_Q1_shifted(point_list):
         subtraction_vector=Point.get_subtraction_vector(point_list)
@@ -60,6 +30,7 @@ class Point(tuple):
     def __add__(self,other): return Point([self.x+other.x,self.y+other.y])
     def __mul__(self,other): return Point([self.x*other.x,self.y*other.y])
     def __repr__(self): return '(%d,%d)' % (self.x,self.y)
+    
     
     def strict_left(self, other):
         return self.x < other.x
@@ -86,11 +57,26 @@ class Point(tuple):
         return Point([self.x*scalar,self.y*scalar])
     def dist(self,other): return hypot(self.x-other.x, self.y-other.y)
     
+    def max_dimension(self):
+        return max(d for d in self)
+    def as_int_tuple(self):
+        return tuple([int(d) for d in self])
 class Rectangle(tuple):
     '''A Rectangle implemented as a set of 4 points.
     
     Points need to be passed in order:
-    lower left, lower right, upper right, upper left'''
+    lower left, lower right, upper right, upper left
+    
+    TODO: No need to use all 4 points. Change implementation
+    to use a Point at lower-left and then a Point representing
+    width,height '''
+    @staticmethod
+    def get_rectangle_points(w, h):
+        pl = [Point(p) for p in [[0, 0], [w, 0], [w, h], [0, h]]]
+        return pl
+    @staticmethod
+    def get_sqare_points(w):
+        return Rectangle.get_rectangle_points(w, w)
     
     def __new__(cls, p, *args, **kwds):
         return tuple.__new__(cls, tuple(p))
@@ -100,16 +86,7 @@ class Rectangle(tuple):
         
         #TODO: Needed here?
         self.color=color
-    
-    
-#     def shift(self, vector):
-#         '''Return a Rectangle shifted such that it's lower-left point is at vector '''
-#         if vector == self.offset:
-#             return
-#         shift_vector=vector-self.offset
-#         shifted_points=[p-shift_vector for p in self]
-#         self = Rectangle(shifted_points,vector)
-    
+   
     # TODO: __add__ and get_bounding_rectangle are begging to be combined...
     def __add__(self,other):
         # Given 2 rectangles, return the smallest Rectangle that includes all of both
@@ -121,6 +98,7 @@ class Rectangle(tuple):
         nul=Point([min([p.x for p in all_points]),max([p.y for p in all_points])])
         
         return Rectangle([nll,nlr,nur,nul])
+    
     @staticmethod
     def get_bounding_rectangle(point_list):
         all_points=point_list
@@ -131,27 +109,24 @@ class Rectangle(tuple):
         nul=Point([min([p.x for p in all_points]),max([p.y for p in all_points])])
         
         return Rectangle([nll,nlr,nur,nul])
-#     def get_corner_fill(self, other):
-#         '''Given two Rectangles with the same lower left point,
-#         return a point that represents the difference between
-#         the upper-right corners.
-#         '''
-#         new_width=self.width()-other.width()
-#         new_height=self.height()-other.height()
-#         return Point((new_width,new_height))
+
     def abs_coords(self,scalar=1):
         return Rectangle([Point(p+self.offset).scaled(scalar) for p in self],(0,0),self.color)
     
-    @property 
+    @property
     def lower_left(self): return self[0]+self.offset
-    @property 
+    @property
     def lower_right(self): return self[1]+self.offset
     @property
     def upper_right(self): return self[2]+self.offset
-    @property 
+    @property
     def upper_left(self): return self[3]+self.offset
+    
     def width(self): return self[1].x-self[0].x
     def height(self): return self[3].y-self[0].y
+    
+    def get_dimensions(self):
+        return Point([self.width(),self.height()])
     
     def could_contain(self, other):
         return not (self.width()<other.width() or self.height()<other.height())
@@ -364,7 +339,15 @@ def geom_print(*args):
     pass
 #print=geom_print
 if __name__=='__main__':
-
+    ''' XXX
+         X  '''
+    TshapeDown = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'TshapeDown')
+    p=Point([-5,-6])
+    print(p.max_dimension())
+    TshapeDown.set_offset(p)
+    print('TshapeDown.bounding_rectangle', TshapeDown.bounding_rectangle)
+    print(TshapeDown.bounding_rectangle.get_dimensions().max_dimension())
+    exit(0)
     r3x3=MultiBlock([(x,y) for x in range(3) for y in range(3)])
     r3x2=MultiBlock([(x,y) for x in range(3) for y in range(2)])
     r2x3=MultiBlock([(x,y) for x in range(2) for y in range(3)])

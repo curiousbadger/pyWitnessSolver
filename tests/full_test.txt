@@ -1,10 +1,7 @@
 Finalizing Grid: {(0,1): GridNode:4 @(0,1), (1,2): GridNode:9 @(1,2), (3,2): GridNode:b @(3,2), (0,0): GridNode:0 @(0,0), (3,3): GridNode:f @(3,3), (3,0): GridNode:3 @(3,0), (3,1): GridNode:7 @(3,1), (2,1): GridNode:6 @(2,1), (0,2): GridNode:8 @(0,2), (2,0): GridNode:2 @(2,0), (1,3): GridNode:d @(1,3), (2,3): GridNode:e @(2,3), (2,2): GridNode:a @(2,2), (1,0): GridNode:1 @(1,0), (0,3): GridNode:c @(0,3), (1,1): GridNode:5 @(1,1)}
-overwriting: Ishape3test_4x4RectGridGraph_all
-Done! found: 184 total paths
-writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\Ishape3test_4x4RectGridGraph_all.p
-Warning: self.paths already loaded
+Skipping path generation...
 Checking 184 paths...
-Found solution! [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
+Found solution! [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
 rendering... Ishape3test_4x4RectGridGraph0
 total_w 13
 total_h 13
@@ -19,13 +16,13 @@ rendering... Ishape3test_4x4RectGridGraph2
 total_w 13
 total_h 13
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\Ishape3test_4x4RectGridGraph2.png
-Found solution! [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
+Found solution! [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
 rendering... Ishape3test_4x4RectGridGraph3
 total_w 13
 total_h 13
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\Ishape3test_4x4RectGridGraph3.png
 Found 4 total solutions!
-g.solutions [[(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)], [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]]
+g.solutions [[(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)], [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]]
 Finalizing Grid: {(1,2): GridNode:d @(1,2), (3,2): GridNode:f @(3,2), (0,0): GridNode:0 @(0,0), (4,3): GridNode:m @(4,3), (3,0): GridNode:3 @(3,0), (0,4): GridNode:o @(0,4), (5,4): GridNode:t @(5,4), (2,1): GridNode:8 @(2,1), (1,3): GridNode:j @(1,3), (2,3): GridNode:k @(2,3), (1,4): GridNode:p @(1,4), (5,1): GridNode:b @(5,1), (4,2): GridNode:g @(4,2), (0,3): GridNode:i @(0,3), (1,0): GridNode:1 @(1,0), (4,0): GridNode:4 @(4,0), (0,1): GridNode:6 @(0,1), (2,4): GridNode:q @(2,4), (3,3): GridNode:l @(3,3), (4,1): GridNode:a @(4,1), (3,1): GridNode:9 @(3,1), (4,4): GridNode:s @(4,4), (1,1): GridNode:7 @(1,1), (2,0): GridNode:2 @(2,0), (5,0): GridNode:5 @(5,0), (2,2): GridNode:e @(2,2), (3,4): GridNode:r @(3,4), (5,3): GridNode:n @(5,3), (5,2): GridNode:h @(5,2), (0,2): GridNode:c @(0,2)}
 Skipping path generation...
 Skipping filter_paths...
@@ -47,10 +44,7 @@ total_w 21
 total_h 17
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\bunker_first_room_last_panel_6x5RectGridGraph0.png
 Found 1 total solutions!
-overwriting: MultipleShapesInPartition_5x5RectGridGraph_all
-Done! found: 8512 total paths
-writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\MultipleShapesInPartition_5x5RectGridGraph_all.p
-Warning: self.paths already loaded
+Skipping path generation...
 Checking 8512 paths...
 Found solution! [(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4)]
 rendering... MultipleShapesInPartition_5x5RectGridGraph0
@@ -58,10 +52,7 @@ total_w 17
 total_h 17
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\MultipleShapesInPartition_5x5RectGridGraph0.png
 Found 1 total solutions!
-overwriting: testRotationShapes_4x5RectGridGraph_all
-Done! found: 976 total paths
-writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\testRotationShapes_4x5RectGridGraph_all.p
-Warning: self.paths already loaded
+Skipping path generation...
 Checking 976 paths...
 Found solution! [(0, 0), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2), (2, 3), (3, 3), (3, 4)]
 rendering... testRotationShapes_4x5RectGridGraph0
@@ -74,17 +65,14 @@ total_w 13
 total_h 17
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testRotationShapes_4x5RectGridGraph1.png
 Found 2 total solutions!
-overwriting: testSinglePartition_3x4RectGridGraph_all
-Done! found: 38 total paths
-writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\testSinglePartition_3x4RectGridGraph_all.p
-Warning: self.paths already loaded
+Skipping path generation...
 Checking 38 paths...
-Found solution! [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3)]
+Found solution! [(0, 0), (0, 1), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3)]
 rendering... testSinglePartition_3x4RectGridGraph0
 total_w 9
 total_h 13
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testSinglePartition_3x4RectGridGraph0.png
-Found solution! [(0, 0), (0, 1), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3)]
+Found solution! [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3)]
 rendering... testSinglePartition_3x4RectGridGraph1
 total_w 9
 total_h 13
@@ -100,36 +88,35 @@ total_w 9
 total_h 13
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testSinglePartition_3x4RectGridGraph3.png
 Found 4 total solutions!
-Real Partition {(1,2): GridSquare:h @(1,2), (0,2): GridSquare:g @(0,2)}
+Real Partition {(1,0): GridSquare:d @(1,0), (0,0): GridSquare:c @(0,0), (1,1): GridSquare:f @(1,1)}
 Finalizing Grid: {(1,2): GridNode:d @(1,2), (3,2): GridNode:f @(3,2), (0,0): GridNode:0 @(0,0), (4,3): GridNode:m @(4,3), (3,0): GridNode:3 @(3,0), (0,4): GridNode:o @(0,4), (5,4): GridNode:t @(5,4), (2,1): GridNode:8 @(2,1), (5,5): GridNode:z @(5,5), (1,3): GridNode:j @(1,3), (2,3): GridNode:k @(2,3), (1,4): GridNode:p @(1,4), (5,1): GridNode:b @(5,1), (4,2): GridNode:g @(4,2), (0,3): GridNode:i @(0,3), (1,0): GridNode:1 @(1,0), (4,0): GridNode:4 @(4,0), (0,1): GridNode:6 @(0,1), (2,5): GridNode:w @(2,5), (2,4): GridNode:q @(2,4), (3,3): GridNode:l @(3,3), (1,5): GridNode:v @(1,5), (4,1): GridNode:a @(4,1), (3,1): GridNode:9 @(3,1), (4,5): GridNode:y @(4,5), (4,4): GridNode:s @(4,4), (1,1): GridNode:7 @(1,1), (2,0): GridNode:2 @(2,0), (3,5): GridNode:x @(3,5), (5,0): GridNode:5 @(5,0), (2,2): GridNode:e @(2,2), (3,4): GridNode:r @(3,4), (0,5): GridNode:u @(0,5), (5,3): GridNode:n @(5,3), (5,2): GridNode:h @(5,2), (0,2): GridNode:c @(0,2)}
 Skipping path generation...
 Checking 2285446 paths...
-Found solution! [(3, 0), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5)]
+Found solution! [(2, 0), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (3, 2), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (4, 4), (3, 4), (3, 5), (2, 5)]
 rendering... testTreehouse0_6x6RectGridGraph0
 total_w 21
 total_h 21
 Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testTreehouse0_6x6RectGridGraph0.png
 Found 1 total solutions!
-g.solutions [[(3, 0), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5)]]
+g.solutions [[(2, 0), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (3, 2), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (4, 4), (3, 4), (3, 5), (2, 5)]]
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        7    3.250    0.464    3.250    0.464 {built-in method _pickle.load}
-    20096    2.747    0.000    2.747    0.000 {built-in method builtins.compile}
-       13    2.672    0.206    2.672    0.206 {method 'encode' of 'ImagingEncoder' objects}
- 539948/4    1.708    0.000    1.998    0.500 Graph.py:364(travel)
-1316936/20096    1.575    0.000    1.966    0.000 ast.py:49(_convert)
-    20096    1.068    0.000    3.525    0.000 Graph.py:388(set_current_path)
-       26    0.638    0.025    0.638    0.025 {built-in method PIL._imaging.alpha_composite}
-223626/25216    0.607    0.000    1.348    0.000 Partition.py:16(travel_partition)
-   441507    0.527    0.000    0.778    0.000 Edge.py:154(connect)
-  3162311    0.410    0.000    0.450    0.000 {built-in method builtins.isinstance}
-       78    0.400    0.005    0.400    0.005 {built-in method PIL._imaging.fill}
-   412399    0.381    0.000    0.381    0.000 Graph.py:50(get_edge)
-   412184    0.361    0.000    0.361    0.000 Graph.py:403(<listcomp>)
-   395188    0.292    0.000    0.365    0.000 Node.py:104(traversable_edges)
-   386108    0.268    0.000    0.268    0.000 Node.py:267(set_partition_neighbors)
-    20090    0.236    0.000    1.162    0.000 Graph.py:419(unset_current_path)
-   131461    0.213    0.000    0.370    0.000 Geometry.py:60(__add__)
-         15976229 function calls (13938654 primitive calls) in 21.142 seconds
+        7    3.385    0.484    3.385    0.484 {built-in method _pickle.load}
+       13    2.664    0.205    2.664    0.205 {method 'encode' of 'ImagingEncoder' objects}
+    15309    1.909    0.000    1.909    0.000 {built-in method builtins.compile}
+938664/15309    1.389    0.000    1.672    0.000 ast.py:49(_convert)
+    15309    0.771    0.000    2.430    0.000 Graph.py:388(set_current_path)
+       26    0.632    0.024    0.632    0.024 {built-in method PIL._imaging.alpha_composite}
+       78    0.380    0.005    0.380    0.005 {built-in method PIL._imaging.fill}
+123528/17534    0.357    0.000    0.774    0.000 Partition.py:16(travel_partition)
+   274322    0.331    0.000    0.490    0.000 Edge.py:154(connect)
+  2257172    0.297    0.000    0.323    0.000 {built-in method builtins.isinstance}
+   292691    0.267    0.000    0.267    0.000 Graph.py:50(get_edge)
+   292476    0.259    0.000    0.259    0.000 Graph.py:403(<listcomp>)
+   266433    0.179    0.000    0.179    0.000 Node.py:268(set_partition_neighbors)
+   216133    0.164    0.000    0.207    0.000 Node.py:104(traversable_edges)
+    15303    0.155    0.000    0.748    0.000 Graph.py:419(unset_current_path)
+        6    0.142    0.024   12.203    2.034 RectangleGridPuzzle.py:119(solve)
+   292476    0.119    0.000    0.152    0.000 Edge.py:90(sever_inner)
+         9123038 function calls (8092182 primitive calls) in 15.596 seconds
    Ordered by: internal time
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-Wasted: 0
