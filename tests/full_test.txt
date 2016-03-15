@@ -1,29 +1,34 @@
-Finalizing Grid: {(0,1): GridNode:4 (0,1), (1,2): GridNode:9 (1,2), (3,2): GridNode:b (3,2), (0,0): GridNode:0 (0,0), (3,3): GridNode:f (3,3), (3,0): GridNode:3 (3,0), (3,1): GridNode:7 (3,1), (2,1): GridNode:6 (2,1), (0,2): GridNode:8 (0,2), (2,0): GridNode:2 (2,0), (1,3): GridNode:d (1,3), (2,3): GridNode:e (2,3), (2,2): GridNode:a (2,2), (1,0): GridNode:1 (1,0), (0,3): GridNode:c (0,3), (1,1): GridNode:5 (1,1)}
-Skipping path generation...
+Finalizing Grid: {(0,1): GridNode:4 @(0,1), (1,2): GridNode:9 @(1,2), (3,2): GridNode:b @(3,2), (0,0): GridNode:0 @(0,0), (3,3): GridNode:f @(3,3), (3,0): GridNode:3 @(3,0), (3,1): GridNode:7 @(3,1), (2,1): GridNode:6 @(2,1), (0,2): GridNode:8 @(0,2), (2,0): GridNode:2 @(2,0), (1,3): GridNode:d @(1,3), (2,3): GridNode:e @(2,3), (2,2): GridNode:a @(2,2), (1,0): GridNode:1 @(1,0), (0,3): GridNode:c @(0,3), (1,1): GridNode:5 @(1,1)}
+overwriting: Ishape3test_4x4RectGridGraph_all
+Done! found: 184 total paths
+writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\Ishape3test_4x4RectGridGraph_all.p
+Warning: self.paths already loaded
 Checking 184 paths...
-Found solution! [(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)]
+Found solution! [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
 rendering... Ishape3test_4x4RectGridGraph0
-Saving image: ../../img/Ishape3test_4x4RectGridGraph0.png
-Found solution! [(0,0), (0,1), (0,2), (0,3), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)]
+total_w 13
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\Ishape3test_4x4RectGridGraph0.png
+Found solution! [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)]
 rendering... Ishape3test_4x4RectGridGraph1
-Saving image: ../../img/Ishape3test_4x4RectGridGraph1.png
-Found solution! [(0,0), (1,0), (1,1), (1,2), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)]
+total_w 13
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\Ishape3test_4x4RectGridGraph1.png
+Found solution! [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)]
 rendering... Ishape3test_4x4RectGridGraph2
-Saving image: ../../img/Ishape3test_4x4RectGridGraph2.png
-Found solution! [(0,0), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)]
+total_w 13
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\Ishape3test_4x4RectGridGraph2.png
+Found solution! [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
 rendering... Ishape3test_4x4RectGridGraph3
-Saving image: ../../img/Ishape3test_4x4RectGridGraph3.png
+total_w 13
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\Ishape3test_4x4RectGridGraph3.png
 Found 4 total solutions!
-g.solutions [[(0,0), (0,1), (0,2), (0,3), (1,3), (1,2), (1,1), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)], [(0,0), (0,1), (0,2), (0,3), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (1,1), (1,2), (1,3), (2,3), (2,2), (2,1), (2,0), (3,0), (3,1), (3,2), (3,3)], [(0,0), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3)]]
-Finalizing Grid: {(1,2): GridNode:d (1,2), (3,2): GridNode:f (3,2), (0,0): GridNode:0 (0,0), (4,3): GridNode:m (4,3), (3,0): GridNode:3 (3,0), (0,4): GridNode:o (0,4), (5,4): GridNode:t (5,4), (2,1): GridNode:8 (2,1), (1,3): GridNode:j (1,3), (2,3): GridNode:k (2,3), (1,4): GridNode:p (1,4), (5,1): GridNode:b (5,1), (4,2): GridNode:g (4,2), (0,3): GridNode:i (0,3), (1,0): GridNode:1 (1,0), (4,0): GridNode:4 (4,0), (0,1): GridNode:6 (0,1), (2,4): GridNode:q (2,4), (3,3): GridNode:l (3,3), (4,1): GridNode:a (4,1), (3,1): GridNode:9 (3,1), (4,4): GridNode:s (4,4), (1,1): GridNode:7 (1,1), (2,0): GridNode:2 (2,0), (5,0): GridNode:5 (5,0), (2,2): GridNode:e (2,2), (3,4): GridNode:r (3,4), (5,3): GridNode:n (5,3), (5,2): GridNode:h (5,2), (0,2): GridNode:c (0,2)}
-overwriting: bunker_first_room_last_panel_6x5RectGridGraph_all
-Done! found: 79384 total paths
-writing pickle to ../../db/bunker_first_room_last_panel_6x5RectGridGraph_all.p
-Overwriting filter_paths...
-color_boundaries frozenset({frozenset({(2, 3), (3, 3)}), frozenset({(5, 1), (4, 1)}), frozenset({(1, 3), (1, 4)})})
-Attempting to filter: 79384 total paths
-Filtered 79384 paths to 4666
-writing pickle to ../../db/bunker_first_room_last_panel_6x5RectGridGraph_filtered.p
+g.solutions [[(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)], [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]]
+Finalizing Grid: {(1,2): GridNode:d @(1,2), (3,2): GridNode:f @(3,2), (0,0): GridNode:0 @(0,0), (4,3): GridNode:m @(4,3), (3,0): GridNode:3 @(3,0), (0,4): GridNode:o @(0,4), (5,4): GridNode:t @(5,4), (2,1): GridNode:8 @(2,1), (1,3): GridNode:j @(1,3), (2,3): GridNode:k @(2,3), (1,4): GridNode:p @(1,4), (5,1): GridNode:b @(5,1), (4,2): GridNode:g @(4,2), (0,3): GridNode:i @(0,3), (1,0): GridNode:1 @(1,0), (4,0): GridNode:4 @(4,0), (0,1): GridNode:6 @(0,1), (2,4): GridNode:q @(2,4), (3,3): GridNode:l @(3,3), (4,1): GridNode:a @(4,1), (3,1): GridNode:9 @(3,1), (4,4): GridNode:s @(4,4), (1,1): GridNode:7 @(1,1), (2,0): GridNode:2 @(2,0), (5,0): GridNode:5 @(5,0), (2,2): GridNode:e @(2,2), (3,4): GridNode:r @(3,4), (5,3): GridNode:n @(5,3), (5,2): GridNode:h @(5,2), (0,2): GridNode:c @(0,2)}
+Skipping path generation...
+Skipping filter_paths...
 -------------------
 o p q r s t
  J K L M N
@@ -36,535 +41,95 @@ c d e f g h
 0 1 2 3 4 5
 ********************
 Checking 4666 paths...
-Found solution! [(0,0), (0,1), (0,2), (0,3), (0,4), (1,4), (1,3), (1,2), (1,1), (1,0), (2,0), (2,1), (2,2), (2,3), (3,3), (3,2), (3,1), (3,0), (4,0), (5,0), (5,1), (4,1), (4,2), (4,3), (4,4), (5,4)]
+Found solution! [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (5, 4)]
 rendering... bunker_first_room_last_panel_6x5RectGridGraph0
-Saving image: ../../img/bunker_first_room_last_panel_6x5RectGridGraph0.png
+total_w 21
+total_h 17
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\bunker_first_room_last_panel_6x5RectGridGraph0.png
 Found 1 total solutions!
-Skipping path generation...
+overwriting: MultipleShapesInPartition_5x5RectGridGraph_all
+Done! found: 8512 total paths
+writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\MultipleShapesInPartition_5x5RectGridGraph_all.p
+Warning: self.paths already loaded
 Checking 8512 paths...
-Found solution! [(0,0), (0,1), (1,1), (1,2), (2,2), (2,3), (1,3), (1,4), (2,4), (3,4), (4,4)]
+Found solution! [(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4)]
 rendering... MultipleShapesInPartition_5x5RectGridGraph0
-Saving image: ../../img/MultipleShapesInPartition_5x5RectGridGraph0.png
+total_w 17
+total_h 17
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\MultipleShapesInPartition_5x5RectGridGraph0.png
 Found 1 total solutions!
-         16187112 function calls (13130941 primitive calls) in 19.270 seconds
-
-   Ordered by: cumulative time
-
+overwriting: testRotationShapes_4x5RectGridGraph_all
+Done! found: 976 total paths
+writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\testRotationShapes_4x5RectGridGraph_all.p
+Warning: self.paths already loaded
+Checking 976 paths...
+Found solution! [(0, 0), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2), (2, 3), (3, 3), (3, 4)]
+rendering... testRotationShapes_4x5RectGridGraph0
+total_w 13
+total_h 17
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testRotationShapes_4x5RectGridGraph0.png
+Found solution! [(0, 0), (0, 1), (1, 1), (1, 2), (1, 3), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4)]
+rendering... testRotationShapes_4x5RectGridGraph1
+total_w 13
+total_h 17
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testRotationShapes_4x5RectGridGraph1.png
+Found 2 total solutions!
+overwriting: testSinglePartition_3x4RectGridGraph_all
+Done! found: 38 total paths
+writing pickle to C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\db\testSinglePartition_3x4RectGridGraph_all.p
+Warning: self.paths already loaded
+Checking 38 paths...
+Found solution! [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3)]
+rendering... testSinglePartition_3x4RectGridGraph0
+total_w 9
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testSinglePartition_3x4RectGridGraph0.png
+Found solution! [(0, 0), (0, 1), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3)]
+rendering... testSinglePartition_3x4RectGridGraph1
+total_w 9
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testSinglePartition_3x4RectGridGraph1.png
+Found solution! [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3)]
+rendering... testSinglePartition_3x4RectGridGraph2
+total_w 9
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testSinglePartition_3x4RectGridGraph2.png
+Found solution! [(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (2, 3)]
+rendering... testSinglePartition_3x4RectGridGraph3
+total_w 9
+total_h 13
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testSinglePartition_3x4RectGridGraph3.png
+Found 4 total solutions!
+Real Partition {(1,2): GridSquare:h @(1,2), (0,2): GridSquare:g @(0,2)}
+Finalizing Grid: {(1,2): GridNode:d @(1,2), (3,2): GridNode:f @(3,2), (0,0): GridNode:0 @(0,0), (4,3): GridNode:m @(4,3), (3,0): GridNode:3 @(3,0), (0,4): GridNode:o @(0,4), (5,4): GridNode:t @(5,4), (2,1): GridNode:8 @(2,1), (5,5): GridNode:z @(5,5), (1,3): GridNode:j @(1,3), (2,3): GridNode:k @(2,3), (1,4): GridNode:p @(1,4), (5,1): GridNode:b @(5,1), (4,2): GridNode:g @(4,2), (0,3): GridNode:i @(0,3), (1,0): GridNode:1 @(1,0), (4,0): GridNode:4 @(4,0), (0,1): GridNode:6 @(0,1), (2,5): GridNode:w @(2,5), (2,4): GridNode:q @(2,4), (3,3): GridNode:l @(3,3), (1,5): GridNode:v @(1,5), (4,1): GridNode:a @(4,1), (3,1): GridNode:9 @(3,1), (4,5): GridNode:y @(4,5), (4,4): GridNode:s @(4,4), (1,1): GridNode:7 @(1,1), (2,0): GridNode:2 @(2,0), (3,5): GridNode:x @(3,5), (5,0): GridNode:5 @(5,0), (2,2): GridNode:e @(2,2), (3,4): GridNode:r @(3,4), (0,5): GridNode:u @(0,5), (5,3): GridNode:n @(5,3), (5,2): GridNode:h @(5,2), (0,2): GridNode:c @(0,2)}
+Skipping path generation...
+Checking 2285446 paths...
+Found solution! [(3, 0), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5)]
+rendering... testTreehouse0_6x6RectGridGraph0
+total_w 21
+total_h 21
+Saving image: C:\Users\charper\Documents\eclipse\ec_workspace\pyWitnessSolver\img\testTreehouse0_6x6RectGridGraph0.png
+Found 1 total solutions!
+g.solutions [[(3, 0), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5)]]
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000   14.433   14.433 RectangleGridPuzzle.py:187(testColor0)
-        3    0.000    0.000   11.429    3.810 Graph.py:348(generate_paths)
-2963317/1   10.669    0.000   11.345   11.345 Graph.py:372(travel)
-        3    0.043    0.014    6.290    2.097 RectangleGridPuzzle.py:100(solve)
-        1    0.000    0.000    3.885    3.885 RectangleGridPuzzle.py:241(testMultipleShapesInPartition)
-    13362    0.029    0.000    2.600    0.000 Graph.py:476(find_any_shape_violation)
-     8757    0.041    0.000    2.498    0.000 Graph.py:495(shape_violation_check)
-    13362    0.724    0.000    1.811    0.000 Graph.py:391(set_current_path)
-        1    1.553    1.553    1.665    1.665 RectangleGridPuzzle.py:53(filter_paths)
-        6    0.007    0.001    1.587    0.265 GraphImage.py:77(render_solution)
-        6    0.020    0.003    1.580    0.263 GraphImage.py:81(render)
-7817/1404    0.092    0.000    1.522    0.001 Graph.py:532(compose_shapes)
-        6    0.000    0.000    1.396    0.233 GraphImage.py:30(save)
-    15178    0.082    0.000    1.285    0.000 Geometry.py:176(__init__)
-        6    0.000    0.000    1.256    0.209 Image.py:1601(save)
-        6    0.000    0.000    1.229    0.205 PngImagePlugin.py:637(_save)
-        6    0.000    0.000    1.229    0.205 ImageFile.py:438(_save)
-        6    1.227    0.204    1.227    0.204 {method 'encode' of 'ImagingEncoder' objects}
-        1    0.000    0.000    1.086    1.086 RectangleGridPuzzle.py:156(test2Ishapes)
-    42362    0.169    0.000    0.810    0.000 Geometry.py:192(compose)
-    15178    0.163    0.000    0.596    0.000 Geometry.py:87(get_bounding_rectangle)
-   161864    0.304    0.000    0.504    0.000 Geometry.py:28(__add__)
-    34545    0.086    0.000    0.492    0.000 Geometry.py:206(<listcomp>)
-  3938394    0.489    0.000    0.489    0.000 Node.py:208(vec)
-    15178    0.018    0.000    0.467    0.000 Geometry.py:14(get_Q1_shifted)
-    16154    0.016    0.000    0.430    0.000 Graph.py:600(retreive_partition)
-    15460    0.059    0.000    0.414    0.000 Graph.py:582(generate_partition)
-   485803    0.279    0.000    0.391    0.000 Geometry.py:18(__new__)
-    13359    0.180    0.000    0.346    0.000 Graph.py:420(unset_current_path)
-101650/15460    0.134    0.000    0.338    0.000 Graph.py:569(travel_partition)
-    15178    0.056    0.000    0.310    0.000 Geometry.py:17(<listcomp>)
-    96686    0.158    0.000    0.274    0.000 Geometry.py:26(__sub__)
-     7397    0.011    0.000    0.247    0.000 Graph.py:464(check_colors)
-   256136    0.222    0.000    0.222    0.000 Graph.py:49(get_edge)
-   255800    0.207    0.000    0.207    0.000 Graph.py:405(<listcomp>)
-   177560    0.090    0.000    0.193    0.000 Node.py:99(traversable_nodes)
-    79384    0.179    0.000    0.186    0.000 Graph.py:340(add_path)
-   231168    0.145    0.000    0.145    0.000 Node.py:275(set_partition_neighbors)
-    15178    0.033    0.000    0.138    0.000 Geometry.py:10(get_subtraction_vector)
-    15178    0.049    0.000    0.126    0.000 Geometry.py:183(<listcomp>)
-   255800    0.095    0.000    0.124    0.000 Edge.py:81(sever_inner)
-   255751    0.099    0.000    0.124    0.000 Edge.py:84(reset_inner)
-  1017374    0.117    0.000    0.117    0.000 Geometry.py:21(x)
-   502639    0.116    0.000    0.116    0.000 {built-in method __new__ of type object at 0x5B349820}
-  1008073    0.114    0.000    0.114    0.000 Geometry.py:23(y)
-    86190    0.062    0.000    0.104    0.000 Edge.py:113(traverse_from_node)
-       18    0.000    0.000    0.095    0.005 Image.py:1996(new)
-       24    0.094    0.004    0.094    0.004 {built-in method PIL._imaging.fill}
-        2    0.000    0.000    0.093    0.047 util.py:61(dump)
-1823040/1823024    0.092    0.000    0.092    0.000 {built-in method builtins.len}
-        2    0.086    0.043    0.086    0.043 {built-in method _pickle.dump}
-    20982    0.024    0.000    0.074    0.000 {built-in method builtins.any}
-    13362    0.021    0.000    0.072    0.000 Graph.py:473(has_rule_shapes)
-   424719    0.067    0.000    0.067    0.000 Edge.py:75(connect_both)
-      811    0.002    0.000    0.057    0.000 Geometry.py:105(abs_coords)
-      811    0.006    0.000    0.053    0.000 Geometry.py:106(<listcomp>)
-    13854    0.010    0.000    0.051    0.000 Geometry.py:112(upper_right)
-        6    0.000    0.000    0.051    0.008 GraphImage.py:23(__init__)
-        6    0.000    0.000    0.047    0.008 GraphImage.py:60(flipped)
-        6    0.000    0.000    0.047    0.008 Image.py:1896(transpose)
-        6    0.047    0.008    0.047    0.008 {method 'transpose' of 'ImagingCore' objects}
-   233300    0.045    0.000    0.045    0.000 Edge.py:64(sever_both)
-      345    0.001    0.000    0.045    0.000 Node.py:185(get_imgRect)
-    91444    0.041    0.000    0.041    0.000 {built-in method builtins.min}
-    15178    0.029    0.000    0.040    0.000 Geometry.py:13(<listcomp>)
-     7817    0.013    0.000    0.039    0.000 Geometry.py:119(could_contain)
-   359354    0.037    0.000    0.037    0.000 {method 'append' of 'list' objects}
-    15178    0.026    0.000    0.036    0.000 Geometry.py:91(<listcomp>)
-      543    0.001    0.000    0.036    0.000 GraphImage.py:65(polygon)
-    15178    0.026    0.000    0.035    0.000 Geometry.py:92(<listcomp>)
-      543    0.001    0.000    0.035    0.000 ImageDraw.py:214(polygon)
-    15178    0.025    0.000    0.035    0.000 Geometry.py:93(<listcomp>)
-    15178    0.025    0.000    0.035    0.000 Geometry.py:94(<listcomp>)
-   141282    0.031    0.000    0.031    0.000 Graph.py:474(<genexpr>)
-    16731    0.018    0.000    0.030    0.000 Geometry.py:66(__init__)
-      818    0.028    0.000    0.028    0.000 {method 'draw_polygon' of 'ImagingDraw' objects}
-    61352    0.026    0.000    0.026    0.000 {built-in method builtins.max}
-    86190    0.026    0.000    0.026    0.000 Edge.py:110(get_other_node)
-   182228    0.024    0.000    0.024    0.000 {method 'add' of 'set' objects}
-    32833    0.014    0.000    0.022    0.000 Graph.py:469(<genexpr>)
-        6    0.000    0.000    0.022    0.004 ImageDraw.py:244(text)
-    57/12    0.000    0.000    0.020    0.002 <frozen importlib._bootstrap>:996(_handle_fromlist)
-        6    0.000    0.000    0.020    0.003 Image.py:342(preinit)
-     31/5    0.000    0.000    0.020    0.004 <frozen importlib._bootstrap>:214(_call_with_frames_removed)
-     11/5    0.000    0.000    0.020    0.004 {built-in method builtins.__import__}
-     18/5    0.000    0.000    0.020    0.004 <frozen importlib._bootstrap>:966(_find_and_load)
-     18/5    0.000    0.000    0.020    0.004 <frozen importlib._bootstrap>:939(_find_and_load_unlocked)
-        6    0.000    0.000    0.019    0.003 ImageFont.py:150(getmask2)
-     17/5    0.000    0.000    0.018    0.004 <frozen importlib._bootstrap>:659(_load_unlocked)
-     14/5    0.000    0.000    0.018    0.004 <frozen importlib._bootstrap_external>:656(exec_module)
-    91343    0.017    0.000    0.017    0.000 {method 'remove' of 'set' objects}
-        6    0.000    0.000    0.017    0.003 GraphImage.py:94(<listcomp>)
-       12    0.000    0.000    0.016    0.001 Image.py:1248(paste)
-     16/5    0.001    0.000    0.016    0.003 {built-in method builtins.exec}
-       12    0.016    0.001    0.016    0.001 {method 'paste' of 'ImagingCore' objects}
-    16731    0.010    0.000    0.014    0.000 Geometry.py:63(__new__)
-    15634    0.011    0.000    0.014    0.000 Geometry.py:116(width)
-        6    0.014    0.002    0.014    0.002 {method 'render' of 'Font' objects}
-    14578    0.009    0.000    0.012    0.000 Geometry.py:117(height)
-        1    0.000    0.000    0.011    0.011 JpegImagePlugin.py:35(<module>)
-    13362    0.008    0.000    0.011    0.000 util.py:93(reset)
-        2    0.000    0.000    0.011    0.005 Graph.py:334(load_paths)
-        2    0.000    0.000    0.011    0.005 util.py:68(load)
-        2    0.010    0.005    0.010    0.005 {built-in method _pickle.load}
-        6    0.000    0.000    0.010    0.002 ImageFont.py:216(truetype)
-        8    0.010    0.001    0.010    0.001 {method 'close' of '_io.BufferedWriter' objects}
-    15460    0.007    0.000    0.010    0.000 util.py:95(get)
-    91195    0.009    0.000    0.009    0.000 Geometry.py:253(geom_print)
-       72    0.002    0.000    0.009    0.000 Node.py:323(overlay_traversable_rects)
-     8757    0.009    0.000    0.009    0.000 Graph.py:508(<listcomp>)
-    25519    0.009    0.000    0.009    0.000 Node.py:314(different_color)
-     3244    0.005    0.000    0.009    0.000 Geometry.py:53(scaled)
-        1    0.000    0.000    0.009    0.009 TiffImagePlugin.py:42(<module>)
-    28822    0.008    0.000    0.008    0.000 Graph.py:41(color_generator)
-     8757    0.007    0.000    0.007    0.000 Graph.py:514(<listcomp>)
-        3    0.000    0.000    0.007    0.002 RectangleGridPuzzle.py:40(__init__)
-        3    0.000    0.000    0.007    0.002 GraphImage.py:73(__init__)
-      6/3    0.000    0.000    0.007    0.002 Graph.py:70(__init__)
-     8757    0.005    0.000    0.006    0.000 Graph.py:511(<listcomp>)
-       12    0.002    0.000    0.006    0.001 os.py:298(walk)
-      549    0.002    0.000    0.006    0.000 ImageDraw.py:113(_getink)
-       18    0.000    0.000    0.006    0.000 <frozen importlib._bootstrap>:879(_find_spec)
-    48819    0.006    0.000    0.006    0.000 {method 'values' of 'dict' objects}
-    18258    0.006    0.000    0.006    0.000 {built-in method builtins.next}
-       14    0.000    0.000    0.006    0.000 <frozen importlib._bootstrap_external>:726(get_code)
-        6    0.005    0.001    0.005    0.001 {method 'getsize' of 'Font' objects}
-      620    0.001    0.000    0.005    0.000 Node.py:205(get_sqare_points)
-       16    0.000    0.000    0.005    0.000 <frozen importlib._bootstrap_external>:1130(find_spec)
-       16    0.000    0.000    0.005    0.000 <frozen importlib._bootstrap_external>:1098(_get_spec)
-        1    0.000    0.000    0.005    0.005 fractions.py:4(<module>)
-       33    0.000    0.000    0.005    0.000 <frozen importlib._bootstrap_external>:1212(find_spec)
-      620    0.001    0.000    0.005    0.000 Node.py:199(get_rectangle_points)
-       68    0.004    0.000    0.004    0.000 {built-in method nt.stat}
-       10    0.004    0.000    0.004    0.000 {built-in method io.open}
-       62    0.000    0.000    0.004    0.000 <frozen importlib._bootstrap_external>:68(_path_stat)
-       77    0.001    0.000    0.004    0.000 Geometry.py:77(__add__)
-      830    0.002    0.000    0.004    0.000 ImageColor.py:102(getcolor)
-      620    0.002    0.000    0.004    0.000 Node.py:202(<listcomp>)
-       14    0.000    0.000    0.003    0.000 <frozen importlib._bootstrap_external>:471(_compile_bytecode)
-      345    0.000    0.000    0.003    0.000 Node.py:172(dimensions)
-       14    0.003    0.000    0.003    0.000 {built-in method marshal.loads}
-        6    0.003    0.000    0.003    0.000 {method 'draw_bitmap' of 'ImagingDraw' objects}
-     8757    0.002    0.000    0.002    0.000 {built-in method builtins.sum}
-        3    0.001    0.000    0.002    0.001 Graph.py:177(associate_outer_to_inner)
-    13365    0.002    0.000    0.002    0.000 {built-in method builtins.iter}
-       17    0.000    0.000    0.002    0.000 <frozen importlib._bootstrap>:570(module_from_spec)
-       28    0.000    0.000    0.002    0.000 re.py:278(_compile)
-       12    0.000    0.000    0.002    0.000 ImageFont.py:119(__init__)
-       15    0.000    0.000    0.002    0.000 <frozen importlib._bootstrap_external>:87(_path_isfile)
-       15    0.000    0.000    0.002    0.000 <frozen importlib._bootstrap_external>:78(_path_is_mode_type)
-        6    0.000    0.000    0.002    0.000 sre_compile.py:531(compile)
-        1    0.000    0.000    0.002    0.002 decimal.py:2(<module>)
-       12    0.002    0.000    0.002    0.000 {built-in method PIL._imagingft.getfont}
-        6    0.001    0.000    0.002    0.000 Graph.py:117(assign_neighbors)
-        4    0.000    0.000    0.002    0.000 re.py:222(compile)
-       38    0.001    0.000    0.002    0.000 {built-in method builtins.print}
-        1    0.000    0.000    0.002    0.002 BmpImagePlugin.py:27(<module>)
-       18    0.000    0.000    0.002    0.000 PngImagePlugin.py:615(putchunk)
-        1    0.000    0.000    0.002    0.002 GifImagePlugin.py:27(<module>)
-        1    0.000    0.000    0.002    0.002 <frozen importlib._bootstrap_external>:900(create_module)
-        1    0.001    0.001    0.002    0.002 {built-in method _imp.create_dynamic}
-        6    0.000    0.000    0.002    0.000 PngImagePlugin.py:633(write)
-       14    0.001    0.000    0.001    0.000 <frozen importlib._bootstrap_external>:813(get_data)
-        6    0.000    0.000    0.001    0.000 sre_parse.py:819(parse)
-        2    0.000    0.000    0.001    0.001 __init__.py:340(namedtuple)
-     16/6    0.000    0.000    0.001    0.000 sre_parse.py:429(_parse_sub)
-     18/6    0.000    0.000    0.001    0.000 sre_parse.py:491(_parse)
-      324    0.000    0.000    0.001    0.000 ntpath.py:220(splitext)
-  842/830    0.001    0.000    0.001    0.000 ImageColor.py:24(getrgb)
-        1    0.000    0.000    0.001    0.001 TiffTags.py:20(<module>)
-      347    0.001    0.000    0.001    0.000 Node.py:293(offset)
-       24    0.001    0.000    0.001    0.000 {built-in method builtins.__build_class__}
-      324    0.001    0.000    0.001    0.000 genericpath.py:111(_splitext)
-      830    0.001    0.000    0.001    0.000 Image.py:286(getmodebase)
-       16    0.000    0.000    0.001    0.000 <frozen importlib._bootstrap_external>:610(find_spec)
-       60    0.001    0.000    0.001    0.000 {method 'write' of '_io.BufferedWriter' objects}
-       16    0.000    0.000    0.001    0.000 <frozen importlib._bootstrap_external>:595(_search_registry)
-        2    0.000    0.000    0.001    0.000 Graph.py:294(finalize)
-      273    0.001    0.000    0.001    0.000 Node.py:175(offset)
-       16    0.000    0.000    0.001    0.000 <frozen importlib._bootstrap_external>:588(_open_registry)
-        1    0.000    0.000    0.001    0.001 PngImagePlugin.py:34(<module>)
-      116    0.000    0.000    0.001    0.000 Node.py:132(__init__)
-       32    0.001    0.000    0.001    0.000 {built-in method winreg.OpenKey}
-       45    0.000    0.000    0.001    0.000 Node.py:237(__init__)
-      836    0.001    0.000    0.001    0.000 {method 'draw_ink' of 'ImagingDraw' objects}
-        6    0.000    0.000    0.001    0.000 sre_compile.py:516(_code)
-      232    0.001    0.000    0.001    0.000 {built-in method builtins.sorted}
-       36    0.001    0.000    0.001    0.000 {built-in method PIL._imaging.crc32}
-       14    0.000    0.000    0.001    0.000 <frozen importlib._bootstrap_external>:823(path_stats)
-      854    0.000    0.000    0.001    0.000 _util.py:10(isStringType)
-       14    0.001    0.000    0.001    0.000 {method 'read' of '_io.FileIO' objects}
-       72    0.000    0.000    0.001    0.000 Node.py:216(has_left_traversable_nbr)
-       17    0.000    0.000    0.001    0.000 <frozen importlib._bootstrap>:510(_init_module_attrs)
-      541    0.000    0.000    0.001    0.000 sre_parse.py:247(get)
-      162    0.000    0.000    0.001    0.000 <frozen importlib._bootstrap_external>:50(_path_join)
-        6    0.000    0.000    0.000    0.000 util.py:75(file_exists)
-       24    0.000    0.000    0.000    0.000 Image.py:512(_new)
-     34/6    0.000    0.000    0.000    0.000 sre_compile.py:64(_compile)
-        6    0.000    0.000    0.000    0.000 genericpath.py:16(exists)
-       72    0.000    0.000    0.000    0.000 Node.py:212(has_right_traversable_nbr)
-       72    0.000    0.000    0.000    0.000 Node.py:224(has_upper_traversable_nbr)
-       24    0.000    0.000    0.000    0.000 re.py:160(match)
-        5    0.000    0.000    0.000    0.000 abc.py:132(__new__)
-       28    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:243(cache_from_source)
-       72    0.000    0.000    0.000    0.000 Node.py:220(has_lower_traversable_nbr)
-       77    0.000    0.000    0.000    0.000 Geometry.py:83(<listcomp>)
-       52    0.000    0.000    0.000    0.000 Node.py:218(<listcomp>)
-     1426    0.000    0.000    0.000    0.000 Node.py:126(x)
-      180    0.000    0.000    0.000    0.000 Edge.py:20(__init__)
-     2329    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
-      273    0.000    0.000    0.000    0.000 Geometry.py:30(__repr__)
-      116    0.000    0.000    0.000    0.000 Node.py:27(__init__)
-        1    0.000    0.000    0.000    0.000 TiffTags.py:303(_populate)
-       14    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:416(_validate_bytecode_header)
-      601    0.000    0.000    0.000    0.000 sre_parse.py:226(__next)
-       52    0.000    0.000    0.000    0.000 Node.py:214(<listcomp>)
-      164    0.000    0.000    0.000    0.000 cp1252.py:18(encode)
-      830    0.000    0.000    0.000    0.000 ImageMode.py:38(getmode)
-       51    0.000    0.000    0.000    0.000 Node.py:226(<listcomp>)
-        6    0.000    0.000    0.000    0.000 {built-in method nt.scandir}
-       51    0.000    0.000    0.000    0.000 Node.py:222(<listcomp>)
-       12    0.000    0.000    0.000    0.000 ImageDraw.py:319(Draw)
-       29    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:406(cached)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:163(__enter__)
-     1426    0.000    0.000    0.000    0.000 Node.py:129(y)
-       15    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:339(_get_cached)
-     2670    0.000    0.000    0.000    0.000 {method 'is_dir' of 'nt.DirEntry' objects}
-       21    0.000    0.000    0.000    0.000 ntpath.py:74(join)
-      360    0.000    0.000    0.000    0.000 Node.py:64(add_neighbor)
-      162    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:52(<listcomp>)
-      974    0.000    0.000    0.000    0.000 {method 'rfind' of 'str' objects}
-       77    0.000    0.000    0.000    0.000 Geometry.py:81(<listcomp>)
-       77    0.000    0.000    0.000    0.000 Geometry.py:82(<listcomp>)
-        3    0.000    0.000    0.000    0.000 Graph.py:158(remove_path_dead_ends)
-      100    0.000    0.000    0.000    0.000 TiffTags.py:26(__new__)
-      180    0.000    0.000    0.000    0.000 {method 'format' of 'str' objects}
-       77    0.000    0.000    0.000    0.000 Geometry.py:84(<listcomp>)
-        1    0.000    0.000    0.000    0.000 ImagePalette.py:19(<module>)
-        3    0.000    0.000    0.000    0.000 Graph.py:226(assign_keys)
-       48    0.000    0.000    0.000    0.000 ntpath.py:120(splitdrive)
-      370    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
-      227    0.000    0.000    0.000    0.000 {built-in method builtins.hasattr}
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:176(_get_module_lock)
-      208    0.000    0.000    0.000    0.000 {method 'join' of 'str' objects}
-       42    0.000    0.000    0.000    0.000 Image.py:492(__init__)
-      164    0.000    0.000    0.000    0.000 {built-in method _codecs.charmap_encode}
-       28    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:56(_path_split)
-       12    0.000    0.000    0.000    0.000 ImageDraw.py:58(__init__)
-       24    0.000    0.000    0.000    0.000 sre_compile.py:221(_compile_charset)
-        6    0.000    0.000    0.000    0.000 Graph.py:28(__init__)
-        9    0.000    0.000    0.000    0.000 util.py:57(__init__)
-       75    0.000    0.000    0.000    0.000 Node.py:156(finalize)
-       46    0.000    0.000    0.000    0.000 Node.py:24(__repr__)
-       29    0.000    0.000    0.000    0.000 Node.py:262(finalize)
-      116    0.000    0.000    0.000    0.000 Edge.py:40(assign_default_state)
-        6    0.000    0.000    0.000    0.000 sre_compile.py:412(_compile_info)
-       54    0.000    0.000    0.000    0.000 Image.py:748(load)
-        1    0.000    0.000    0.000    0.000 abc.py:151(register)
-        1    0.000    0.000    0.000    0.000 ImageFile.py:30(<module>)
-        1    0.000    0.000    0.000    0.000 Graph.py:270(render_both)
-      113    0.000    0.000    0.000    0.000 Node.py:166(is_vertical_with)
-      9/2    0.000    0.000    0.000    0.000 {built-in method builtins.issubclass}
-      5/1    0.000    0.000    0.000    0.000 abc.py:194(__subclasscheck__)
-       15    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:1207(_get_spec)
-        6    0.000    0.000    0.000    0.000 ntpath.py:230(basename)
-    50/25    0.000    0.000    0.000    0.000 sre_parse.py:167(getwidth)
-        6    0.000    0.000    0.000    0.000 ntpath.py:197(split)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:74(__init__)
-       24    0.000    0.000    0.000    0.000 sre_compile.py:248(_optimize_charset)
-       75    0.000    0.000    0.000    0.000 Node.py:50(finalize)
-        5    0.000    0.000    0.000    0.000 abc.py:135(<setcomp>)
-        1    0.000    0.000    0.000    0.000 TiffImagePlugin.py:354(ImageFileDirectory_v2)
-       17    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:321(__exit__)
-      121    0.000    0.000    0.000    0.000 sre_parse.py:157(__getitem__)
-        1    0.000    0.000    0.000    0.000 PpmImagePlugin.py:18(<module>)
-       13    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:50(paths_filename)
-        6    0.000    0.000    0.000    0.000 {method 'flush' of '_io.BufferedWriter' objects}
-      358    0.000    0.000    0.000    0.000 {method 'rstrip' of 'str' objects}
-       36    0.000    0.000    0.000    0.000 {built-in method _thread.allocate_lock}
-        2    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:745(exec_module)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:170(__exit__)
-      452    0.000    0.000    0.000    0.000 Graph.py:187(<lambda>)
-        2    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:737(create_module)
-       24    0.000    0.000    0.000    0.000 {method 'match' of '_sre.SRE_Pattern' objects}
-      164    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:363(_verbose_message)
-        2    0.000    0.000    0.000    0.000 {built-in method _imp.exec_builtin}
-        6    0.000    0.000    0.000    0.000 _collections_abc.py:592(get)
-        6    0.000    0.000    0.000    0.000 Graph.py:38(set_nodes)
-      122    0.000    0.000    0.000    0.000 util.py:83(get)
-       15    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:510(spec_from_file_location)
-        2    0.000    0.000    0.000    0.000 {built-in method _imp.create_builtin}
-       57    0.000    0.000    0.000    0.000 Node.py:169(is_horizontal_with)
-        1    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:235(<listcomp>)
-        5    0.000    0.000    0.000    0.000 Graph.py:264(outer_row_str)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:119(release)
-       30    0.000    0.000    0.000    0.000 _binary.py:73(o32be)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:94(acquire)
-        6    0.000    0.000    0.000    0.000 Image.py:419(_getencoder)
-       36    0.000    0.000    0.000    0.000 Image.py:131(isImageType)
-      100    0.000    0.000    0.000    0.000 <string>:12(__new__)
-       29    0.000    0.000    0.000    0.000 Node.py:318(get_different_color_boundaries)
-        6    0.000    0.000    0.000    0.000 os.py:678(__getitem__)
-       20    0.000    0.000    0.000    0.000 _weakrefset.py:36(__init__)
-        1    0.000    0.000    0.000    0.000 <string>:1(<module>)
-        3    0.000    0.000    0.000    0.000 Graph.py:237(<listcomp>)
-      273    0.000    0.000    0.000    0.000 Node.py:182(get_color)
-       66    0.000    0.000    0.000    0.000 {built-in method _struct.pack}
-       28    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:45(_r_long)
-       43    0.000    0.000    0.000    0.000 Node.py:88(remove_traversable_no_err)
-        2    0.000    0.000    0.000    0.000 {method 'close' of '_io.BufferedReader' objects}
-      108    0.000    0.000    0.000    0.000 {method 'rpartition' of 'str' objects}
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:716(find_spec)
-       69    0.000    0.000    0.000    0.000 {method 'replace' of 'str' objects}
-       11    0.000    0.000    0.000    0.000 Graph.py:245(iter_all)
-       28    0.000    0.000    0.000    0.000 {method 'rsplit' of 'str' objects}
-      122    0.000    0.000    0.000    0.000 Graph.py:241(iter_sorted)
-       66    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:856(__exit__)
-       16    0.000    0.000    0.000    0.000 Graph.py:286(paths_filename)
-        5    0.000    0.000    0.000    0.000 Graph.py:265(<listcomp>)
-        7    0.000    0.000    0.000    0.000 TiffImagePlugin.py:567(_register_basic)
-        8    0.000    0.000    0.000    0.000 _weakrefset.py:58(__iter__)
-       63    0.000    0.000    0.000    0.000 sre_parse.py:242(match)
-       54    0.000    0.000    0.000    0.000 {method 'pixel_access' of 'ImagingCore' objects}
-        7    0.000    0.000    0.000    0.000 Graph.py:290(all_path_filename)
-        6    0.000    0.000    0.000    0.000 GraphImage.py:24(<listcomp>)
-        5    0.000    0.000    0.000    0.000 sre_parse.py:90(closegroup)
-       18    0.000    0.000    0.000    0.000 _util.py:13(isPath)
-       14    0.000    0.000    0.000    0.000 {built-in method _imp._fix_co_filename}
-        4    0.000    0.000    0.000    0.000 Graph.py:267(inner_row_str)
-        5    0.000    0.000    0.000    0.000 sre_parse.py:260(getuntil)
-       66    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:852(__enter__)
-       10    0.000    0.000    0.000    0.000 __init__.py:405(<genexpr>)
-        1    0.000    0.000    0.000    0.000 __init__.py:1774(getLogger)
-        1    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:149(tearDown)
-      113    0.000    0.000    0.000    0.000 Edge.py:94(set_inner_edge)
-       36    0.000    0.000    0.000    0.000 _binary.py:69(o16be)
-       12    0.000    0.000    0.000    0.000 Image.py:618(__getattr__)
-       14    0.000    0.000    0.000    0.000 sre_compile.py:386(_simple)
-        6    0.000    0.000    0.000    0.000 {built-in method PIL._imaging.zip_encoder}
-       53    0.000    0.000    0.000    0.000 sre_parse.py:165(append)
-        1    0.000    0.000    0.000    0.000 __init__.py:1132(getLogger)
-        4    0.000    0.000    0.000    0.000 case.py:815(assertEqual)
-       25    0.000    0.000    0.000    0.000 sre_parse.py:362(_escape)
-       17    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:419(parent)
-       34    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:1061(_path_importer_cache)
-      116    0.000    0.000    0.000    0.000 Graph.py:96(<lambda>)
-        5    0.000    0.000    0.000    0.000 TiffImagePlugin.py:553(decorator)
-       43    0.000    0.000    0.000    0.000 Node.py:81(remove_traversable)
-        6    0.000    0.000    0.000    0.000 sre_parse.py:217(__init__)
-        3    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:47(filtered_paths_filename)
-        1    0.000    0.000    0.000    0.000 pstats.py:62(__init__)
-        1    0.000    0.000    0.000    0.000 ImageSequence.py:19(<module>)
-       14    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:35(_new_module)
-       42    0.000    0.000    0.000    0.000 sre_parse.py:276(tell)
-       36    0.000    0.000    0.000    0.000 {built-in method builtins.setattr}
-        1    0.000    0.000    0.000    0.000 fractions.py:60(Fraction)
-       12    0.000    0.000    0.000    0.000 {built-in method math.ceil}
-       72    0.000    0.000    0.000    0.000 Node.py:300(get_color)
-       85    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
-        1    0.000    0.000    0.000    0.000 locale.py:562(getlocale)
-       68    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:324(<genexpr>)
-       34    0.000    0.000    0.000    0.000 sre_parse.py:105(__init__)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:372(__init__)
-        2    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:436(spec_from_loader)
-       16    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:789(find_spec)
-        6    0.000    0.000    0.000    0.000 os.py:746(encodekey)
-       24    0.000    0.000    0.000    0.000 Graph.py:268(<genexpr>)
-        1    0.000    0.000    0.000    0.000 pstats.py:72(init)
-       33    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:30(_relax_case)
-        1    0.000    0.000    0.000    0.000 TiffImagePlugin.py:230(IFDRational)
-       32    0.000    0.000    0.000    0.000 {method 'find' of 'bytearray' objects}
-        5    0.000    0.000    0.000    0.000 sre_parse.py:78(opengroup)
-        1    0.000    0.000    0.000    0.000 copyreg.py:96(_slotnames)
-       14    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:379(_check_name_wrapper)
-       12    0.000    0.000    0.000    0.000 {built-in method PIL._imaging.draw}
-       28    0.000    0.000    0.000    0.000 {built-in method from_bytes}
-       45    0.000    0.000    0.000    0.000 Node.py:246(<listcomp>)
-        1    0.000    0.000    0.000    0.000 ImagePalette.py:23(ImagePalette)
-       48    0.000    0.000    0.000    0.000 sre_parse.py:153(__len__)
-        6    0.000    0.000    0.000    0.000 {method 'sort' of 'list' objects}
-        6    0.000    0.000    0.000    0.000 {built-in method _imp.is_builtin}
-       17    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:314(__enter__)
-       24    0.000    0.000    0.000    0.000 {method 'copy' of 'dict' objects}
-       10    0.000    0.000    0.000    0.000 __init__.py:403(<genexpr>)
-        5    0.000    0.000    0.000    0.000 _weakrefset.py:26(__exit__)
-       17    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:310(__init__)
-       14    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:783(__init__)
-        6    0.000    0.000    0.000    0.000 Image.py:2401(register_open)
-       16    0.000    0.000    0.000    0.000 {method 'endswith' of 'str' objects}
-       66    0.000    0.000    0.000    0.000 {built-in method _imp.acquire_lock}
-       17    0.000    0.000    0.000    0.000 ImageMode.py:25(__init__)
-       12    0.000    0.000    0.000    0.000 Image.py:2450(register_extension)
-        1    0.000    0.000    0.000    0.000 {built-in method _locale.setlocale}
-        6    0.000    0.000    0.000    0.000 ImageDraw.py:234(_multiline_check)
-       43    0.000    0.000    0.000    0.000 Edge.py:61(sever)
-        4    0.000    0.000    0.000    0.000 case.py:782(_getAssertEqualityFunc)
-        6    0.000    0.000    0.000    0.000 {built-in method _sre.compile}
-       84    0.000    0.000    0.000    0.000 {built-in method _imp.release_lock}
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:159(__init__)
-        1    0.000    0.000    0.000    0.000 <string>:5(_TagInfo)
-        1    0.000    0.000    0.000    0.000 locale.py:509(getdefaultlocale)
-       31    0.000    0.000    0.000    0.000 {method 'lower' of 'str' objects}
-       17    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:225(_verbose_message)
-        1    0.000    0.000    0.000    0.000 pstats.py:91(load_stats)
-        1    0.000    0.000    0.000    0.000 JpegPresets.py:67(<module>)
-       18    0.000    0.000    0.000    0.000 {method 'join' of 'bytes' objects}
-       16    0.000    0.000    0.000    0.000 {built-in method _imp.is_frozen}
-       36    0.000    0.000    0.000    0.000 {built-in method _thread.get_ident}
-        3    0.000    0.000    0.000    0.000 util.py:91(__init__)
-        7    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:67(<genexpr>)
-        1    0.000    0.000    0.000    0.000 ImageChops.py:18(<module>)
-       22    0.000    0.000    0.000    0.000 sre_parse.py:75(groups)
-        1    0.000    0.000    0.000    0.000 __init__.py:1183(_fixupParents)
-        7    0.000    0.000    0.000    0.000 {built-in method _struct.calcsize}
-        1    0.000    0.000    0.000    0.000 <string>:5(DecimalTuple)
-        6    0.000    0.000    0.000    0.000 {method 'setimage' of 'ImagingEncoder' objects}
-       12    0.000    0.000    0.000    0.000 sre_compile.py:513(isstring)
-        4    0.000    0.000    0.000    0.000 fractions.py:318(_operator_fallbacks)
-        6    0.000    0.000    0.000    0.000 PngImagePlugin.py:629(__init__)
-       12    0.000    0.000    0.000    0.000 Node.py:307(set_rule_color)
-       18    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:190(cb)
-        6    0.000    0.000    0.000    0.000 ntpath.py:35(_get_bothseps)
-        6    0.000    0.000    0.000    0.000 os.py:740(check_str)
-       48    0.000    0.000    0.000    0.000 {method 'upper' of 'str' objects}
-        2    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:235(_requires_builtin_wrapper)
-        6    0.000    0.000    0.000    0.000 sre_parse.py:70(__init__)
-        6    0.000    0.000    0.000    0.000 sre_parse.py:797(fix_flags)
-       28    0.000    0.000    0.000    0.000 TiffImagePlugin.py:310(_delegate)
-        5    0.000    0.000    0.000    0.000 _weakrefset.py:20(__enter__)
-        4    0.000    0.000    0.000    0.000 sre_compile.py:101(fixup)
-        1    0.000    0.000    0.000    0.000 {built-in method _locale._getdefaultlocale}
-        1    0.000    0.000    0.000    0.000 cProfile.py:50(create_stats)
-        5    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:178(<genexpr>)
-        1    0.000    0.000    0.000    0.000 __init__.py:1239(__init__)
-        1    0.000    0.000    0.000    0.000 case.py:1008(assertListEqual)
-        6    0.000    0.000    0.000    0.000 Image.py:2427(register_save)
-        6    0.000    0.000    0.000    0.000 _weakrefset.py:81(add)
-        3    0.000    0.000    0.000    0.000 Graph.py:249(iter_all_sorted)
-        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:908(exec_module)
-        2    0.000    0.000    0.000    0.000 {built-in method builtins.repr}
-        1    0.000    0.000    0.000    0.000 TiffImagePlugin.py:775(ImageFileDirectory_v1)
-        5    0.000    0.000    0.000    0.000 _weakrefset.py:70(__contains__)
-        5    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:179(<genexpr>)
-       13    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
-        2    0.000    0.000    0.000    0.000 sre_compile.py:391(_generate_overlap_table)
-        1    0.000    0.000    0.000    0.000 GifImagePlugin.py:53(GifImageFile)
-        1    0.000    0.000    0.000    0.000 locale.py:459(_parse_localename)
-        1    0.000    0.000    0.000    0.000 TiffImagePlugin.py:868(TiffImageFile)
-        1    0.000    0.000    0.000    0.000 case.py:903(assertSequenceEqual)
-        6    0.000    0.000    0.000    0.000 {method 'keys' of 'dict' objects}
-        3    0.000    0.000    0.000    0.000 Graph.py:255(upper_right)
-        5    0.000    0.000    0.000    0.000 Image.py:2416(register_mime)
-       14    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:808(get_filename)
-       14    0.000    0.000    0.000    0.000 sre_parse.py:161(__setitem__)
-        8    0.000    0.000    0.000    0.000 {built-in method _sre.getlower}
-        1    0.000    0.000    0.000    0.000 __init__.py:211(_acquireLock)
-        3    0.000    0.000    0.000    0.000 Graph.py:252(lower_left)
-       20    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
-        5    0.000    0.000    0.000    0.000 _weakrefset.py:16(__init__)
-        3    0.000    0.000    0.000    0.000 util.py:81(__init__)
-       14    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:653(create_module)
-       17    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:427(has_location)
-        1    0.000    0.000    0.000    0.000 Graph.py:364(<listcomp>)
-        1    0.000    0.000    0.000    0.000 PngImagePlugin.py:266(PngStream)
-        5    0.000    0.000    0.000    0.000 _weakrefset.py:52(_commit_removals)
-       14    0.000    0.000    0.000    0.000 {built-in method builtins.ord}
-        5    0.000    0.000    0.000    0.000 Node.py:257(set_rule_shape)
-        1    0.000    0.000    0.000    0.000 locale.py:376(normalize)
-        2    0.000    0.000    0.000    0.000 {method 'split' of 'str' objects}
-        1    0.000    0.000    0.000    0.000 BmpImagePlugin.py:61(BmpImageFile)
-        1    0.000    0.000    0.000    0.000 TiffImagePlugin.py:135(<listcomp>)
-        1    0.000    0.000    0.000    0.000 JpegImagePlugin.py:282(JpegImageFile)
-       15    0.000    0.000    0.000    0.000 {method 'isidentifier' of 'str' objects}
-        1    0.000    0.000    0.000    0.000 PngImagePlugin.py:97(ChunkStream)
-        1    0.000    0.000    0.000    0.000 __init__.py:220(_releaseLock)
-        6    0.000    0.000    0.000    0.000 ImageFile.py:66(_tilesort)
-        1    0.000    0.000    0.000    0.000 ImageFile.py:299(Parser)
-        6    0.000    0.000    0.000    0.000 {method 'cleanup' of 'ImagingEncoder' objects}
-        6    0.000    0.000    0.000    0.000 {method 'extend' of 'list' objects}
-       10    0.000    0.000    0.000    0.000 {method '__contains__' of 'frozenset' objects}
-        1    0.000    0.000    0.000    0.000 PngImagePlugin.py:484(PngImageFile)
-        1    0.000    0.000    0.000    0.000 ImageFile.py:75(ImageFile)
-        1    0.000    0.000    0.000    0.000 {method 'get' of 'mappingproxy' objects}
-        1    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:889(__init__)
-        3    0.000    0.000    0.000    0.000 case.py:808(_baseAssertEqual)
-        1    0.000    0.000    0.000    0.000 PpmImagePlugin.py:59(PpmImageFile)
-        5    0.000    0.000    0.000    0.000 {method '__subclasses__' of 'type' objects}
-        1    0.000    0.000    0.000    0.000 Graph.py:280(<listcomp>)
-        1    0.000    0.000    0.000    0.000 PngImagePlugin.py:189(PngInfo)
-        5    0.000    0.000    0.000    0.000 TiffImagePlugin.py:561(_register_writer)
-        1    0.000    0.000    0.000    0.000 ImageFile.py:269(StubImageFile)
-        1    0.000    0.000    0.000    0.000 PngImagePlugin.py:169(iTXt)
-        1    0.000    0.000    0.000    0.000 {method 'encode' of 'str' objects}
-        1    0.000    0.000    0.000    0.000 TiffTags.py:23(TagInfo)
-        5    0.000    0.000    0.000    0.000 TiffImagePlugin.py:562(decorator)
-        2    0.000    0.000    0.000    0.000 case.py:673(assertTrue)
-        1    0.000    0.000    0.000    0.000 PngImagePlugin.py:626(_idat)
-        1    0.000    0.000    0.000    0.000 __init__.py:182(_checkLevel)
-        1    0.000    0.000    0.000    0.000 __init__.py:1086(append)
-        2    0.000    0.000    0.000    0.000 {built-in method sys._getframe}
-        5    0.000    0.000    0.000    0.000 TiffImagePlugin.py:552(_register_loader)
-        1    0.000    0.000    0.000    0.000 BmpImagePlugin.py:205(DibImageFile)
-        1    0.000    0.000    0.000    0.000 __init__.py:675(__init__)
-        1    0.000    0.000    0.000    0.000 {built-in method _imp.exec_dynamic}
-        1    0.000    0.000    0.000    0.000 ImageSequence.py:19(Iterator)
-        1    0.000    0.000    0.000    0.000 Image.py:2438(register_save_all)
-        1    0.000    0.000    0.000    0.000 {method 'setter' of 'property' objects}
-        1    0.000    0.000    0.000    0.000 {method 'acquire' of '_thread.RLock' objects}
-        5    0.000    0.000    0.000    0.000 {method '__subclasshook__' of 'object' objects}
-        2    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap>:762(is_package)
-        1    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:182(<genexpr>)
-        1    0.000    0.000    0.000    0.000 RectangleGridPuzzle.py:183(<genexpr>)
-        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
-        1    0.000    0.000    0.000    0.000 {method 'release' of '_thread.RLock' objects}
-
-
+        7    3.250    0.464    3.250    0.464 {built-in method _pickle.load}
+    20096    2.747    0.000    2.747    0.000 {built-in method builtins.compile}
+       13    2.672    0.206    2.672    0.206 {method 'encode' of 'ImagingEncoder' objects}
+ 539948/4    1.708    0.000    1.998    0.500 Graph.py:364(travel)
+1316936/20096    1.575    0.000    1.966    0.000 ast.py:49(_convert)
+    20096    1.068    0.000    3.525    0.000 Graph.py:388(set_current_path)
+       26    0.638    0.025    0.638    0.025 {built-in method PIL._imaging.alpha_composite}
+223626/25216    0.607    0.000    1.348    0.000 Partition.py:16(travel_partition)
+   441507    0.527    0.000    0.778    0.000 Edge.py:154(connect)
+  3162311    0.410    0.000    0.450    0.000 {built-in method builtins.isinstance}
+       78    0.400    0.005    0.400    0.005 {built-in method PIL._imaging.fill}
+   412399    0.381    0.000    0.381    0.000 Graph.py:50(get_edge)
+   412184    0.361    0.000    0.361    0.000 Graph.py:403(<listcomp>)
+   395188    0.292    0.000    0.365    0.000 Node.py:104(traversable_edges)
+   386108    0.268    0.000    0.268    0.000 Node.py:267(set_partition_neighbors)
+    20090    0.236    0.000    1.162    0.000 Graph.py:419(unset_current_path)
+   131461    0.213    0.000    0.370    0.000 Geometry.py:60(__add__)
+         15976229 function calls (13938654 primitive calls) in 21.142 seconds
+   Ordered by: internal time
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
 Wasted: 0

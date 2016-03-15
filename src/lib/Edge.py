@@ -73,6 +73,7 @@ class Edge(object):
         
     def connect(self):
         if self.connected==True:
+            # TODO: Use decorator
             WastedCounter.get()
         self.connected=True
         

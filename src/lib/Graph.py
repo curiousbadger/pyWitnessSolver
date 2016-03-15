@@ -32,12 +32,15 @@ class Graph(dict):
         self.solutions = []
         self.partitions = None
         self.all_paths_pickler = None
-        
+        # TODO: Might be handy, need to think about implementation
+        self.unsearched_nodes = None
         self.edges=dict()
 
     def set_nodes(self, node_list):
         for n in node_list:
             self[n.vec()]=n
+            #self.unsearched_nodes=self.copy()
+            
     def color_generator(self):
         return MasterUniqueColorGenerator
 
@@ -293,6 +296,7 @@ class RectGridGraph(Graph):
         self.color_generator().reset()
         for n in self.values():
             n.reset_node()
+        
 
     def render_with_links(self, sx, sy):
         m = []
@@ -333,7 +337,7 @@ class RectGridGraph(Graph):
         if to_db:
             pass
 
-    def generate_paths(self, overwrite=False):
+    def generate_paths(self, overwrite=True):
         '''Traverse all possible Paths.
 
         TODO: Early dead-end detection?
@@ -413,13 +417,13 @@ class RectGridGraph(Graph):
             n.set_partition_neighbors()
             
     def unset_current_path(self):
+
+        # Reconnect any Edges severed by partitioning 
         for p in self.partitions:
             for e in p.edges.values():
                 e.connect()
-#             for n in p.values():
-#                 n.prepare_for_partitioning()
-#                 for e in n.edges:
-#                     e.connect()
+
+        # Reconnect all edges severed by the Path
         for e in self.current_path:
             e.reset_inner()
             
@@ -438,111 +442,161 @@ class RectGridGraph(Graph):
         if any(n.different_color(p_nbr) for p_nbr in partition.values()):
             return True
         return False
-        
-    def has_rule_shapes(self):
-        return any(n.has_rule and n.has_rule_shape for n in self.inner_grid.values())
     
-    def find_any_shape_violation(self):
+    
+    def find_any_color_violation(self):
         
-        if not self.has_rule_shapes():
+        rule_color_nodes={n for n in self.inner_grid.values() if n.rule_color}
+        if not rule_color_nodes:
             return False
         
         violation = False
         
-        for n in self.inner_grid.values():
-            if n.has_rule_shape:
-                # TODO: probably no need to check for further violations, but leaving in while working out bugs
-                violation = self.shape_violation_check(n)
-                # print(n,'found shape violation')
-                if violation:
-                    break
+        while rule_color_nodes:
+            n=rule_color_nodes.pop()
+            current_partition = self.retreive_partition(n)
+            if not current_partition:
+                raise Exception('Unable to find partition for ', n)
+            violation = current_partition.has_color_violation()
+            # TODO: probably no need to check for further violations, but leaving in while working out bugs
+            if violation:
+                break
+            # No need to recheck these nodes...
+            for partition_node in current_partition.values():
+                    if partition_node in rule_color_nodes:
+                        rule_color_nodes.remove(partition_node)
+        return violation
+    
+    def find_any_shape_violation(self):
+        
+        rule_shape_nodes={n for n in self.inner_grid.values() if n.rule_shape}
+        if not rule_shape_nodes:
+            return False
+        
+        violation = False
+        
+        while rule_shape_nodes:
+            n=rule_shape_nodes.pop()
+            current_partition = self.retreive_partition(n)
+            if not current_partition:
+                raise Exception('Unable to find partition for ', n)
+            violation = current_partition.has_shape_violation()
+            # TODO: probably no need to check for further violations, but leaving in while working out bugs
+            if violation:
+                break
+            # No need to recheck these nodes...
+            for partition_node in current_partition.values():
+                if partition_node in rule_shape_nodes:
+                    rule_shape_nodes.remove(partition_node)
+            
         return violation
 
-    def shape_violation_check(self, n):
-        '''Returns True if n cannot reside in it's Partition.
-        TODO: Invert so that each Partition with MultiBlock shapes checks all
-        it's Nodes '''
-
-        current_partition = self.retreive_partition(n)
-        if not current_partition:
-            raise Exception('Unable to find partition for ', n)
-        return current_partition.has_shape_violation()
+    def find_any_sun_violation(self):
         
-        #print('Checking GridSquare:', n, 'in partition', current_partition)
-
-        # TODO: Make Partition a class that knows the rules, counts etc of it's Squares?
-        # accumulate all MultiBlocks in this partition
-        shapes = [n.rule_shape for n in current_partition.values() if n.rule_shape]
-
-        # calculate the sum of all points in all shapes
-        num_shape_points = sum([len(n) for n in shapes])
-        #print('shapes', shapes,'num_shape_points',num_shape_points)
-        # get all points with the partition
-        partition_points = [n for n in current_partition.keys()]
-        #print('partition_points', partition_points)
-        # A set of points is a MultiBlock... (and a Grid and a Graph and
-        # ugh...)
-        partition_multiblock = MultiBlock(
-            partition_points, name='partition_multiblock', auto_shift_Q1=True)
-        #print('partition_multiblock', partition_multiblock)
-
-        '''If this partition doesn't have the same number of Squares as the 
-        sum of the number of points in the shapes, there's no way they will
-        fit.
-        TODO: Until of course I add the blue "subtraction shapes"...
-        '''
-        if num_shape_points != len(partition_multiblock):
-            return True
-        return not self.compose_shapes(0, shapes, partition_multiblock, None)
-
-    def compose_shapes(self, counter, shapes_list, partition, last_offset):
-        #print('START compose_shapes')
-        #print('    counter',counter)
-        #print('    partition',partition.part_off())
-        cur_shape = shapes_list[counter]
-
-        # Remember the last offset, if we find a solution this helps with
-        # rendering
-        cur_shape.last_offset = partition.last_offset
-
-        # Iterate over all possible positions this shape could occupy
-        for remaining_partition_points, new_offset in cur_shape.compose(partition):
-
-            # print('remaining_partition_points',remaining_partition_points)
-            if not remaining_partition_points:
-                # We filled up the partition, but have we placed all shapes?
-                if counter == len(shapes_list) - 1:
-                    #print('Found solution!!')
-                    return True
-                else:
-                    #print('Ran out of room')
-                    return False
-            elif counter < len(shapes_list) - 1:
-                remaining_partition = MultiBlock(remaining_partition_points)
-                remaining_partition.last_offset += partition.last_offset
-                # print('remaining_partition.last_offset',remaining_partition.last_offset)
-                ret = self.compose_shapes(
-                    counter + 1, shapes_list, remaining_partition, new_offset)
-                if ret == True:
-                    return True
-                else:
-                    # print('counter',counter,'cur_shape',cur_shape)
-                    pass
-            else:
-                #print('counter',counter,'at end of shape list')
-                pass
-        return False
-
-    def travel_partition(self, n, partition):
-        if n in partition:
-            return
+        rule_sun_nodes={n for n in self.inner_grid.values() if n.sun_color}
         
-        #n.been_partitioned = True # TODO: Needed?
-        partition.add(n)
+        if not rule_sun_nodes:
+            return False
         
-
-        for nbr in n.traversable_nodes():
-            self.travel_partition(nbr, partition)
+        violation = False
+        
+        while rule_sun_nodes:
+            n=rule_sun_nodes.pop()
+            current_partition = self.retreive_partition(n)
+            if not current_partition:
+                raise Exception('Unable to find partition for ', n)
+            violation = current_partition.has_sun_violation()
+            # TODO: probably no need to check for further violations, but leaving in while working out bugs
+            if violation:
+                break
+            # No need to recheck these nodes...
+            
+            for partition_node in current_partition.values():
+                if partition_node in rule_sun_nodes:
+                    rule_sun_nodes.remove(partition_node)
+            
+        return violation
+#     def shape_violation_check(self, n):
+#         '''Returns True if n cannot reside in it's Partition.
+#         TODO: Invert so that each Partition with MultiBlock shapes checks all
+#         it's Nodes '''
+# 
+#         
+#         
+#         #print('Checking GridSquare:', n, 'in partition', current_partition)
+# 
+#         # TODO: Make Partition a class that knows the rules, counts etc of it's Squares?
+#         # accumulate all MultiBlocks in this partition
+#         shapes = [n.rule_shape for n in current_partition.values() if n.rule_shape]
+# 
+#         # calculate the sum of all points in all shapes
+#         num_shape_points = sum([len(n) for n in shapes])
+#         #print('shapes', shapes,'num_shape_points',num_shape_points)
+#         # get all points with the partition
+#         partition_points = [n for n in current_partition.keys()]
+#         #print('partition_points', partition_points)
+#         # A set of points is a MultiBlock... (and a Grid and a Graph and
+#         # ugh...)
+#         partition_multiblock = MultiBlock(
+#             partition_points, name='partition_multiblock', auto_shift_Q1=True)
+#         #print('partition_multiblock', partition_multiblock)
+# 
+#         '''If this partition doesn't have the same number of Squares as the 
+#         sum of the number of points in the shapes, there's no way they will
+#         fit.
+#         TODO: Until of course I add the blue "subtraction shapes"...
+#         '''
+#         if num_shape_points != len(partition_multiblock):
+#             return True
+#         return not self.compose_shapes(0, shapes, partition_multiblock, None)
+# 
+#     def compose_shapes(self, counter, shapes_list, partition, last_offset):
+#         #print('START compose_shapes')
+#         #print('    counter',counter)
+#         #print('    partition',partition.part_off())
+#         cur_shape = shapes_list[counter]
+# 
+#         # Remember the last offset, if we find a solution this helps with
+#         # rendering
+#         cur_shape.last_offset = partition.last_offset
+# 
+#         # Iterate over all possible positions this shape could occupy
+#         for remaining_partition_points, new_offset in cur_shape.compose(partition):
+# 
+#             # print('remaining_partition_points',remaining_partition_points)
+#             if not remaining_partition_points:
+#                 # We filled up the partition, but have we placed all shapes?
+#                 if counter == len(shapes_list) - 1:
+#                     #print('Found solution!!')
+#                     return True
+#                 else:
+#                     #print('Ran out of room')
+#                     return False
+#             elif counter < len(shapes_list) - 1:
+#                 remaining_partition = MultiBlock(remaining_partition_points)
+#                 remaining_partition.last_offset += partition.last_offset
+#                 # print('remaining_partition.last_offset',remaining_partition.last_offset)
+#                 ret = self.compose_shapes(
+#                     counter + 1, shapes_list, remaining_partition, new_offset)
+#                 if ret == True:
+#                     return True
+#                 else:
+#                     # print('counter',counter,'cur_shape',cur_shape)
+#                     pass
+#             else:
+#                 #print('counter',counter,'at end of shape list')
+#                 pass
+#         return False
+# 
+#     def travel_partition(self, n, partition):
+#         if n in partition:
+#             return
+#         
+#         #n.been_partitioned = True # TODO: Needed?
+#         partition.add(n)
+# 
+#         for nbr in n.traversable_nodes():
+#             self.travel_partition(nbr, partition)
 
     def generate_partition(self, n, auto_color=True):
         '''Return the Partition that contains this GridSquare'''

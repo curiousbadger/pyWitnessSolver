@@ -393,6 +393,9 @@ if __name__=='__main__':
     TshapeUp=MultiBlock([(0,0),(1,0),(2,0),(1,1)],name='TshapeUp',color='red',can_rotate=True)
     ''' XX '''
     IshapeHoriz2=MultiBlock([(0,0),(1,0)])
+    ''' X
+        X'''
+    IshapeVert2=MultiBlock([(0,0),(1,0)])
     Single0=MultiBlock([(0,0)])
     Single1=MultiBlock([(0,0)])
     
