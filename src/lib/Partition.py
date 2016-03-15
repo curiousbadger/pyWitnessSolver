@@ -14,28 +14,18 @@ class Partition(Graph):
     cg=UniqueColorGenerator()
     
     def travel_partition(self, n):
+        '''Travel the partition to discover all Nodes.
+        TODO: accumulate some simple rule info as we go?'''
         if n.vec() in self:
             return
         
         self[n.vec()]=n
+        
         for e in n.traversable_edges():
             if e.nodes not in self.edges:
                 self.edges[e.nodes]=e
             self.travel_partition(e.traverse_from_node(n))
 
-    def has_sun_violation(self):
-        
-        if self.sun_violation is not None:
-            return self.sun_violation
-        
-        for col in [n.sun_color for n in self.values() if n.sun_color]:
-            if col not in self.color_counter:
-                self.color_counter[col]=1
-            else:
-                self.color_counter[col]+=1
-        # Every sun needs a buddy...
-        self.sun_violation = any(cnt != 2 for cnt in self.color_counter.values())
-        return self.sun_violation
     
     def get_rule_shapes(self):
         if self.rule_shapes is not None and len(self.rule_shapes)==0:
@@ -51,8 +41,9 @@ class Partition(Graph):
     
     def can_be_composed_of(self,rule_shapes, partition_multiblock, depth_counter):
         cur_multiblock=rule_shapes[depth_counter]
-        print('partition_multiblock', partition_multiblock)
-        print('cur_multiblock', cur_multiblock)
+        t='\t'*depth_counter
+        print(t,'partition_multiblock', partition_multiblock)
+        print(t,'cur_multiblock', cur_multiblock)
         found_solution=False
         
         for cur_shape in cur_multiblock.rotations:
@@ -65,10 +56,10 @@ class Partition(Graph):
             
             # Put the shape in the lower-left corner
             cur_shape.set_offset(partition_multiblock.offset_point())
-            print('    cur_shape.offset_point', cur_shape.offset_point())
+            #print('    cur_shape.offset_point', cur_shape.offset_point())
             
             max_shift_point=partition_multiblock.upper_right()-cur_shape.upper_right()
-            print('    max_shift_point', max_shift_point)
+            #print('    max_shift_point', max_shift_point)
             
             # TODO: Change to MultiBlock yield?
             for y in range(max_shift_point.y+1):
@@ -77,25 +68,25 @@ class Partition(Graph):
                     cur_shape.set_offset(Point((x,y)))
                     
                     abs_points=cur_shape.get_absolute_point_set()
-                    print('        abs_points', abs_points)
+                    #print('        abs_points', abs_points)
                 
                     outside_points=abs_points - partition_multiblock
                     if outside_points:
-                        print('            !!outside_points', outside_points)
+                        #print('            !!outside_points', outside_points)
                         continue
                     # Return all the points in the partition that are left
                     remaining_partition_points=partition_multiblock - abs_points
-                    print('        remaining_partition_points', remaining_partition_points)
+                    #print('        remaining_partition_points', remaining_partition_points)
                     
                     # Haven't filled all our points yet...
                     if remaining_partition_points:
                         if depth_counter==len(rule_shapes)-1:
-                            print( '            still points')
+                            #print( '            still points')
                             raise Exception('still points')
                         else:
-                            print('            keep on truckin...')
+                            #print('            keep on truckin...')
                             new_partition=MultiBlock(remaining_partition_points,auto_shift_Q1=False)
-                            print('            new_partition', new_partition)
+                            #print('            new_partition', new_partition)
                             found_solution=self.can_be_composed_of(rule_shapes, new_partition, depth_counter+1)
                     # Filled all our points, are we at the end?
                     else:
@@ -103,50 +94,90 @@ class Partition(Graph):
                             found_solution=True
                             
                         else:
+                            # Should not happen till we start implementing SubtractionSquare 
                             raise Exception('Filled too soon')
                             return False
                     if found_solution:
-                        print('            FOUND SOLUTION!!', cur_shape)
-                        self.solution_shapes.append(cur_shape)
+                        print('\t'*(depth_counter)+'FOUND SOLUTION!!', cur_shape)
+                        sol_pts=cur_shape.get_absolute_point_set()
+                        self.solution_shapes.append(sol_pts)
                         return True
         return False
-        
+    
     def has_shape_violation(self):
         
         if self.shape_violation is not None:
+            raise Exception('Violation already checked')
             return self.shape_violation
         self.solution_shapes=[]
         rule_shapes=self.get_rule_shapes()
         #print('rule_shapes', rule_shapes)
+        
         if self.total_rule_shape_points != len(self):
+            self.shape_violation=True
             return True
+        
         partition_multiblock=MultiBlock(self.keys(),name='partition_multiblock',auto_shift_Q1=False)
         
         self.shape_violation = not self.can_be_composed_of(rule_shapes,partition_multiblock, 0)
         return self.shape_violation
     
-    def __init__(self, first_node=None):
+    def has_color_violation(self):
+        
+        if self.color_violation is not None:
+            raise Exception('Violation already checked')
+            return self.color_violation
+        
+        distinct_rule_colors = Counter([n.rule_color for n in self.values() if n.rule_color])
+        print('distinct_rule_colors', distinct_rule_colors)
+        
+        # Only 1 rule_color allowed per Partition
+        self.color_violation = len(distinct_rule_colors)>1
+             
+        return self.color_violation
+    
+    def has_sun_violation(self):
+        '''TODO: This logic is far from complete, but works for simple puzzles 
+        The rule suns will actually count other objects with the same color as
+        a "buddy", so far I've seen "Rule Shapes" and normal "Rule Colors" count.
+        '''
+        if self.sun_violation is not None:
+            raise Exception('Violation already checked')
+            return self.sun_violation
+        
+        rule_sun_colors = Counter([n.sun_color for n in self.values() if n.sun_color])
+
+        # Every sun needs a buddy...
+        self.sun_violation = any(cnt != 2 for cnt in rule_sun_colors.values())
+        return self.sun_violation
+    
+    def __init__(self, first_node):
         '''
         '''
         Graph.__init__(self)
-        if first_node:
-            self.travel_partition(first_node)
+        
+        self.travel_partition(first_node)
         self.shape_violation=None
         self.rule_shapes=None
         self.solution_shapes=[]
         self.total_rule_shape_points=0
         self.color_violation=None
         self.sun_violation=None
-        self.color_counter=Counter()
+        
         
     def get_img_rects(self):
         for s in self.solution_shapes:
             col=Partition.cg.get()
-            print('sol_shape', s)
-            for p in s.get_absolute_point_set():
-                print('p', p)
-                n=self[p]
-                print('n', n)
+            print('Solution points:', s)
+            
+            for p in s:
+                #print('p', p)
+                if p not in self:
+                    print(self)
+                    raise Exception('p not in self',p)
+                else:
+                    n=self[p]
+                    #print('n', n)
                 #exit(0)
                 yield p,col
 

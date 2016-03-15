@@ -18,12 +18,15 @@ class Node(object):
 #
 #     def __eq__(self,other):
 #         return self.__hash__() == other.__hash__()
+
     def vec(self):
+        '''Some way to identify position within the Graph. For Nodes is a Grid this
+        is simply coordinates. Not sure yet how to handle for others. '''
         raise NotImplementedError
         return ''
 
     def __repr__(self):
-        return '%s:%s %s' % (self.__class__.__name__, self.sym, str(self.vec()))
+        return '%s:%s @%s' % (self.__class__.__name__, self.sym, str(self.vec()))
 
     def __init__(self, hash_int=None):
         self.hash_int = hash_int or MasterUniqueNumberGenerator.get()
@@ -38,7 +41,7 @@ class Node(object):
         self.neighbors = set()
         self.traversable_neighbors = set()
         self.finalized_traversable_neighbors = set()
-        self.has_rule = False
+        #self.has_rule = False
         self.has_rule_color = False
         self.has_rule_shape = False
         #self.passed_rule_check = False
@@ -60,7 +63,8 @@ class Node(object):
         self.edges = frozenset(self.edges)
 
     def has_rule(self):
-        return self.has_rule
+        raise Exception('foo')
+        return self.rule_color or self.sun_color or self.rule_shape
 
     def add_neighbor(self, nbr, backref=False):
         self.neighbors.add(nbr)
@@ -154,7 +158,7 @@ class GridNode(Node):
         # TODO: move to sub-class
         self.color = 'blue'
         
-        self.has_rule = None
+        #self.has_rule = None
 
     def finalize(self):
         super().finalize()
@@ -201,6 +205,7 @@ class GridNode(Node):
 
     def vec(self):
         return self.pt
+    
     def add_edge(self, e, direction):
         self.edges.add(e)
         self.edge_map[direction]=e
@@ -248,7 +253,7 @@ class GridSquare(GridNode):
         self.partition_color = None
 
     def set_rule_shape(self, shape):
-        self.has_rule = True
+        #self.has_rule = True
         self.has_rule_shape = True
         self.rule_shape = shape
 
@@ -291,14 +296,15 @@ class GridSquare(GridNode):
             return self.rule_color
 
     def set_rule_color(self, color):
-        self.has_rule = True
+        #self.has_rule = True
         self.has_rule_color = True
         # self.color=color
         self.rule_color = color
 
     # colors are only "different" if both squares actually have a rule_color
     def different_color(self, other):
-        return (self.has_rule and other.has_rule and self.rule_color != other.rule_color)
+        return (self.rule_color and other.rule_color \
+                and self.rule_color != other.rule_color)
     
     # the "outer nodes" I share with neighbor squares of a different color
     def get_different_color_boundaries(self):
