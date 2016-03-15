@@ -337,7 +337,7 @@ class RectGridGraph(Graph):
         if to_db:
             pass
 
-    def generate_paths(self, overwrite=True):
+    def generate_paths(self, overwrite=False):
         '''Traverse all possible Paths.
 
         TODO: Early dead-end detection?
@@ -409,12 +409,6 @@ class RectGridGraph(Graph):
             
             #self.remove_inner_nbrs(seg)
             self.current_path.append(cur_edge)
-            
-        # Now each GridSquare has had it's traversable_neighbors set
-        # Copy those as partition_neighbors
-        # TODO: Will be invalidated in Partition class logic
-        for n in self.inner_grid.values():
-            n.set_partition_neighbors()
             
     def unset_current_path(self):
 

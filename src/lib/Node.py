@@ -179,6 +179,7 @@ class GridNode(Node):
     def dimensions(self):
         return self.get_sqare_points(self.rendering_weight)
 
+    # TODO: GraphImage should handle this...
     def offset(self):
         #offset= self.x*4, self.y*4
         offset = self.x * \
@@ -264,15 +265,6 @@ class GridSquare(GridNode):
     def prepare_for_partitioning(self):
         self.partition_color = None
 
-    def set_partition_neighbors(self):
-        self.partition_neighbors = list(self.traversable_neighbors)
-
-    def pop_any_partition_neighbor(self):
-        nbr = self.partition_neighbors.pop()
-        # And don't come back! *ptew*
-        nbr.partition_neighbors.remove(self)
-        return nbr
-
     def reset_node(self):
         super().reset_node()
         self.prepare_for_partitioning()
@@ -328,14 +320,17 @@ class GridSquare(GridNode):
                 Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 3)), 'pink'))
         return trl
     
-    def overlay_rule(self):
-        c=self.color
-        if self.rule_color:
-            c=self.rule_color
-        elif self.rule_shape:
-            c=self.rule_shape.get_color()
-        
-        return Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 1)), c)
+    # I don't want the individual Nodes to be responsible for their own rendering logic.
+    # Making GraphImage handle this 
+#     def overlay_rule(self):
+#         c=self.color
+#         if self.rule_color:
+#             c=self.rule_color
+#         elif self.rule_shape:
+#             c=self.rule_shape.get_color()
+#         
+#         return Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 1)), c)
+#     
 if __name__ == '__main__':
     a = None
     b = 'purple'
