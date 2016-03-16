@@ -191,6 +191,7 @@ class Test(unittest.TestCase):
         
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
+        g.render()
         g.generate_paths()
         g.load_paths()
         g.solve()
@@ -203,7 +204,6 @@ class Test(unittest.TestCase):
         extra_solutions = actual_solutions - expected_solutions
         self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
         self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
-        
     
     def testTreehouse0(self):
             
@@ -248,18 +248,18 @@ class Test(unittest.TestCase):
             self.assertIsNotNone(first_solution)
             #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
     
-    def testRuleShapeRendering(self):
-        ''' Put 3 Tshapes in a 5x5 Grid to demo rules_shape rendering.'''
+    def testMoveableShapes(self):
+        '''Same as testRuleShapeRendering with a different layout'''
         
-        g = RectangleGridPuzzle(5, 5, 'testRuleShapeRendering')
+        g = RectangleGridPuzzle(5, 5, 'testMoveableShapes')
 
         TshapeDown = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'TshapeDown',can_rotate=False)
         TshapeRight = MultiBlock([(0, 0), (0, 1), (0, 2), (1, 1)], 'TshapeRight')
         TshapeLeft = MultiBlock([(0, 1), (1, 0), (1, 1), (1, 2)], 'TshapeLeft')
         #Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
         
-        g.inner_grid[1, 3].set_rule_shape(TshapeDown)
-        g.inner_grid[0, 0].set_rule_shape(TshapeRight)
+        g.inner_grid[1, 3].set_rule_shape(TshapeRight)
+        g.inner_grid[0, 0].set_rule_shape(TshapeDown)
         g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
         
         
@@ -281,6 +281,128 @@ class Test(unittest.TestCase):
         self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
         self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
         
+    def testRuleShapeRendering(self):
+        ''' Put 3 Tshapes in a 5x5 Grid to demo rules_shape rendering.'''
+        
+        g = RectangleGridPuzzle(5, 5, 'testRuleShapeRendering')
+
+        TshapeDown = MultiBlock([(0, 1), (1, 1), (2, 1), (1, 0)], 'TshapeDown',can_rotate=False)
+        TshapeRight = MultiBlock([(0, 0), (0, 1), (0, 2), (1, 1)], 'TshapeRight')
+        TshapeLeft = MultiBlock([(0, 1), (1, 0), (1, 1), (1, 2)], 'TshapeLeft')
+        #Ishape3Vert = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3Vert')
+        
+        g.inner_grid[1, 3].set_rule_shape(TshapeDown)
+        g.inner_grid[0, 0].set_rule_shape(TshapeRight)
+        g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
+        
+        g.finalize()
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        g.render()
+        g.generate_paths()
+        g.load_paths()
+        g.solve()
+        
+        expected_solutions=[[(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4)]]
+        expected_solutions=set(frozenset(p) for p in expected_solutions)
+        
+        print('expected_solutions:',expected_solutions)
+        actual_solutions=set(frozenset(p) for p in g.solutions)
+        print('actual_solutions', actual_solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+        self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
+        self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
+
+
+    def testVillageYellowDoorWindow(self):
+        
+        
+        g = RectangleGridPuzzle(6, 6, 'testVillageYellowDoorWindow')
+
+        for i in range(5):
+            # Top row all have Lshapes
+            shape=MultiBlock([(0, 0), (1, 0), (0, 1)], 'Lshape3_'+str(i), can_rotate=True)
+            g.inner_grid[i,4].set_rule_shape(shape)
+            # Bottom row all have purple suns
+            g.inner_grid[i,0].sun_color='purple'
+        
+        # Last purple sun in middle
+        g.inner_grid[2,2].sun_color='purple'
+        
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        
+        g.finalize()
+        g.render()
+        g.generate_paths()
+        g.load_paths()
+        g.solve()
+        
+        #expected_solutions=[]
+        #expected_solutions=set(frozenset(p) for p in expected_solutions)
+#         print('expected_solutions:',expected_solutions)
+#         actual_solutions=set(frozenset(p) for p in g.solutions)
+#         print('actual_solutions', actual_solutions)
+#         missing_solutions = expected_solutions - actual_solutions
+#         extra_solutions = actual_solutions - expected_solutions
+#         self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
+#         self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
+    def testVillageSunDoor0(self):
+        
+        g = RectangleGridPuzzle(5, 5, 'testVillageSunDoor0')
+
+        for i in range(4):
+            # Top row all white
+            g.inner_grid[i,3].set_rule_sun('white')
+            # Bottom row all red
+            g.inner_grid[i,0].set_rule_sun('red')
+        
+        g.inner_grid[0,2].set_rule_sun('white')
+        g.inner_grid[1,2].set_rule_sun('white')
+            
+        g.inner_grid[0,1].set_rule_sun('black')
+        g.inner_grid[1,1].set_rule_sun('black')
+        g.inner_grid[2,1].set_rule_sun('black')    
+        g.inner_grid[2,2].set_rule_sun('black')
+            
+        g.inner_grid[3,1].set_rule_sun('red')    
+        g.inner_grid[3,2].set_rule_sun('red')
+        
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        
+        g.finalize()
+        g.render()
+        g.generate_paths()
+        #g.filter_paths(overwrite=True, expecting_filtered=False)
+        g.load_paths()
+        force_paths=['[(0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (2, 3), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]']
+        g.solve(force_paths=None)
+
+    def testVillageVentWall1(self):
+        ''' Put 3 Tshapes in a 5x5 Grid to demo rules_shape rendering.'''
+        
+        g = RectangleGridPuzzle(6, 6, 'testVillageYellowDoorWindow')
+
+        for i in range(5):
+            # Top row all have Lshapes
+            shape=MultiBlock([(0, 0), (1, 0), (0, 1)], 'Lshape3_'+str(i), can_rotate=True)
+            g.inner_grid[i,4].set_rule_shape(shape)
+            # Bottom row all have purple suns
+            g.inner_grid[i,0].sun_color='purple'
+        
+        # Last purple sun in middle
+        g.inner_grid[2,2].sun_color='purple'
+        
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        
+        g.finalize()
+        g.render()
+        g.generate_paths()
+        g.load_paths()
+        g.solve()        
     def setUp(self, enable_profiler=True, clear_img_directory=True):
         self.enable_profiler=enable_profiler
         if self.enable_profiler:
@@ -322,16 +444,19 @@ def test_singles():
     
     t.setUp(enable_profiler=True)
     
-#     t.test2Ishapes()
-#     t.testColor0()
-#     t.testMultipleShapesInPartition()
-#     t.testRotationShapes() 
+#    t.test2Ishapes()
+    #t.testColor0()
+#    t.testMultipleShapesInPartition()
+    #t.testRotationShapes() 
 #     t.testSinglePartition()
 #      
 #     t.testTreehouse0()
 
-    t.testRuleShapeRendering()
+    #t.testRuleShapeRendering()
+    #t.testMoveableShapes()
     
+    #t.testVillageYellowDoorWindow()
+    t.testVillageSunDoor0()
     t.tearDown()
 
 def test_all():

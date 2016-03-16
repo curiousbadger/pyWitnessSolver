@@ -110,6 +110,8 @@ class RectangleGridPuzzle(GraphImage):
             
         if self.find_any_color_violation():
             violation = True
+        else:
+            pass
             
         if self.find_any_sun_violation():
             violation = True
@@ -119,7 +121,7 @@ class RectangleGridPuzzle(GraphImage):
     def solve(self, break_on_first=False, render_all=False, force_paths=None):
         
         ''' Iterate over every potential path and check each GridSquare
-        with a rule for violations. 
+        with a rule for violations.
         '''
         # Auto-load paths if they have been previously generated
         if not self.paths:
@@ -131,14 +133,14 @@ class RectangleGridPuzzle(GraphImage):
         
         if force_paths:
             print('WARNING: Forcing single-path solve', force_paths)
-            self.potential_paths=[force_paths]
+            self.potential_paths=force_paths
             
         print('Checking',len(self.potential_paths),'paths...')
         for p in self.potential_paths:
             
             # TODO: Hack... Use Path class instead of OrderededDict and encapsulate efficient search/serialization
             p=literal_eval(p)
-
+            print('Evaluating:\n'+str(p))
             self.set_current_path(p)
             
             solution = not self.has_violations()

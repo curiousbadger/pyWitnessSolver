@@ -243,17 +243,7 @@ class MultiBlock(set):
                 # Shift all the shape's Points
                 shifted_points=frozenset([p+shift_vector for p in shape])
                 #print('shifted_points',shifted_points)
-                '''There are now several possibilities:
-                1. The shifted points completely cover the partition points
-                    We're done no matter what. If the last shape has been placed then
-                    this is a solution. If not, then we ran out of space.
-                2. The shifted points are a proper subset of the partition points.
-                    This is fine, pass the remaining points back to see if further shapes can fill them
-                3. The shifted points are not a subset of the partition points, ie.
-                    some lie outside the partition points.
-                    Invalid, discard and move on
                 
-                '''
                 outside_points=shifted_points - partition
                 if outside_points:
                     #print('outside_points', outside_points)

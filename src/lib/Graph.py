@@ -35,6 +35,10 @@ class Graph(dict):
         # TODO: Might be handy, need to think about implementation
         self.unsearched_nodes = None
         self.edges=dict()
+        self.rule_nodes = None
+        self.rule_color_nodes = None
+        self.rule_shape_nodes = None
+        self.rule_sun_nodes = None
 
     def set_nodes(self, node_list):
         for n in node_list:
@@ -285,6 +289,10 @@ class RectGridGraph(Graph):
             n.finalize()
         for e in self.edges.values():
             e.assign_default_state()
+        if self.is_outer:
+            self.rule_color_nodes=frozenset({n for n in self.inner_grid.values() if n.rule_color})
+            self.rule_shape_nodes=frozenset({n for n in self.inner_grid.values() if n.rule_shape})
+            self.rule_sun_nodes=frozenset({n for n in self.inner_grid.values() if n.sun_color})
 #         for e in self.inner_grid.edges.values():
 #             e.assign_default_state()
 
@@ -379,7 +387,7 @@ class RectGridGraph(Graph):
             self.add_path(finalized_path, to_obj=True, to_db=False)
             
             # TODO: Assumes that there's only 1 exit
-            #return
+            return
 
         # head on down the line...
         for nxt in n.neighbors:
@@ -440,14 +448,14 @@ class RectGridGraph(Graph):
     
     def find_any_color_violation(self):
         
-        rule_color_nodes={n for n in self.inner_grid.values() if n.rule_color}
-        if not rule_color_nodes:
+        cur_rule_color_nodes=set(self.rule_color_nodes)
+        if not cur_rule_color_nodes:
             return False
-        
+
         violation = False
-        
-        while rule_color_nodes:
-            n=rule_color_nodes.pop()
+        while cur_rule_color_nodes:
+            
+            n=cur_rule_color_nodes.pop()
             current_partition = self.retreive_partition(n)
             if not current_partition:
                 raise Exception('Unable to find partition for ', n)
@@ -457,8 +465,8 @@ class RectGridGraph(Graph):
                 break
             # No need to recheck these nodes...
             for partition_node in current_partition.values():
-                    if partition_node in rule_color_nodes:
-                        rule_color_nodes.remove(partition_node)
+                    if partition_node in cur_rule_color_nodes:
+                        cur_rule_color_nodes.remove(partition_node)
         return violation
     
     def find_any_shape_violation(self):
@@ -467,9 +475,10 @@ class RectGridGraph(Graph):
         if not rule_shape_nodes:
             return False
         
-        violation = False
+        
         
         while rule_shape_nodes:
+            violation = False
             n=rule_shape_nodes.pop()
             current_partition = self.retreive_partition(n)
             if not current_partition:
@@ -504,7 +513,7 @@ class RectGridGraph(Graph):
             if violation:
                 break
             # No need to recheck these nodes...
-            
+            # TODO: set difference
             for partition_node in current_partition.values():
                 if partition_node in rule_sun_nodes:
                     rule_sun_nodes.remove(partition_node)

@@ -48,10 +48,10 @@ class Partition(Graph):
         
         for cur_shape in cur_multiblock.rotations:
             
-            print('    cur_shape',cur_shape)
+            #print('    cur_shape',cur_shape)
             # Is the shape bigger than the partition?
             if not partition_multiblock.could_contain(cur_shape):
-                print('            %s can''t contain %s', partition_multiblock, cur_shape)
+                #print('            %s can''t contain %s', partition_multiblock, cur_shape)
                 continue
             
             # Put the shape in the lower-left corner
@@ -64,12 +64,24 @@ class Partition(Graph):
             # TODO: Change to MultiBlock yield?
             for y in range(max_shift_point.y+1):
                 for x in range(max_shift_point.x+1):
-                    
+                    # Shift all the shape's Points
                     cur_shape.set_offset(Point((x,y)))
                     
                     abs_points=cur_shape.get_absolute_point_set()
                     #print('        abs_points', abs_points)
-                
+                    '''There are now several possibilities:
+                    1. The shifted points completely cover the partition points
+                        We're done no matter what. If the last shape has been placed then
+                        this is a solution. If not, then we ran out of space.
+                    2. The shifted points are a proper subset of the partition points.
+                        This is fine, pass the remaining points back to see if further shapes can fill them
+                    3. The shifted points are not a subset of the partition points, ie.
+                        some lie outside the partition points.
+                        Invalid, discard and move on
+                    
+                    '''
+                    # If any point in cur_shape lies outside the partition points, this is not a solution
+                    # TODO: Change to yield? No reason to check all points, just need first violation
                     outside_points=abs_points - partition_multiblock
                     if outside_points:
                         #print('            !!outside_points', outside_points)
@@ -129,11 +141,11 @@ class Partition(Graph):
             return self.color_violation
         
         distinct_rule_colors = Counter([n.rule_color for n in self.values() if n.rule_color])
-        print('distinct_rule_colors', distinct_rule_colors)
+        #print('distinct_rule_colors', distinct_rule_colors)
         
         # Only 1 rule_color allowed per Partition
         self.color_violation = len(distinct_rule_colors)>1
-             
+            
         return self.color_violation
     
     def has_sun_violation(self):
@@ -183,7 +195,7 @@ class Partition(Graph):
 
 def pass_print(*args):
     pass
-print=pass_print
+#print=pass_print
 if __name__=='__main__':
     pass
     

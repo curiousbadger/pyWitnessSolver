@@ -139,14 +139,20 @@ class GraphImage(RectGridGraph):
         scalar=cw/element_dimensions.max_dimension()
         
         
-        # Iterate over all Nodes (Outer and Inner)
-        render_list=[n.get_imgRect().abs_coords(scalar) for n in self.inner_grid.values()]
-        for n in render_list:
-            print('Rendering:',n)
-            im.polygon(n,n.color)
+        # Iterate over entrance/exit Outer GridNodes
+        for n in self.values():
+            if not (n.is_entrance or n.is_exit):
+                continue
+            r=n.get_imgRect().abs_coords(scalar)
+            im.polygon(r,r.color)
         
-       
+        # Iterate over Inner GridSquares
+        for n in self.inner_grid.values():
+            r=n.get_imgRect().abs_coords(scalar)
+            im.polygon(r,r.color)
+        
         # Draw rule shapes inside the GridSquares
+        # TODO: This is a mess...
         rule_shape_nodes=[n for n in self.inner_grid.values() if n.rule_shape]
         if rule_shape_nodes:
             print('rule_shape_nodes', rule_shape_nodes)
@@ -170,7 +176,7 @@ class GraphImage(RectGridGraph):
                 print('square_element_dimensions', square_element_dimensions)
                 sq_scalar=cw/square_element_dimensions.max_dimension()
                 print('sq_scalar', sq_scalar)
-                sq_im=PILImage.new('RGBA',sq_int_canvas,(255,255,255,150))
+                sq_im=PILImage.new('RGBA',sq_int_canvas,(255,255,255,0))
                 sq_d=PILImageDraw.Draw(sq_im)
                 r=Rectangle(Rectangle.get_sqare_points(3))
                 for p in cur_rule_shape:
@@ -193,6 +199,8 @@ class GraphImage(RectGridGraph):
                 print('rule_square_rect.lower_left', rule_square_rect.lower_left)
                 print('rule_square_rect', rule_square_rect)
                 print('dim', dim)
+                if cur_rule_shape.can_rotate:
+                    sq_im=sq_im.rotate(15, PILImage.BICUBIC, 1)
                 sq_im.thumbnail(dim, PILImage.LANCZOS)
                 #fn=self.paths_filename()+str(self.ung.get())
                 #sq_im.show()
@@ -216,7 +224,7 @@ class GraphImage(RectGridGraph):
 
                     pl=[[0,0],[3,0],[3,3],[0,3]]
                     plp=[Point(p) for p in pl]
-                    col=chImg.color_with_alpha(col, 100)
+                    col=chImg.color_with_alpha(col, 75)
     
                     squ_and_n_rect=Rectangle(plp,offset,col).abs_coords(scalar)
                     #print('squ_and_n_rect', squ_and_n_rect)
@@ -229,23 +237,24 @@ class GraphImage(RectGridGraph):
         # Draw path
         draw_path=True
         if self.current_path and draw_path:
-            #Draw traversable links for each square
+            transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
+            d=PILImageDraw.Draw(transp_layer)
+            
+            # 
             for sq in self.inner_grid.values():
-                #print('sq',sq)
+                #Draw traversable links for each square
                 new_rects=sq.overlay_traversable_rects()
                 #print('new_rects',new_rects)
                 for r in new_rects:
                     coords,col=r.abs_coords(scalar), r.color
-                    col=chImg.color_with_alpha(r.color,64)
+                    col=chImg.color_with_alpha(r.color,75)
                     print('col', col)
                     
-                    im.polygon(coords, col, 'red')
+                    d.polygon(coords, col, 'red')
                     #sd.polygon(coords, col, 'green')
             
         
             # Draw path
-            transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
-            d=PILImageDraw.Draw(transp_layer)
             for e in self.current_path:
                 f,s=e.nodes
                 #print('f',f,'s',s)

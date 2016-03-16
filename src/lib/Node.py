@@ -42,7 +42,7 @@ class Node(object):
         self.traversable_neighbors = set()
         self.finalized_traversable_neighbors = set()
         #self.has_rule = False
-        self.has_rule_color = False
+        #self.has_rule_color = False
         self.has_rule_shape = False
         #self.passed_rule_check = False
 
@@ -176,10 +176,11 @@ class GridNode(Node):
     def is_horizontal_with(self, other):
         return self.pt.y == other.pt.y
 
+    
+
+    # TODO: BEGIN GraphImage should handle this...
     def dimensions(self):
         return self.get_sqare_points(self.rendering_weight)
-
-    # TODO: GraphImage should handle this...
     def offset(self):
         #offset= self.x*4, self.y*4
         offset = self.x * \
@@ -188,7 +189,8 @@ class GridNode(Node):
         return Point(offset)
 
     def get_color(self):
-        return self.color
+        col=self.color
+        return col
 
     def get_imgRect(self, scalar=1):
         raw_rect = Rectangle(
@@ -203,7 +205,8 @@ class GridNode(Node):
 
     def get_sqare_points(self, w):
         return self.get_rectangle_points(w, w)
-
+    # TODO: END  GraphImage should handle this...
+    
     def vec(self):
         return self.pt
     
@@ -281,18 +284,21 @@ class GridSquare(GridNode):
         
         if self.sun_color:
             return self.sun_color
+        if self.rule_color:
+            return self.rule_color
 #         if self.partition_color:
 #             return self.partition_color
         return self.color
-        if self.rule_color:
-            return self.rule_color
+        
 
-    def set_rule_color(self, color):
+    def set_rule_color(self, rule_color):
         #self.has_rule = True
-        self.has_rule_color = True
         # self.color=color
-        self.rule_color = color
-
+        self.rule_color = rule_color
+    
+    def set_rule_sun(self, sun_color):
+        self.sun_color=sun_color
+        
     # colors are only "different" if both squares actually have a rule_color
     def different_color(self, other):
         return (self.rule_color and other.rule_color \
