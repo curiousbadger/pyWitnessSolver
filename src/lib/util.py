@@ -96,6 +96,7 @@ class simplePickler(object):
     def __init__(self, paths_filename):
         d, e = defaultValueServer.get_directory_extension_pair('pickle')
         self.fn = os.path.join(d, paths_filename + e)
+        print('Created pickle handler:', self.fn)
 
     def dump(self, o):
         print('writing pickle to', self.fn)

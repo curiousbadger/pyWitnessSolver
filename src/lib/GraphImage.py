@@ -248,7 +248,7 @@ class GraphImage(RectGridGraph):
                 for r in new_rects:
                     coords,col=r.abs_coords(scalar), r.color
                     col=chImg.color_with_alpha(r.color,75)
-                    print('col', col)
+                    #print('col', col)
                     
                     d.polygon(coords, col, 'red')
                     #sd.polygon(coords, col, 'green')
@@ -260,7 +260,7 @@ class GraphImage(RectGridGraph):
                 #print('f',f,'s',s)
                 
                 new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
-                col=(255,255,255,200)
+                col=chImg.color_with_alpha('white', 240)
                 #print('new_rect',new_rect)
                 d.polygon(new_rect, col)
             im.im=PILImage.alpha_composite(im.im, transp_layer)

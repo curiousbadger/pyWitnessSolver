@@ -328,10 +328,13 @@ class RectGridGraph(Graph):
         jm = '\n'.join([''.join([str(y) for y in x]) for x in m])
         return jm
 
-    def load_paths(self):
+    def load_paths(self, overwrite=False):
         if self.paths:
+            if not overwrite:
+                return
             print('Warning: self.paths already loaded')
-            #raise Exception('self.paths already loaded')
+            
+        #raise Exception('self.paths already loaded')
         self.paths = self.all_paths_pickler.load()
         
 

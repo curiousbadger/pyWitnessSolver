@@ -135,9 +135,28 @@ class Rectangle(tuple):
         return 'Rectangle: %s to %s offset: %s color: %s' % (self.lower_left,self.upper_right,self.offset,self.color) 
 
 class MultiBlock(set):
+    '''A MultiBlock is the underlying shape for the MultiBlockSquare.
+    
+    A MultiBock is composed of one or more (usually contiguous) 1-unit squares.
+    For the purposes of puzzle solving it is best to consider them as a set of
+    "Virtual Squares" that need to be perfectly bounded within a sub-section
+    of the Grid. Or conversely, there cannot be any Square within the Path-bounded 
+    sub-section that is not "filled" by a Virtual Square from a MultiBlock. 
+    
+    Virtual Squares within a sub-section need not all come from the same MultiBlock. 
+    Indeed they often won't, and in that case they need to fit together. However, a
+    MultiBlock cannot usually be "broken up", it must retain it's original shape,
+    but some do have gaps or holes.
+    
+    It's kind of like Tetris.
+    
+    '''
+    
     MultiBlockColorGenerator=MasterUniqueColorGenerator
+    
     def could_contain(self,other):
         return self.bounding_rectangle.could_contain(other.bounding_rectangle)
+    
     def rotate(self,angle):
         '''
         In general if:
@@ -172,22 +191,7 @@ class MultiBlock(set):
 
         return new_points_shifted
 
-    '''A MultiBlock is the underlying shape for the MultiBlockSquare.
     
-    A MultiBock is composed of one or more (usually contiguous) 1-unit squares.
-    For the purposes of puzzle solving it is best to consider them as a set of
-    "Virtual Squares" that need to be perfectly bounded within a sub-section
-    of the Grid. Or conversely, there cannot be any Square within the Path-bounded 
-    sub-section that is not "filled" by a Virtual Square from a MultiBlock. 
-    
-    Virtual Squares within a sub-section need not all come from the same MultiBlock. 
-    Indeed they often won't, and in that case they need to fit together. However, a
-    MultiBlock cannot usually be "broken up", it must retain it's original shape,
-    but some do have gaps or holes.
-    
-    It's kind of like Tetris.
-    
-    '''
     def __init__(self, point_list,name=None,auto_shift_Q1=True,color=None,can_rotate=False):
         '''PRE: Each Point has been assigned it's relative coordinates within the
         MultiBlock.
@@ -369,7 +373,7 @@ if __name__=='__main__':
     ''' X
         X'''
     IshapeVert2=MultiBlock([(0,0),(1,0)])
-    Single0=MultiBlock([(0,0)])
+    
     Single1=MultiBlock([(0,0)])
     
     ''' STS
@@ -377,10 +381,7 @@ if __name__=='__main__':
     
     
     shape_list=[LshapeUpRight,IshapeHoriz2]
-    shape_list=[LshapeUpLeft,Single0,Single1]
-    shape_list=[TshapeUp,Single0,Single1]
-    
-    
+
     partition=r2x3
     cs_ret=compose_shapes(0, shape_list, partition,None)
     print('cs_ret',cs_ret)

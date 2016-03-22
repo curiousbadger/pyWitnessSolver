@@ -48,22 +48,28 @@ class RectangleGridPuzzle(GraphImage):
     def paths_filename(self):
         return '%s_%s' % (self.puzzle_name, super().paths_filename())
     
-    def filter_paths(self, overwrite=False, expecting_filtered=False):
+    # TODO: Decorator?
+    def filter_paths_setup(self, overwrite=False):
+        if not self.paths:
+            self.load_paths()
+
+        
+       
+    def filter_paths_colors_only(self, overwrite=False, expecting_filtered=False):
         '''TODO: Currently only works for RectangleGridPuzzles with rule_color GridSquares.
         
         Filter paths to those containing segments bounding adjacent, differing rule_colors'''
         
-        if not self.paths:
-            self.load_paths()
-
+        self.filter_paths_setup(overwrite)
+        
         if self.filtered_paths_pickler.file_exists():
             if not overwrite:
                 self.potential_paths = self.filtered_paths_pickler.load()
-                print('Skipping filter_paths...')
+                print('Skipping filter_paths_colors_only...')
                 return
             else:
-                print('Overwriting filter_paths...')
-        
+                print('Overwriting filter_paths_colors_only...')
+                
         # get a list of all boundaries between adjacent differing colors
         color_boundaries = frozenset(s.different_color_boundaries for s in self.inner_grid.values(
         ) if s.different_color_boundaries)
@@ -90,15 +96,16 @@ class RectangleGridPuzzle(GraphImage):
                     self.potential_paths.append(path)
                     break
                     
+        self.filter_paths_cleanup(expecting_filtered)
 
+    def filter_paths_cleanup(self, expecting_filtered):
         if not self.potential_paths and expecting_filtered:
-            #print(sorted_path_segs)
             raise Exception('No filtered paths')
-
+        
         print('Filtered', len(self.paths),
               'paths to', len(self.potential_paths))
         self.filtered_paths_pickler.dump(self.potential_paths)
-
+        
     def has_violations(self):
         # Innocent until proven guilty ;)
         violation = False
@@ -140,7 +147,7 @@ class RectangleGridPuzzle(GraphImage):
             
             # TODO: Hack... Use Path class instead of OrderededDict and encapsulate efficient search/serialization
             p=literal_eval(p)
-            print('Evaluating:\n'+str(p))
+            #print('Evaluating:\n'+str(p))
             self.set_current_path(p)
             
             solution = not self.has_violations()
