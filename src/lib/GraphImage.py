@@ -192,7 +192,7 @@ class GraphImage(RectGridGraph):
                     #sq_im.show()
             
                 rule_square_rect=Rectangle(Rectangle.get_sqare_points(3))
-                rule_square_offset=GraphImage.calculate_inner_square_offset(*rsn.vec())
+                rule_square_offset=GraphImage.calculate_inner_square_offset(*rsn.key())
                 rule_square_rect.offset=rule_square_offset
                 rule_square_rect=rule_square_rect.abs_coords(scalar)
                 dim=rule_square_rect.get_dimensions()

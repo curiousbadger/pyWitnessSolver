@@ -169,7 +169,8 @@ class UniqueStringGenerator(object):
                 self.generator = self.generator = itertools.permutations(
                     UniqueStringGenerator.symbol_string, self.r_length)
         return n
-
+    def __iter__(self):
+        return self
     def get(self):
         return next(self)
 

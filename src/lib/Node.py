@@ -2,6 +2,8 @@
 Created on Feb 4, 2016
 
 @author: charper
+
+TODO: Get rid of code invalidated by Edge logic. Make the Nodes "dumber" and less aware of things outside themselves.
 '''
 import string
 import random
@@ -13,20 +15,16 @@ from lib.util import MasterUniqueNumberGenerator, MasterUniqueStringGenerator
 class Node(object):
     '''A generic Node (or vertex) in a Graph '''
 
-#     def __hash__(self):
-#         return self.hash_int
-#
-#     def __eq__(self,other):
-#         return self.__hash__() == other.__hash__()
-
-    def vec(self):
+    def key(self):
         '''Some way to identify position within the Graph. For Nodes is a Grid this
-        is simply coordinates. Not sure yet how to handle for others. '''
+        is simply coordinates. 
+        
+        TODO: Not sure yet how to handle for others. '''
         raise NotImplementedError
         return ''
 
     def __repr__(self):
-        return '%s:%s @%s' % (self.__class__.__name__, self.sym, str(self.vec()))
+        return '%s:%s @%s' % (self.__class__.__name__, self.sym, str(self.key()))
 
     def __init__(self, hash_int=None):
         self.hash_int = hash_int or MasterUniqueNumberGenerator.get()
@@ -93,8 +91,8 @@ class Node(object):
     def remove_traversable_no_err(self, other, warn=True):
         if not other in self.traversable_neighbors:
             if warn:
-                print(self.vec(), 'does not have', other.vec())
-            #raise Exception(str(self),'does not have', other.vec())
+                print(self.key(), 'does not have', other.key())
+            #raise Exception(str(self),'does not have', other.key())
             return
         self.remove_traversable(other)
 
@@ -207,7 +205,7 @@ class GridNode(Node):
         return self.get_rectangle_points(w, w)
     # TODO: END  GraphImage should handle this...
     
-    def vec(self):
+    def key(self):
         return self.pt
     
     def add_edge(self, e, direction):

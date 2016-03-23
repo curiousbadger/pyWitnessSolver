@@ -201,6 +201,7 @@ class Test(unittest.TestCase):
 
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
+        g.finalize()
         g.render()
         g.generate_paths()
         g.load_paths()
@@ -568,9 +569,9 @@ def test_singles():
     t.setUp(enable_profiler=True)
 
 #    t.test2Ishapes()
-    #t.testColor0()
+    t.testColor0()
 #    t.testMultipleShapesInPartition()
-    # t.testRotationShapes()
+    t.testRotationShapes()
 #     t.testSinglePartition()
 #
 #     t.testTreehouse0()
@@ -579,7 +580,7 @@ def test_singles():
     # t.testMoveableShapes()
 
     # t.testVillageYellowDoorWindow()
-    #t.testVillageSunDoor()
+    t.testVillageSunDoor()
     t.testVillageVentWall1()
     t.testVillageVentWall2()
     t.testVillageVentWall3()

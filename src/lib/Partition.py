@@ -16,10 +16,10 @@ class Partition(Graph):
     def travel_partition(self, n):
         '''Travel the partition to discover all Nodes.
         TODO: accumulate some simple rule info as we go?'''
-        if n.vec() in self:
+        if n.key() in self:
             return
         
-        self[n.vec()]=n
+        self[n.key()]=n
         
         for e in n.traversable_edges():
             if e.nodes not in self.edges:
