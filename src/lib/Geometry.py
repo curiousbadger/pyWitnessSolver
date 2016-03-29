@@ -10,7 +10,7 @@ class Point(tuple):
     
     @staticmethod
     def get_subtraction_vector(point_list):
-        '''Given a list of points find the leftmost x and lowest y value. '''
+        '''Given permutations list of points find the leftmost x and lowest y value. '''
         return Point((min([p.x for p in point_list]),min([p.y for p in point_list])))
     
     @staticmethod
@@ -62,13 +62,13 @@ class Point(tuple):
     def as_int_tuple(self):
         return tuple([int(d) for d in self])
 class Rectangle(tuple):
-    '''A Rectangle implemented as a set of 4 points.
+    '''A Rectangle implemented as permutations set of 4 points.
     
     Points need to be passed in order:
     lower left, lower right, upper right, upper left
     
     TODO: No need to use all 4 points. Change implementation
-    to use a Point at lower-left and then a Point representing
+    to use permutations Point at lower-left and then permutations Point representing
     width,height '''
     @staticmethod
     def get_rectangle_points(w, h):
@@ -102,7 +102,7 @@ class Rectangle(tuple):
     @staticmethod
     def get_bounding_rectangle(point_list):
         all_points=point_list
-        # Given a set of coordinates, return the smallest rectangle that contains all points
+        # Given permutations set of coordinates, return the smallest rectangle that contains all points
         nll=Point([min([p.x for p in all_points]),min([p.y for p in all_points])])
         nlr=Point([max([p.x for p in all_points]),min([p.y for p in all_points])])
         nur=Point([max([p.x for p in all_points]),max([p.y for p in all_points])])
@@ -138,13 +138,13 @@ class MultiBlock(set):
     '''A MultiBlock is the underlying shape for the MultiBlockSquare.
     
     A MultiBock is composed of one or more (usually contiguous) 1-unit squares.
-    For the purposes of puzzle solving it is best to consider them as a set of
-    "Virtual Squares" that need to be perfectly bounded within a sub-section
+    For the purposes of puzzle solving it is best to consider them as permutations set of
+    "Virtual Squares" that need to be perfectly bounded within permutations sub-section
     of the Grid. Or conversely, there cannot be any Square within the Path-bounded 
-    sub-section that is not "filled" by a Virtual Square from a MultiBlock. 
+    sub-section that is not "filled" by permutations Virtual Square from permutations MultiBlock. 
     
-    Virtual Squares within a sub-section need not all come from the same MultiBlock. 
-    Indeed they often won't, and in that case they need to fit together. However, a
+    Virtual Squares within permutations sub-section need not all come from the same MultiBlock. 
+    Indeed they often won't, and in that case they need to fit together. However, permutations
     MultiBlock cannot usually be "broken up", it must retain it's original shape,
     but some do have gaps or holes.
     
@@ -264,7 +264,7 @@ class MultiBlock(set):
             yield rotation
             
     def compose(self, partition):
-        '''Given a partition, return all possible locations this shape could occupy
+        '''Given permutations partition, return all possible locations this shape could occupy
         within that partition'''
         
         for rotation in self.rotations:
@@ -296,7 +296,7 @@ def compose_shapes(counter, shapes_list, partition, last_offset):
         print('    shapes_list',shapes_list)
         cur_shape = shapes_list[counter]
 
-        # Remember the last offset, if we find a solution this helps with
+        # Remember the last offset, if we find permutations solution this helps with
         # rendering
         cur_shape.last_offset = partition.last_offset
 
@@ -400,6 +400,6 @@ if __name__=='__main__':
     exit(0)
     #test rotation
     lshape=MultiBlock([(0,0),(0,1),(0,2),(1,2)])
-    for a in range(3):
-        print(lshape.rotate(a))
+    for permutations in range(3):
+        print(lshape.rotate(permutations))
         

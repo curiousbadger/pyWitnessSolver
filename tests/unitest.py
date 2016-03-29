@@ -52,7 +52,7 @@ class Test(unittest.TestCase):
         self.assertEqual(len(g.solutions), 4, g.solutions)
         #frozenset({(0, 1), (3, 2), (0, 0), (1, 3), (3, 3), (3, 0), (3, 1), (2, 1), (2, 0), (2, 3), (2, 2), (0, 3), (0, 2)})
 
-    def testColor0(self, overwrite=False):
+    def testBunker8(self, overwrite=False):
         '''o p q r s t
             J K L M N
            i j k l m n
@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
            
            uvwx CBA FEJK pq LM HI up'''
         # Color Puzzle 1
-        cp1 = RectangleGridPuzzle(6, 5, 'bunker_first_room_last_panel')
+        cp1 = RectangleGridPuzzle(6, 5, 'testBunker8')
         # Initialize the entrance/exit Nodes
         cp1.lower_left().is_entrance = True
         cp1.upper_right().is_exit = True
@@ -90,7 +90,7 @@ class Test(unittest.TestCase):
         square_grid[4, 3].set_rule_color('yellow')
 
         cp1.finalize()
-
+        cp1.render()
         # Generate all possible paths
         cp1.generate_paths(overwrite)
         # Filter paths (if possible)
@@ -111,6 +111,41 @@ class Test(unittest.TestCase):
             '\n'.join([''.join(str(s)) for s in actual_solutions])))
         self.assertEqual(len(cp1.paths), 79384, 'path number')
 
+    def testBunker6(self, overwrite=False):
+     
+        # Color Puzzle 1
+        cp1 = RectangleGridPuzzle(5, 5, 'testBunker6')
+        # Initialize the entrance/exit Nodes
+        cp1.lower_left().is_entrance = True
+        cp1.upper_right().is_exit = True
+
+        # Initialize the colored Squares
+        square_grid = cp1.inner_grid
+
+        square_grid[0, 0].set_rule_color('aqua')
+        square_grid[0, 3].set_rule_color('aqua')
+        
+        square_grid[1, 1].set_rule_color('yellow')
+        square_grid[1, 2].set_rule_color('yellow')
+        
+        square_grid[2, 1].set_rule_color('antiquewhite')
+        square_grid[2, 2].set_rule_color('antiquewhite')
+
+        square_grid[3, 0].set_rule_color('red')
+        square_grid[3, 3].set_rule_color('red')
+
+        cp1.finalize()
+        cp1.render()
+        # Generate all possible paths
+        cp1.generate_paths(overwrite)
+        # Filter paths (if possible)
+        cp1.filter_paths_colors_only(overwrite, expecting_filtered=True)
+        # Solve but do NOT break on first first_solution to make sure we don't find
+        # multiples
+        print(cp1.render_both())
+        cp1.solve(False)
+        
+        
     def testMultipleShapesInPartition(self):
         g = RectangleGridPuzzle(5, 5, 'MultipleShapesInPartition')
 
@@ -283,6 +318,7 @@ class Test(unittest.TestCase):
 
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
+        g.finalize()
         g.render()
         g.generate_paths()
         g.load_paths()
@@ -410,6 +446,30 @@ class Test(unittest.TestCase):
             '[(0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (2, 3), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]']
         g.solve(force_paths=None)
 
+    def testVillageVentWall0(self):
+        '''1 Rotatable Tshape, hexagon "must-travel" dots at all Path Nodes'''
+
+        g = RectangleGridPuzzle(5, 5, 'testVillageVentWall0')
+
+        TshapeUp = MultiBlock(
+            [(0, 0), (1, 0), (2, 0), (1, 1)], name='TshapeUp', can_rotate=True)
+        
+        g.inner_grid[0, 1].set_rule_shape(TshapeUp)
+        
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+
+        g.finalize()
+        g.render()
+        
+        g.generate_paths()
+        g.load_paths()
+        
+        # Filter paths to those containing ALL path nodes (fill up the Grid)
+        #paths_hack=[literal_eval(p) for p in g.paths]
+        g.potential_paths=[p for p in g.paths if len(literal_eval(p))==g.gx*g.gy]
+        g.solve()
+        
     def testVillageVentWall1(self):
         '''1 Rotatable Tshape, on Single, hexagon "must-travel" dots at all Path Nodes'''
 
@@ -568,31 +628,37 @@ def test_singles():
 
     t.setUp(enable_profiler=True)
 
-#    t.test2Ishapes()
-    t.testColor0()
+    
+    t.testBunker8()
+    t.testBunker6()
+
+    #t.test2Ishapes()
 #    t.testMultipleShapesInPartition()
-    t.testRotationShapes()
+    #t.testRotationShapes()
 #     t.testSinglePartition()
 #
 #     t.testTreehouse0()
 
-    # t.testRuleShapeRendering()
-    # t.testMoveableShapes()
+    #t.testRuleShapeRendering()
+    #t.testMoveableShapes()
 
-    # t.testVillageYellowDoorWindow()
-    t.testVillageSunDoor()
-    t.testVillageVentWall1()
-    t.testVillageVentWall2()
-    t.testVillageVentWall3()
-    t.testVillageVentWall4()
+    #t.testVillageYellowDoorWindow()
+    #t.testVillageSunDoor()
+    
+#     t.testVillageVentWall0()
+#     t.testVillageVentWall1()
+    #t.testVillageVentWall2()
+#     t.testVillageVentWall3()
+#     t.testVillageVentWall4()
+    
     t.tearDown()
-
 
 def test_all():
     unittest.main()
 
 if __name__ == '__main__':
 
+    
     test_singles()
     #test_all()
 

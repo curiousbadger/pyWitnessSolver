@@ -36,10 +36,12 @@ class Edge(object):
         self.connected=True
         self.inner_edge=None
     
+    def __iter__(self):
+        return iter(self.nodes)
     
     def assign_default_state(self):
         '''OuterEdge default_state is useful because when searching for paths 
-        because there are certain Paths that will always result in a dead end.
+        because there are certain Paths that will always result in permutations dead end.
         InnerEdge (GridSquare) default state is not as useful because they are either
         severed by the current Path or not. But when building Partitions we mostly
         want to get every possible GridSquare to check for rule violations, then it's
@@ -163,15 +165,15 @@ if __name__=='__main__':
     na,nb,nc=nl
     for n in nl: n.finalize()
     e=Edge(nl[:2])
-    a,b=e.nodes
+    permutations,b=e.nodes
     
     
-    e.sever(a)
+    e.sever(permutations)
     print('e.state_str', e.state_str())
     
     e.assign_default_state()
     
-    e.repair(a)
+    e.repair(permutations)
     print('e.state_str', e.state_str())
     e.set_default_state()
     print('e.state_str', e.state_str())

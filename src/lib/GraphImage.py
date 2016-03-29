@@ -15,9 +15,10 @@ from PIL import ImageFont,ImageColor
 
 from lib.Geometry import Point, Rectangle
 from lib.util import UniqueNumberGenerator, defaultValueServer
-from lib.Graph import RectGridGraph
+from lib.GridGraph import RectGridGraph
 from lib.Partition import Partition
 from lib.Node import GridNode, GridSquare
+from lib.Edge import InnerEdge
 
 class chImg(object):
     '''Wrapper around Pillow Image.
@@ -93,8 +94,8 @@ class GraphImage(RectGridGraph):
     
     '''
     
-    def __init__(self, gx, gy, *args):
-        super().__init__(gx, gy)
+    def __init__(self, gx, gy, **kwargs):
+        super().__init__(gx, gy, **kwargs)
         self.ung=UniqueNumberGenerator()
 
     def render_solution(self,title=None):
@@ -137,7 +138,7 @@ class GraphImage(RectGridGraph):
         int_canvas=[int(d) for d in canvas]
         im=chImg(canvas)
         scalar=cw/element_dimensions.max_dimension()
-        
+        print('scalar', scalar)
         
         # Iterate over entrance/exit Outer GridNodes
         for n in self.values():
@@ -152,7 +153,7 @@ class GraphImage(RectGridGraph):
             im.polygon(r,r.color)
         
         # Draw rule shapes inside the GridSquares
-        # TODO: This is a mess...
+        # TODO: This is an ABSOLUTE mess... LAYERING!!!
         rule_shape_nodes=[n for n in self.inner_grid.values() if n.rule_shape]
         if rule_shape_nodes:
             print('rule_shape_nodes', rule_shape_nodes)
@@ -208,7 +209,7 @@ class GraphImage(RectGridGraph):
                 
             im.im=PILImage.alpha_composite(im.im, sq_transp_layer)
                     
-            
+        # Overlay anything Partitions want to add
         render_partitions=True
         if self.partitions and render_partitions:
             # Draw Partitions
@@ -234,7 +235,7 @@ class GraphImage(RectGridGraph):
             im.im=PILImage.alpha_composite(im.im, transp_layer)
         
         
-        # Draw path
+        # Draw path and traversable links between Squares
         draw_path=True
         if self.current_path and draw_path:
             transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
@@ -260,11 +261,29 @@ class GraphImage(RectGridGraph):
                 #print('f',f,'s',s)
                 
                 new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
-                col=chImg.color_with_alpha('white', 240)
+                col=chImg.color_with_alpha('blue', 150)
                 #print('new_rect',new_rect)
                 d.polygon(new_rect, col)
             im.im=PILImage.alpha_composite(im.im, transp_layer)
+        
+        # Draw GridSquare Edges as lines instead of small, pink squares :)
+        for e in self.inner_grid.edges.values():
+            na,nb=e
+            print('na,nb', na,nb)
+            ca=GraphImage.calculate_inner_square_offset(*nb.pt)
+            coordinate_list=[Point(GraphImage.calculate_inner_square_offset(*n.pt)) for n in e]
+            coordinate_list=[p.scaled(scalar) for p in coordinate_list]
+            print('coordinate_list', coordinate_list)
+            im.line(coordinate_list, 'green', 5)
+            print('ca', ca)
+            # Get a rectangle with lower left corner at this point
+            print('scalar', scalar)
+            r=Rectangle(Rectangle.get_sqare_points(1))
             
+            r.offset=ca
+            r=r.abs_coords(scalar)
+            print('r', r)
+            im.polygon(r, 'purple', 'blue')
         #PILImage.alpha_composite(bb, square_traversable_layer)
         #square_traversable_layer.save('../../img/test_transp.png')
         #comp=PILImage.alpha_composite(im.im, square_traversable_layer)
@@ -310,10 +329,46 @@ class GraphImage(RectGridGraph):
     def class_name(self): return 'sqareGraph'
     def cust_string(self):
         return 'gx'+str(self.gx)+'gy'+str(self.gy)
-    
+
+# TODO: Hack    
+def pass_print(*args):
+    pass
+#print=pass_print
 if __name__=='__main__':
+    ''' Given an Edge, draw a line
     
-    gi=GraphImage(5,5)
+    Need x,y coords of each endpoint
+    '''
     
-    print(gi.render_both())
+    gi=GraphImage(11,11,auto_assign_edges=False)
+    na=gi.inner_grid[0,0]
+    nb=gi.inner_grid[0,1]
+    nc=gi.inner_grid[3,4]
+    na.color='red'
+    nb.color = 'green'
+    nc.color='blue'
+    na_nc=frozenset([na,nc])
+    e=InnerEdge(na_nc)
+    gi.inner_grid.edges[na_nc]=e
+    
+    for i in range(100-6):
+        
+        
+        y,x=divmod(i, 10)
+        key=(x,y)
+
+        n=gi.inner_grid[key]
+        print(n)
+        for j in range(1,1+6):
+            jx=(i+j)%10
+            jy=(i+j)//10
+            ns=gi.inner_grid[jx,jy]
+            print('ns', ns)
+            na_nb=frozenset([n,ns])
+            print('na_nb', na_nb)
+            e=InnerEdge(na_nb)
+            gi.inner_grid.edges[na_nb]=e
+    #print(gi.render_both())
+    exit(0)
     gi.render()
+    

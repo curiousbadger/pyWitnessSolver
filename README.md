@@ -12,3 +12,6 @@ http://store.steampowered.com/app/210970/
 Playstation Store:
 https://www.playstation.com/en-us/games/the-witness-ps4/
 
+# Where to start
+
+All the puzzles are in src/unitest.py as test cases. Sorry that I don't have a good overview yet, I'll get there ;)

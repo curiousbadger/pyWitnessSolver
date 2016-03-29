@@ -195,7 +195,7 @@ class Partition(Graph):
 
 def pass_print(*args):
     pass
-#print=pass_print
+print=pass_print
 if __name__=='__main__':
     pass
     
