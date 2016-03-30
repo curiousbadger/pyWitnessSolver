@@ -10,8 +10,9 @@ from collections import Counter
 class simpleLogger(object):
 
     DEBUG2=logging.DEBUG-1
-    def __init__(self, *args, **kwargs):
-        self.logger=logging.getLogger('master')
+    def __init__(self, name, *args, **kwargs):
+        print('Creating logger:', name)
+        self.logger=logging.getLogger(name)
         self.logger.setLevel(logging.INFO)
         
         # stderr stream handler
@@ -19,7 +20,7 @@ class simpleLogger(object):
         self.stream_handler.setLevel(logging.INFO)
         
         # TODO: Use this instead and make client calls init handler?
-        self.null_handler=logging.NullHandler()
+        #self.null_handler=logging.NullHandler()
         
         
         # %(asctime)s - %(name)s - %(levelname)s - %(message)s
@@ -28,7 +29,7 @@ class simpleLogger(object):
         # add simple_format to ch
         self.stream_handler.setFormatter(self.simple_format)
         
-        self.time_format=logging.Formatter('%(asctime)s%(message)s')
+        #self.time_format=logging.Formatter('%(asctime)s%(message)s')
         
         self.logger.addHandler(self.stream_handler)
         self.waste_counter=Counter()
@@ -39,10 +40,12 @@ class simpleLogger(object):
     
     # TODO: Decorators?
     def info(self, *args):
-        return self._info(*args)
-    def _info(self, *args):
-        self.logger.info(msg=' '.join([str(a) for a in args]))
-        
+        return self._info(args)
+    def _info(self, args):
+        msg=' '.join([str(a) for a in args])
+
+        self.logger.info(msg=msg)
+
     def debug(self, *args):
         return self._debug(*args)
     def _debug(self, *args):
@@ -81,8 +84,8 @@ class simpleLogger(object):
     def pass_it(self, *args):
         pass
     
-defaultLogger=simpleLogger()
-defaultLogger.set_master_level(logging.DEBUG)
+defaultLogger=simpleLogger(name='default')
+defaultLogger.set_master_level(logging.INFO)
 linf=defaultLogger.info
 ldbg=defaultLogger.debug
 ldbg2=defaultLogger.debug2

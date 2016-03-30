@@ -12,6 +12,7 @@ from lib.Graph import Graph
 
 from lib.Node import GridNode, GridSquare
 from lib.Edge import OuterEdge, InnerEdge
+from log.simpleLogger import linf
 
 
 class GridGraph(Graph):
@@ -118,7 +119,7 @@ class RectGridGraph(Graph):
                 for nbr, direction in nbr_list:
                     # Teach the node it's neighbor directly 
                     # TODO: May just use Node.edges later?
-                    n.add_neighbor(nbr)
+                    #n.add_neighbor(nbr)
                     # Order doesn't really matter for an Edge's Nodes, use a
                     # frozenset
                     node_set = frozenset([n, nbr])
@@ -151,9 +152,8 @@ class RectGridGraph(Graph):
                     nbr = self[x, y - 1]
                 if nbr:
                     e = self.get_edge(n, nbr)
-                    # Cut the line from n -> nbr
+                    # Cut the line
                     e.sever(n)
-                    n.remove_traversable_no_err(nbr)
 
     def associate_outer_to_inner(self):
         ''' Teach the Outer Edges which corresponding Inner Edge runs
@@ -257,7 +257,12 @@ class RectGridGraph(Graph):
         return self.paths_filename() + '_all'
 
     def finalize(self):
-        print('Finalizing Grid:', str(self))
+        
+        if self.finalized:
+            raise Exception('Already finalized!')
+        self.finalized=True
+        
+        linf('Finalizing Grid:', str(self))
         for n in self.iter_all():
             n.finalize()
         for e in self.edges.values():
@@ -282,28 +287,6 @@ class RectGridGraph(Graph):
         self.color_generator().reset()
         for n in self.values():
             n.reset_node()
-
-    def render_with_links(self, sx, sy):
-        m = []
-        m.append(['-------------------\n'])
-        dl = []
-        for y in range(self.gy - 1, -1, -1):
-            m.append([])
-            dl = []
-            for x in range(self.gx):
-                m[-1].append('!' if x == sx and y ==
-                             sy else str(self.nl[x][y]))
-                m[-1].append('-' if self.nl[x]
-                             [y].has_right_traversable_nbr() else ' ')
-                dl.append(
-                    '|' if self.nl[x][y].has_lower_traversable_nbr() else ' ')
-                dl.append(' ')
-            m.append(dl)
-        m.append([' '])
-        #m[-1].extend([str(x) for x in range(self.width)])
-        m.append(['********************'])
-        jm = '\n'.join([''.join([str(y) for y in x]) for x in m])
-        return jm
 
     def load_paths(self, overwrite=False):
         if self.paths:
@@ -351,7 +334,8 @@ class RectGridGraph(Graph):
     def travel(self, n, path):
         ''' Depth-first traversal of all possible paths
         
-        #TODO: Name is too generic, need other traversal algorithms'''
+        TODO: Name is too generic, need other traversal algorithms
+        TODO: Path should be Edges not Nodes'''
         # A node cannot be entered twice
         if n.key() in path:
             return
@@ -361,7 +345,6 @@ class RectGridGraph(Graph):
 
         # Are we done yet?
         if n.is_exit:
-
             finalized_path = str(list(new_path))
             if finalized_path in self.paths:
                 return
@@ -371,7 +354,7 @@ class RectGridGraph(Graph):
             return
 
         # head on down the line...
-        for nxt in n.neighbors:
+        for nxt in n.traversable_nodes(auto_cut=False):
             self.travel(nxt, new_path)
 
     def set_current_path(self, path):
@@ -390,16 +373,13 @@ class RectGridGraph(Graph):
         for i in range(len(path) - 1):
             nodes = [self[n] for n in path[i:i + 2]]
             # Sever the link between 2 Squares (unless on Graph border)
-            # print(self.edges)
             cur_edge = self.get_edge(*nodes)
-            #print('cur_edge', cur_edge)
+            #ldbg2('cur_edge', cur_edge)
             cur_edge.sever_inner()
 
-            # self.remove_inner_nbrs(seg)
             self.current_path.append(cur_edge)
 
     def unset_current_path(self):
-
         # Reconnect any Edges severed by partitioning
         for p in self.partitions:
             for e in p.edges.values():
@@ -408,22 +388,6 @@ class RectGridGraph(Graph):
         # Reconnect all edges severed by the Path
         for e in self.current_path:
             e.reset_inner()
-
-#         for e in self.inner_grid.edges.values():
-#             e.connect()
-
-#         # Sanity test....
-#         for e in self.inner_grid.edges.values():
-#             if not e.is_fully_connected():
-#                 raise Exception('con',e.short_str())
-
-    def check_colors(self, n, color):
-
-        partition = self.retreive_partition(n)
-
-        if any(n.different_color(p_nbr) for p_nbr in partition.values()):
-            return True
-        return False
 
     '''
     TODO: Refactor find_any_xxx_violation functions into a wrapper?
@@ -510,31 +474,32 @@ class RectGridGraph(Graph):
 
         return violation
 
-    def generate_partition(self, n, auto_color=True):
-        '''Return the Partition that contains this GridSquare'''
+    def generate_partition(self, n):
+        '''Return the Partition that contains this GridSquare.
+        
+        PRE: The Partition belonging to n has NOT been generated.'''
         if not self.partitions:
             self.partitions = []
             self.real_partitions = []
+        # Sanity check
+        if any([n in p for p in self.partitions]):
+            raise Exception('Partition already generated for: %s', n)
+        p = Partition(n)
+        self.partitions.append(p)
 
-        rp = Partition(n)
-
-        self.partitions.append(rp)
-
-        # Optionally color partitions
-        # TODO: Partition should handle this
-        if auto_color == True:
-            partition_color = self.color_generator().get()
-            for n in rp.values():
-                n.partition_color = partition_color
-                # print(p,self.inner_grid[nvec].key())
-
-        # self.real_partitions.append(rp)
-        return rp
+        return p
 
     def retreive_partition(self, n):
         # Find the partition that contains this Node (for now just GridSquares)
         found_partition = None
 
+        found_partitions=[ p for p in self.partitions if n in p ]
+        if len(found_partitions) == 1:
+            return found_partitions[0]
+        elif not found_partitions:
+            return self.generate_partition(n)
+        else:
+            raise Exception('Bad number of Partitions returned: %s', found_partitions)
         for p in self.partitions:
             if n.key() in p:
                 found_partition = p

@@ -34,7 +34,7 @@ class Edge(object):
         #self.been_traversed=False
         
         self.connected=True
-        self.inner_edge=None
+        
     
     def __iter__(self):
         return iter(self.nodes)
@@ -102,11 +102,6 @@ class Edge(object):
     def short_str(self):
         return '(%s%s--%s%s)' % (self.a.sym, '<' if self.is_connected(self.b) else ' ','>' if self.is_connected(self.a) else ' ', self.b.sym)
     
-    def set_inner_edge(self, inner_edge):
-        '''If this is an Edge between "outer" GridNodes, then this
-        returns the Edge between the GridSquares on either side of
-        this Edge '''
-        self.inner_edge=inner_edge
     
     def get_other_node(self,from_node):
         return self.b if from_node==self.a else self.a
@@ -127,6 +122,16 @@ class Edge(object):
 
 class OuterEdge(Edge):
 
+    def __init__(self, node_set):
+        Edge.__init__(self, node_set)
+        self.inner_edge=None
+    
+    def set_inner_edge(self, inner_edge):
+        '''If this is an Edge between "outer" GridNodes, then this
+        returns the Edge between the GridSquares on either side of
+        this Edge '''
+        self.inner_edge=inner_edge    
+    
     def assign_default_state(self):
         return Edge.assign_default_state(self)
     

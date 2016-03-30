@@ -28,9 +28,8 @@ class chImg(object):
     TODO: Should probably just inherit instead of has-a'''
     
     def __init__(self,size=(1000,1000),mode='RGBA',color='black'):
-        int_sz=[int(ceil(d)) for d in size]
-        self.size=int_sz
-        self.im=PILImage.new(mode,int_sz,color)
+        self.size=Point(size).rounded()
+        self.im=PILImage.new(mode,self.size,color)
         self.d=PILImageDraw.Draw(self.im)
     
     @staticmethod
@@ -50,7 +49,7 @@ class chImg(object):
         d,ext=defaultValueServer.get_directory_extension_pair('image')
 
         img_filename=os.path.join(d,paths_filename+ext)
-        linf('Saving image:', img_filename)
+        
         flipped_im=self.flipped()
         if title:
             # Create a new image that is the same width plus some percentage of the height
@@ -75,19 +74,18 @@ class chImg(object):
         
         flipped_im.save(img_filename,fmt=None)
         
-    def drawtitle(self,text):
-        pass
-        font = ImageFont.truetype(font='arial', size=30)
-        #im.d.text((10, 10), "hello",font=font)
-    def show(self): self.flipped().show()
+    
     def flipped(self): 
         return self.im.transpose(PILImage.FLIP_TOP_BOTTOM) 
-    
+    def show(self): 
+        self.flipped().show()
+        
     def line(self,xy,color,width=0): 
         self.d.line(xy,color,width)
     def polygon(self,xy,fill=None,outline=None): 
         self.d.polygon(xy, fill, outline)
-        
+    def ellipse(self, xy, fill=None, outline=None):
+        self.d.ellipse(xy, fill, outline)
     def rectangle(self, xy, fill=None, outline=None):
         self.d.rectangle(xy, fill, outline)
         
@@ -114,6 +112,82 @@ class GraphImage(RectGridGraph):
         self._scalar=scalar
     def scalar(self):
         return self._scalar
+    
+    def default_dimensions(self):
+        # Default canvas size
+        cw,ch=2000.0,2000.0
+        canvas=Point([cw,ch])
+        return canvas
+    
+    def get_overlay_image(self, dimensions=None):
+        ''' Get a fully transparent image and drawing tool.
+        Defaults to the size of our background. '''
+        if not dimensions:
+            dimensions = self.default_dimensions()
+        # Fully transparent background color
+        background_color=chImg.color_with_alpha('white', 0)
+        overlay_img=PILImage.new('RGBA',dimensions.rounded(),background_color)
+        overlay_draw=PILImageDraw.Draw(overlay_img)
+        return overlay_img, overlay_draw
+    
+    def render_square_traversable_edges(self, overlay_draw):
+        '''Draw Edge lines between Squares that are connected'''
+        for e in self.inner_grid.edges.values():
+            if not e.is_fully_connected():
+                continue
+            na,nb=e
+            ldbg2('Drawing Path between:', na,nb)
+            # We want to draw the lines from the center of each Square, 
+            #so calculate how much we'll need to shift from low-left corner
+            half_square=self.render_weights[GridSquare] / 2.0
+            center_offset=Point((half_square, half_square))
+            coordinate_list=[GraphImage.calculate_node_offset(n)+center_offset for n in e]
+            coordinate_list=[Point(p).scaled(self.scalar()) for p in coordinate_list]
+            ldbg('coordinate_list', coordinate_list)
+            
+            # peachpuff: Color Of The Year :)
+            line_color = chImg.color_with_alpha('peachpuff', 40)
+            line_width = int(.15*self.scalar())
+            overlay_draw.line(coordinate_list, line_color, line_width)
+
+    def render_partitions(self, overlay_draw):
+        # Overlay Rule Shape solution positions
+        for p in self.partitions:
+            partition_color_generator=UniqueColorGenerator()
+            for edge_set in p.solution_shapes_to_edges():
+                # Get a color for this Rule Shape
+                col=partition_color_generator.get()
+                col=chImg.color_with_alpha(col, 50)
+                ldbg('edge_set',edge_set,'color',col)
+                for e in edge_set:
+                    squares=[s for s in e]
+                    ldbg('squares',squares)
+                    rule_shape_rects=[GraphImage.get_node_rectangle(s, self.scalar(), shrink=.8) for s in squares]
+                    ldbg('rule_shape_rects', rule_shape_rects)
+                    rule_shape_points_list=[]
+                    for r in rule_shape_rects:
+                        rule_shape_points_list.extend(r)
+                    ldbg('rule_shape_points_list', rule_shape_points_list)
+                    new_rect=Rectangle.get_bounding_rectangle(rule_shape_points_list)
+                    ldbg('new_rect', new_rect)
+                    overlay_draw.rectangle(new_rect.as_2_points(), col, outline=None)
+                    
+    def render_path(self, overlay_draw):
+        ''' Draw the Path Edges '''
+        for e in self.current_path:
+            # "Add" the two path Node rectangles together to draw a rectangle between them
+            rect_points=[]
+            for n in e.nodes:
+                rect_points.extend(self.translate_node_to_rectangles(n)[0][0])
+            ldbg('rect_points', rect_points)
+            
+            path_rectangle=Rectangle.get_bounding_rectangle(rect_points)
+            path_2_pt_rect=path_rectangle.as_2_points()
+            ldbg('path_rectangle',path_rectangle, 'path_2_pt_rect', path_2_pt_rect)
+
+            col=chImg.color_with_alpha('blue', 100)
+            overlay_draw.rectangle(path_2_pt_rect, col, outline=None)
+            
     def render(self,paths_filename=None,title=None):
         '''TODO: Convert this mess to use partial opacity layers...
         
@@ -140,14 +214,11 @@ class GraphImage(RectGridGraph):
         to set the scalar, but the idea is the same.
         '''
         element_dimensions=GraphImage.calculate_total_element_dimensions([self.gx,self.gy])
-
         
-        # Default canvas size
-        cw,ch=2000.0,2000.0
-        canvas=[cw,ch]
-        int_canvas=[int(d) for d in canvas]
-        im=chImg(canvas)
-        scalar=cw/element_dimensions.max_dimension()
+        dimensions=self.default_dimensions()
+        im=chImg(dimensions)
+        # TODO: This would not handle non-square image scaling correctly
+        scalar=dimensions.max_dimension()/element_dimensions.max_dimension()
         self.set_scalar(scalar)
         ldbg('scalar', scalar)
         
@@ -164,113 +235,115 @@ class GraphImage(RectGridGraph):
         
         # Iterate over Inner GridSquares
         for gs in self.inner_grid.values():
+            # Get a list of colors and rectangles to draw inside
             img_rects=self.translate_node_to_rectangles(gs)
             ldbg('img_rects', img_rects)
-            
-            #im.polygon(r,r.color)
+            # TODO: Hack, I'm putting the rule_sun element second, but I want to
+            # draw an ellipse instead of a rectangle here.
+            cnt=0
             for img_rect, col in img_rects:
-                im.rectangle(img_rect, col)
+                cnt+=1
+                if cnt==2 and gs.sun_color:
+                    im.ellipse(img_rect, col, 'red')
+                else:
+                    im.rectangle(img_rect, col)
                 pass
         # END  : Draw background
         
         
         # Draw GridSquare Edges as lines instead of small, pink squares :)
-        overlay_img=PILImage.new('RGBA',int_canvas,(255,255,255,0))
-        overlay_draw=PILImageDraw.Draw(overlay_img)
-        for e in self.inner_grid.edges.values():
-            if not e.is_fully_connected():
-                continue
-            na,nb=e
-            ldbg2('na,nb', na,nb)
-            coordinate_list=[Point(GraphImage.calculate_node_offset(*n.pt,n))+Point((1.5,1.5)) for n in e]
-            coordinate_list=[p.scaled(scalar) for p in coordinate_list]
-            ldbg('coordinate_list', coordinate_list)
-            
-            # peachpuff: Color Of The Year :)
-            line_color = chImg.color_with_alpha('peachpuff', 65)
-            line_width = int(.15*self.scalar())
-            overlay_draw.line(coordinate_list, line_color, line_width)
-        im.im=PILImage.alpha_composite(im.im, overlay_img)
-           
-        # Draw rule shapes inside the GridSquares
-        # TODO: HACK This is an ABSOLUTE mess... LAYERING!!!
+        overlay_img, overlay_draw = self.get_overlay_image()
+        self.render_square_traversable_edges(overlay_draw)
+        
+        
+        ''' Draw rule shapes inside the GridSquares.
+        
+        Each GridSquare with a Rule Shape essentially has a mini-Grid
+        inside it.
+        '''
         rule_shape_nodes=[n for n in self.inner_grid.values() if n.rule_shape]
         if rule_shape_nodes:
             ldbg2('rule_shape_nodes', rule_shape_nodes)
-            sq_transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
+            sq_transp_layer=PILImage.new('RGBA',dimensions.rounded(),(255,255,255,0))
+            #sq_transp_layer=im.im
             #td=PILImageDraw.Draw(sq_transp_layer)
+            
             # Default canvas size
             cw,ch=500.0,500.0
             sq_canvas=[cw,ch]
             sq_int_canvas=[int(d) for d in sq_canvas]
             for rsn in rule_shape_nodes:
-                linf('*** BEGIN RENDER rule_shape_node:', rsn)
-                cur_rule_shape=rsn.rule_shape
-                linf('cur_rule_shape', cur_rule_shape)
-                # How big is the Rule Shape? We'll scale it's Points (Squares)
-                bounding_rec=cur_rule_shape.bounding_rectangle
-                linf('bounding_rec', bounding_rec)
                 
-                # TODO: Hack, +2,2 because no Path nodes...
-                rule_shape_dimensions=bounding_rec.get_dimensions()+Point([2,2])
+                ldbg('*** BEGIN RENDER rule_shape_node:', rsn)
+                cur_rule_shape=rsn.rule_shape
+                ldbg('cur_rule_shape', cur_rule_shape)
+                # How big is the Rule Shape? We'll scale it's Points (Squares)
+                bounding_rec=cur_rule_shape.bounding_rectangle.get_absolute()
+                
+                ldbg('bounding_rec', bounding_rec)
+                ldbg('bounding_rec.get_dimensions()', bounding_rec.get_dimensions())
+                # Increase width and height by 1 because Points are 0-based indexes
+                bounding_rec = bounding_rec.grow_upper_right([1,1])
+                
+                # Calculate how big the mini-Grid would be (always InnerGrid.x+1, InnerGrid.y+1)
+                rule_shape_dimensions=bounding_rec.get_dimensions()+Point([1,1])
                 #rule_shape_dimensions=Rectangle.get_square(max_dim).get_dimensions()+Point([2,2])
-                linf('rule_shape_dimensions', rule_shape_dimensions)
+                ldbg('rule_shape_dimensions', rule_shape_dimensions)
                 
                 # This is a mini-Grid itself. Calculate dimensions in units of GridNode rendering weight
                 square_element_dimensions=GraphImage.calculate_total_element_dimensions(rule_shape_dimensions)
-                linf('square_element_dimensions', square_element_dimensions)
+                ldbg('square_element_dimensions', square_element_dimensions)
                 
                 # A mini-Grid needs a mini-scalar :)
                 sq_scalar=cw/square_element_dimensions.max_dimension()
-                linf('sq_scalar', sq_scalar)
+                ldbg('sq_scalar', sq_scalar)
                 
-                # Calculate the offset needed because we're putting a potentially non-square
-                # Rule Shape into a square canvas
-                # TODO: Don't know, ask me in the morning...
-                shift_dim = rule_shape_dimensions - Point([1.0,1.0])
-                #shift_dim = square_element_dimensions
-                linf('shift_dim',shift_dim)
+                ''' Calculate the offset needed because we're putting a potentially non-square
+                 Rule Shape into a square canvas. 
+                 
+                 Ex: TshapeDown is 3x2 squares wide/high, but it will be rendered
+                 as if it were 3x3, so it will be centered horizontally but not
+                 vertically. Therefore, we need to shift it up by half the distance
+                 of a node/square combo (4/2 right now -> 2).
+                 '''
+                # Is the Rule Shape wider than tall?
+                units_shorter = (square_element_dimensions.x - square_element_dimensions.y) / 2
+                vertical_shift = max([0, units_shorter])
+                # Or is it taller than wide?
+                units_taller = (square_element_dimensions.y - square_element_dimensions.x) / 2
+                horizontal_shift = max([0, units_taller])
                 
-                vertical_shift =  shift_dim.x / shift_dim.y
-                horizontal_shift =  shift_dim.y / shift_dim.x
-                # TODO: Hack, I have NO idea
-                if vertical_shift > horizontal_shift:
-                    vertical_shift *= 1.5
-                    horizontal_shift = 0
-                else:
-                    vertical_shift = 0
-                    horizontal_shift *= 1.5
                 rule_shape_offset=Point([horizontal_shift, vertical_shift])
-                linf('rule_shape_offset', rule_shape_offset)
+                ldbg('rule_shape_offset', rule_shape_offset)
                 
                 # Get a new image to draw in. We'll paste this into our layer when finished
-                sq_im=PILImage.new('RGBA',sq_int_canvas,(255,255,255,0))
+                square_background_color=chImg.color_with_alpha('grey', 255)
+                sq_im=PILImage.new('RGBA',sq_int_canvas,square_background_color)
                 sq_d=PILImageDraw.Draw(sq_im)
-                r=Rectangle(Rectangle.get_sqare_points(3))
+                r=Rectangle.get_square(3)
                 for p in cur_rule_shape:
-                    linf('    Current Rule Shape point:', p)
+                    ldbg('    Current Rule Shape point:', p)
                     
                     # TODO: HACK, just getting the corresponding InnerGrid Square to pass
-                    # to calculate_node_offset so that it will apply the right
-                    # Square offset. Ugh.... :(
+                    # to calculate_node_offset so that it will apply the right Square offset. Ugh.... :(
                     hack_temp_square=self.inner_grid[p]
-                    sq_offset=GraphImage.calculate_node_offset(*p,hack_temp_square)
-                    linf('    sq_offset', sq_offset)
+                    sq_offset=GraphImage.calculate_node_offset(hack_temp_square)
+                    ldbg('    sq_offset', sq_offset)
                     r.offset = sq_offset + rule_shape_offset
-                    img_r=r.abs_coords(sq_scalar)
+                    img_r=r.get_absolute(sq_scalar)
                     sq_d.polygon(img_r, 'green', 'yellow')
-                    linf('    r', r)
-                    linf('    img_r', img_r)
+                    ldbg('    r', r)
+                    ldbg('    img_r', img_r)
                     #sq_im.show()
             
-                rule_square_rect=Rectangle(Rectangle.get_sqare_points(3))
-                rule_square_offset=GraphImage.calculate_node_offset(*rsn.key(), rsn)
+                rule_square_rect=Rectangle.get_square(3)
+                rule_square_offset=GraphImage.calculate_node_offset(rsn)
                 rule_square_rect.offset=rule_square_offset
-                rule_square_rect=rule_square_rect.abs_coords(scalar)
+                rule_square_rect=rule_square_rect.get_absolute(scalar)
                 dim=rule_square_rect.get_dimensions()
-                linf('rule_square_rect.lower_left', rule_square_rect.lower_left)
-                linf('rule_square_rect', rule_square_rect)
-                linf('dim', dim)
+                ldbg('rule_square_rect.lower_left', rule_square_rect.lower_left)
+                ldbg('rule_square_rect', rule_square_rect)
+                ldbg('dim', dim)
                 if cur_rule_shape.can_rotate:
                     sq_im=sq_im.rotate(15, PILImage.BICUBIC, 1)
                 sq_im.thumbnail(dim, PILImage.LANCZOS)
@@ -283,84 +356,23 @@ class GraphImage(RectGridGraph):
         # Overlay anything Partitions want to add
         render_partitions=True
         if self.partitions and render_partitions:
-            overlay_img=PILImage.new('RGBA',int_canvas,(255,255,255,0))
-            overlay_draw=PILImageDraw.Draw(overlay_img)
+            self.render_partitions(overlay_draw)
             
-            # Overlay Rule Shape solution positions
-            for p in self.partitions:
-                partition_color_generator=UniqueColorGenerator()
-                for edge_set in p.solution_shapes_to_edges():
-                    # Get a color for this Rule Shape
-                    col=partition_color_generator.get()
-                    col=chImg.color_with_alpha(col, 50)
-                    ldbg('edge_set',edge_set,'color',col)
-                    for e in edge_set:
-                        squares=[s for s in e]
-                        ldbg('squares',squares)
-                        rule_shape_rects=[GraphImage.get_node_rectangle(s, self.scalar(), shrink=.8) for s in squares]
-                        ldbg('rule_shape_rects', rule_shape_rects)
-                        rule_shape_points_list=[]
-                        for r in rule_shape_rects:
-                            rule_shape_points_list.extend(r)
-                        ldbg('rule_shape_points_list', rule_shape_points_list)
-                        new_rect=Rectangle.get_bounding_rectangle(rule_shape_points_list)
-                        ldbg('new_rect', new_rect)
-                        overlay_draw.rectangle(new_rect.as_2_points(), col, outline=None)
-                
-            im.im=PILImage.alpha_composite(im.im, overlay_img)
-
         
         # Draw path
         draw_path=True
         if self.current_path and draw_path:
-            overlay_img=PILImage.new('RGBA',int_canvas,(255,255,255,0))
-            overlay_draw=PILImageDraw.Draw(overlay_img)
-            
-            '''Render traversable Edges as little Rectangles between Squares (now using lines)
-            for sq in self.inner_grid.values():
-                #Draw traversable links for each square
-                new_rects=sq.overlay_traversable_rects()
-                #ldbg2('new_rects',new_rects)
-                for r in new_rects:
-                    coords,col=r.abs_coords(scalar), r.color
-                    col=chImg.color_with_alpha(r.color,75)
-                    #ldbg2('col', col)
-                    d.polygon(coords, col, 'red')
-                    #sd.polygon(coords, col, 'green')
-            '''
         
-            # Draw path
-            for e in self.current_path:
-                #f,s=e.nodes
-                
-                # "Add" the two path Node rectangles together to draw a rectangle between them
-                rect_points=[]
-                for n in e.nodes:
-                    rect_points.extend(self.translate_node_to_rectangles(n)[0][0])
-                
-                path_rectangle=Rectangle.get_bounding_rectangle(rect_points)
-                path_2_pt_rect=path_rectangle.as_2_points()
-
-                ldbg('rect_points', rect_points)
-                ldbg('path_rectangle',path_rectangle)
-                ldbg('path_2_pt_rect', path_2_pt_rect)
-
-                col=chImg.color_with_alpha('blue', 150)
-                overlay_draw.rectangle(path_2_pt_rect, col, outline=None)
-            im.im=PILImage.alpha_composite(im.im, overlay_img)
+            self.render_path(overlay_draw)
         
+        # Compose the overlay on top of the background
+        im.im=PILImage.alpha_composite(im.im, overlay_img)
         
-
-        #PILImage.alpha_composite(bb, square_traversable_layer)
-        #square_traversable_layer.save('../../img/test_transp.png')
-        #comp=PILImage.alpha_composite(im.im, square_traversable_layer)
-        #comp.save('../../img/test_transp_blue.png')
-        
+        # Save the image
         if not paths_filename:
             paths_filename=self.paths_filename()
         if title is None:
             title=paths_filename
-        
         im.save(paths_filename,title=title)
     
     def translate_node_to_rectangles(self, n):
@@ -384,7 +396,12 @@ class GraphImage(RectGridGraph):
         TODO: Handle rule shape/colors here as well '''
         ret_list=[]
         background_rect=GraphImage.get_node_rectangle(gs, self.scalar())
-        ret_list.append((background_rect, gs.get_color()))
+        ret_list.append((background_rect, GridSquare.default_color))
+        if gs.rule_color or gs.sun_color:
+            rc = gs.rule_color or gs.sun_color 
+            ''' Draw the rule color as a smaller rectangle inside the Square '''
+            rule_color_rect=GraphImage.get_node_rectangle(gs, self.scalar(), shrink=.75)
+            ret_list.append([rule_color_rect, rc])
         return ret_list
     
     
@@ -414,12 +431,12 @@ class GraphImage(RectGridGraph):
         # How big is the node?
         width=GraphImage.render_weights[n.__class__]
         # Where is it, in relative coordinates?
-        offset=GraphImage.calculate_node_offset(*n.key(),n)
+        offset=GraphImage.calculate_node_offset(n)
         # Return a square scaled and offset appropriately
         return Rectangle.get_2_point_square(width, offset, scalar, shrink)
         
     @staticmethod
-    def calculate_node_offset(x,y,n=None):
+    def calculate_node_offset(n):
         '''Given a Node (GridNode or GridSquare) x,y coordinates, calculate the
         relative offset based on the rendering weights of Nodes vs. Squares.
         
@@ -436,27 +453,19 @@ class GraphImage(RectGridGraph):
         Ex: If the GridSquare is at (1,0), the middle of the 
         the lower-left corner would be (5,2) in units of GridNode.rendering_weight
         '''
-        if n:
-            x,y=n.key()
-            
-        combined_weight=GridSquare.rendering_weight + GridNode.rendering_weight
+
+        x,y=n.key()
+        node_weight,square_weight = GraphImage.render_weights[GridNode], GraphImage.render_weights[GridSquare]
+        combined_weight=node_weight+square_weight
         offset = Point([x,y]).scaled(combined_weight)
         # Shift GridSquares up and over by 1
         if type(n)==GridSquare:
-            offset = offset + Point([GridNode.rendering_weight,GridNode.rendering_weight])
-        #offset = x * combined_weight, y * combined_weight
+            offset = offset + Point([node_weight,node_weight])
+
         ldbg2(n, offset)
         return offset
-            
-    def cust_string(self):
-        return 'gx'+str(self.gx)+'gy'+str(self.gy)
-
 
 if __name__=='__main__':
-    ''' Given an Edge, draw a line
-    
-    Need x,y coords of each endpoint
-    '''
     
     gi=GraphImage(11,11,auto_assign_edges=False)
     na=gi.inner_grid[0,0]

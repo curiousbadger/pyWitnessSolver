@@ -32,17 +32,7 @@ class Point(tuple):
     
     def __add__(self,other): return Point([self.x+other.x,self.y+other.y])
     def __mul__(self,other): return Point([self.x*other.x,self.y*other.y])
-    def __repr__(self): return '(%.2f,%.2f)' % (self.x,self.y)
-    
-    
-    def strict_left(self, other):
-        return self.x < other.x
-    def strict_below(self,other):
-        return self.y < other.y
-    def is_vertical_with(self,other):
-        return self.x==other.x
-    def is_horizontal_with(self,other):
-        return self.y==other.y
+    def __repr__(self): return '(%.4g,%.4g)' % (self.x,self.y)
     
     def __cmp__(self, other):
         raise Exception('cmp',self,other)
@@ -65,8 +55,12 @@ class Point(tuple):
         return max(d for d in self)
     def min_dimension(self):
         return min(d for d in self)
+    def dimension_delta(self):
+        return abs(self.x-self.y)
     def as_int_tuple(self):
         return tuple([int(d) for d in self])
+    def rounded(self):
+        return Point([int(round(d)) for d in self])
     
 class Rectangle(tuple):
     '''A Rectangle implemented as a set of 4 points.
@@ -120,13 +114,13 @@ class Rectangle(tuple):
         return pl
     
     @staticmethod
-    def get_sqare_points(w, scalar=1):
+    def get_square_points(w, scalar=1):
         return Rectangle.get_rectangle_points(w, w, scalar)
     
     @staticmethod
     def get_square(w, offset=(0,0), scalar=1):
-        pl=Rectangle.get_sqare_points(w)
-        return Rectangle(pl, offset=offset).abs_coords(scalar)
+        pl=Rectangle.get_square_points(w)
+        return Rectangle(pl, offset=offset).get_absolute(scalar)
     
     
     def __new__(cls, p, *args, **kwds):
@@ -161,13 +155,20 @@ class Rectangle(tuple):
         
         return Rectangle([nll,nlr,nur,nul])
 
-    def abs_coords(self,scalar=1):
-        return Rectangle([Point(p+self.offset).scaled(scalar) for p in self],(0,0),self.color)
+    def get_absolute(self,scalar=1):
+        abs_points=[Point(p+self.offset) for p in self]
+        if scalar != 1:
+            abs_points=[ p.scaled(scalar) for p in abs_points ]
+        return Rectangle(abs_points, (0,0), self.color)
     
-#     def abs_dimensions(self):
-#         t=tuple(tuple(p) for p in self)
-#         return t
-    
+    def grow_upper_right(self, grow_dimensions):
+        gd = Point(grow_dimensions)
+        point_list=[p for p in self]
+        point_list[1] += Point([gd.x,0])
+        point_list[2] += gd
+        point_list[3] += Point([0,gd.y])
+        return Rectangle(point_list, self.offset, self.color)
+        
     # TODO: Hack until I convert the Rectangle class to always use this representation
     def as_2_points(self):
         'Get the Rectangle as the absolute low-left and upper-right Points'
@@ -186,6 +187,7 @@ class Rectangle(tuple):
     
     def get_dimensions(self):
         return Point([self.width(),self.height()])
+    
     def get_aspect(self):
         if self.height() == 0:
             return None
@@ -193,9 +195,14 @@ class Rectangle(tuple):
     
     def could_contain(self, other):
         return not (self.width()<other.width() or self.height()<other.height())
+    
+    def points_str(self):
+        s=','.join([str(p) for p in self])
+        return s
     # TODO: Mixes absolute and relative through properties
     def __repr__(self):
-        return 'Rectangle: %s to %s offset: %s color: %s' % (self.lower_left,self.upper_right,self.offset,self.color) 
+        return 'Rectangle: %s | %s to %s | offset: %s color: %s' % \
+            (self.points_str(), self.lower_left,self.upper_right,self.offset,self.color) 
 
 class MultiBlock(set):
     '''A MultiBlock is the underlying shape for the MultiBlockSquare.
@@ -320,11 +327,6 @@ class MultiBlock(set):
                 #print('remaining_partition_points',remaining_partition_points)
                 yield remaining_partition_points,shift_vector
     
-
-    def yield_rotations(self):
-        for rotation in self.rotations:
-            self.last_rotation=(self.last_rotation+1) % len(self.rotations)
-            yield rotation
             
     def compose(self, partition):
         '''Given a partition, return all possible locations this shape could occupy
@@ -341,60 +343,14 @@ class MultiBlock(set):
         if not self.color:
             self.color=MultiBlock.MultiBlockColorGenerator.get()
         return self.color
-    def get_last_rotation(self):
-        return self.rotations[self.last_rotation]
+
     def __repr__(self):
         if self.name: return self.name + self.point_str()
         return ''.join([str(p) for p in self.point_list])
     def point_str(self):
         return ''.join([str(p) for p in self.point_list]) +' ofst:'+ str(self.offset_point())
 
-    def part_off(self):
-        return self.__repr__()+' '+str(self.last_offset)
 
-def compose_shapes(counter, shapes_list, partition, last_offset):
-        print('START compose_shapes')
-        print('    counter',counter)
-        print('    partition',partition.part_off())
-        print('    shapes_list',shapes_list)
-        cur_shape = shapes_list[counter]
-
-        # Remember the last offset, if we find a solution this helps with
-        # rendering
-        cur_shape.last_offset = partition.last_offset
-
-        # Iterate over all possible positions this shape could occupy
-        for remaining_partition_points, new_offset in cur_shape.compose(partition):
-
-            # print('remaining_partition_points',remaining_partition_points)
-            if not remaining_partition_points:
-                # We filled up the partition, but have we placed all shapes?
-                if counter == len(shapes_list) - 1:
-                    #print('Found solution!!')
-                    return True
-                else:
-                    #print('Ran out of room')
-                    return False
-            elif counter < len(shapes_list) - 1:
-                remaining_partition = MultiBlock(remaining_partition_points)
-                remaining_partition.last_offset += partition.last_offset
-                # print('remaining_partition.last_offset',remaining_partition.last_offset)
-                ret = compose_shapes(
-                    counter + 1, shapes_list, remaining_partition, new_offset)
-                if ret == True:
-                    return True
-                else:
-                    # print('counter',counter,'cur_shape',cur_shape)
-                    pass
-            else:
-                #print('counter',counter,'at end of shape list')
-                pass
-        return False
-    
-
-def geom_print(*args):
-    pass
-#print=geom_print
 if __name__=='__main__':
     ''' XXX
          X  '''
@@ -446,23 +402,10 @@ if __name__=='__main__':
     shape_list=[LshapeUpRight,IshapeHoriz2]
 
     partition=r2x3
-    cs_ret=compose_shapes(0, shape_list, partition,None)
-    print('cs_ret',cs_ret)
     for s in shape_list:
         print(s,'last_offset',s.last_offset)
 #         for r in s.rotations:
 #             print('r', r,r.point_str())
     
     exit(0)
-    ishape3=[(0,0),(0,1),(0,2)]
-    mb=MultiBlock(ishape3)
-    print('r3x3',r3x3)
-    for s in mb.compose(r3x3):
-        print(s)
     
-    exit(0)
-    #test rotation
-    lshape=MultiBlock([(0,0),(0,1),(0,2),(1,2)])
-    for permutations in range(3):
-        print(lshape.rotate(permutations))
-        

@@ -12,8 +12,7 @@ from lib.util import UniqueColorGenerator
 
 
 class Partition(Graph):
-    cg=UniqueColorGenerator()
-    
+        
     def travel_partition(self, n):
         '''Travel the partition to discover all Nodes.
         TODO: accumulate some simple rule info as we go?'''
@@ -33,6 +32,7 @@ class Partition(Graph):
             raise Exception('ruleshapes')
         if self.rule_shapes is None:
             self.rule_shapes=[]
+            self.rule_shape_nodes
             for n in self.values():
                 cur_shape=n.rule_shape
                 if cur_shape:
@@ -201,8 +201,7 @@ class Partition(Graph):
         # (Actually Edge keys, which is a frozenset of two Squares,
         # but the squares are what we want anyways)
         edges_to_find=set(self.edges)
-        # TODO: Needed?
-        #found_edges=set()
+
         for squares in self.solution_shape_to_squares():
             ldbg('Looking for Edges in solution shape:', ' '.join(s.sym for s in squares))
             # Find all edges that are in this shape -> The Edge's Squares are both in this
@@ -217,8 +216,6 @@ class Partition(Graph):
                 # Will only happen if Partition is composed of 1 Rule Shape
                 linf('    !!!found all edges!!!')
                 break
-            #found_edges = found_edges | edges_in_shape
-            
 
 
 if __name__=='__main__':

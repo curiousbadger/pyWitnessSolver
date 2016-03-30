@@ -32,13 +32,15 @@ class Graph(dict):
         self.solutions = []
         self.partitions = None
         self._all_paths = None
-        # TODO: Might be handy, need to think about implementation
-        self.unsearched_nodes = None
+
         self.edges=dict()
-        self.rule_nodes = None
+
         self.rule_color_nodes = None
         self.rule_shape_nodes = None
         self.rule_sun_nodes = None
+        
+        # TODO: Hack
+        self.finalized=False
 
     def set_nodes(self, node_list):
         ''' This should be called with a list of Nodes whose coordinate values
@@ -60,11 +62,6 @@ class Graph(dict):
     
     def get_edge(self, na, nb):
         return self.edges[frozenset([na,nb])]
-
-
-def graph_print(*args):
-    pass
-# print=graph_print
 
 if __name__ == '__main__':
     pass

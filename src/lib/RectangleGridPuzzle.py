@@ -12,21 +12,6 @@ from lib.util import simplePickler, WastedCounter, MasterUniqueNumberGenerator
 from lib.GraphImage import GraphImage
 
 
-
-
-
-class PuzzleConfiguration(object):
-    '''Contains info about a puzzle.
-
-    Dimensions
-    Entrance/Exit Nodes
-    SquareModifiers
-    '''
-
-    def __init__(self):
-        pass
-
-
 class RectangleGridPuzzle(GraphImage):
     '''
     Models a rectangular (m*n) Grid puzzle. 
@@ -54,8 +39,6 @@ class RectangleGridPuzzle(GraphImage):
     def filter_paths_setup(self, overwrite=False):
         if not self.paths:
             self.load_paths()
-
-        
        
     def filter_paths_colors_only(self, overwrite=False, expecting_filtered=False):
         '''TODO: Currently only works for RectangleGridPuzzles with rule_color GridSquares.
@@ -86,6 +69,9 @@ class RectangleGridPuzzle(GraphImage):
             
             # TODO: Hack...
             le_path=literal_eval(path)
+            ldbg2(path)
+            ldbg2(le_path)
+            
             # for our purposes, path direction doesn't matter, only which segments (Node-Node) were traversed
             # if the path contains all of the segments we know MUST be
             # traversed, append it
@@ -128,6 +114,8 @@ class RectangleGridPuzzle(GraphImage):
         return violation
     
     def solve(self, break_on_first=False, render_all=False, force_paths=None):
+        if not self.finalized:
+            raise Exception('Attempting to solve unfinalized Grid!')
         
         ''' Iterate over every potential path and check each GridSquare
         with a rule for violations.
