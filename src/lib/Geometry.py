@@ -10,13 +10,14 @@ class Point(tuple):
     
     @staticmethod
     def get_subtraction_vector(point_list):
-        '''Given permutations list of points find the leftmost x and lowest y value. '''
+        '''Given a list of points find the leftmost x and lowest y value. '''
         return Point((min([p.x for p in point_list]),min([p.y for p in point_list])))
     
     @staticmethod
     def get_Q1_shifted(point_list):
         subtraction_vector=Point.get_subtraction_vector(point_list)
         return [p-subtraction_vector for p in point_list],subtraction_vector
+    
     def __new__(cls,p):
         return tuple.__new__(cls, tuple(p))
 
@@ -55,28 +56,53 @@ class Point(tuple):
     
     def scaled(self,scalar):
         return Point([self.x*scalar,self.y*scalar])
+    
     def dist(self,other): return hypot(self.x-other.x, self.y-other.y)
     
     def max_dimension(self):
         return max(d for d in self)
     def as_int_tuple(self):
         return tuple([int(d) for d in self])
+    
 class Rectangle(tuple):
-    '''A Rectangle implemented as permutations set of 4 points.
+    '''A Rectangle implemented as a set of 4 points.
     
     Points need to be passed in order:
     lower left, lower right, upper right, upper left
     
     TODO: No need to use all 4 points. Change implementation
-    to use permutations Point at lower-left and then permutations Point representing
-    width,height '''
+    to use a Point at lower-left and then a Point representing
+    width,height 
+    
+    TODO: I don't want the base Geometry.Rectangle to have color,
+    put it in a sub-class, if at all.
+    '''
     @staticmethod
-    def get_rectangle_points(w, h):
-        pl = [Point(p) for p in [[0, 0], [w, 0], [w, h], [0, h]]]
+    def get_2_point_rect(w, h, offset=(0,0), scalar=1):
+        ''' Given relative width, height and offset values, return 
+        2 absolute Points representing the absolute lower-left and upper-right 
+        coordinates '''
+        lower_left=Point(offset)
+        upper_right=Point((w, h))+lower_left
+        return [p.scaled(scalar) for p in [lower_left, upper_right]]
+    
+    @staticmethod
+    def get_2_point_square(w, offset=(0,0), scalar=1):
+        return Rectangle.get_2_point_rect(w, w, offset, scalar)
+        
+    @staticmethod
+    def get_rectangle_points(w, h, scalar=1):
+        pl = [Point(p).scaled(scalar) for p in [[0, 0], [w, 0], [w, h], [0, h]]]
         return pl
+    
     @staticmethod
-    def get_sqare_points(w):
-        return Rectangle.get_rectangle_points(w, w)
+    def get_sqare_points(w, scalar=1):
+        return Rectangle.get_rectangle_points(w, w, scalar)
+    
+    @staticmethod
+    def get_square(w, offset=(0,0), scalar=1):
+        pl=Rectangle.get_sqare_points(w)
+        return Rectangle(pl, offset=offset).abs_coords(scalar)
     
     def __new__(cls, p, *args, **kwds):
         return tuple.__new__(cls, tuple(p))
@@ -102,7 +128,7 @@ class Rectangle(tuple):
     @staticmethod
     def get_bounding_rectangle(point_list):
         all_points=point_list
-        # Given permutations set of coordinates, return the smallest rectangle that contains all points
+        # Given a set of coordinates, return the smallest rectangle that contains all points
         nll=Point([min([p.x for p in all_points]),min([p.y for p in all_points])])
         nlr=Point([max([p.x for p in all_points]),min([p.y for p in all_points])])
         nur=Point([max([p.x for p in all_points]),max([p.y for p in all_points])])
@@ -112,6 +138,10 @@ class Rectangle(tuple):
 
     def abs_coords(self,scalar=1):
         return Rectangle([Point(p+self.offset).scaled(scalar) for p in self],(0,0),self.color)
+    
+    def abs_dimensions(self):
+        t=tuple(tuple(p) for p in self)
+        return t
     
     @property
     def lower_left(self): return self[0]+self.offset
@@ -138,13 +168,13 @@ class MultiBlock(set):
     '''A MultiBlock is the underlying shape for the MultiBlockSquare.
     
     A MultiBock is composed of one or more (usually contiguous) 1-unit squares.
-    For the purposes of puzzle solving it is best to consider them as permutations set of
-    "Virtual Squares" that need to be perfectly bounded within permutations sub-section
+    For the purposes of puzzle solving it is best to consider them as a set of
+    "Virtual Squares" that need to be perfectly bounded within a sub-section
     of the Grid. Or conversely, there cannot be any Square within the Path-bounded 
-    sub-section that is not "filled" by permutations Virtual Square from permutations MultiBlock. 
+    sub-section that is not "filled" by a Virtual Square from a MultiBlock. 
     
-    Virtual Squares within permutations sub-section need not all come from the same MultiBlock. 
-    Indeed they often won't, and in that case they need to fit together. However, permutations
+    Virtual Squares within a sub-section need not all come from the same MultiBlock. 
+    Indeed they often won't, and in that case they need to fit together. However, a
     MultiBlock cannot usually be "broken up", it must retain it's original shape,
     but some do have gaps or holes.
     
@@ -264,7 +294,7 @@ class MultiBlock(set):
             yield rotation
             
     def compose(self, partition):
-        '''Given permutations partition, return all possible locations this shape could occupy
+        '''Given a partition, return all possible locations this shape could occupy
         within that partition'''
         
         for rotation in self.rotations:
@@ -296,7 +326,7 @@ def compose_shapes(counter, shapes_list, partition, last_offset):
         print('    shapes_list',shapes_list)
         cur_shape = shapes_list[counter]
 
-        # Remember the last offset, if we find permutations solution this helps with
+        # Remember the last offset, if we find a solution this helps with
         # rendering
         cur_shape.last_offset = partition.last_offset
 

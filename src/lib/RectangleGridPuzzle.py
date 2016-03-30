@@ -3,14 +3,16 @@ Created on Feb 24, 2016
 
 @author: charper
 '''
-
-from lib.GraphImage import GraphImage
-from lib.util import simplePickler, WastedCounter, MasterUniqueNumberGenerator
-import unittest
-import cProfile
-
 #TODO: Hack...
 from ast import literal_eval
+
+from src.log.simpleLogger import linf,ldbg,ldbg2
+from lib.util import simplePickler, WastedCounter, MasterUniqueNumberGenerator
+
+from lib.GraphImage import GraphImage
+
+
+
 
 
 class PuzzleConfiguration(object):
@@ -39,7 +41,7 @@ class RectangleGridPuzzle(GraphImage):
         self.puzzle_name = puzzle_name
         super().__init__(gx, gy)
 
-        self.filtered_paths_pickler = simplePickler(
+        self._filtered_paths = simplePickler(
             self.filtered_paths_filename())
 
     def filtered_paths_filename(self):
@@ -62,9 +64,9 @@ class RectangleGridPuzzle(GraphImage):
         
         self.filter_paths_setup(overwrite)
         
-        if self.filtered_paths_pickler.file_exists():
+        if self._filtered_paths.file_exists():
             if not overwrite:
-                self.potential_paths = self.filtered_paths_pickler.load()
+                self.potential_paths = self._filtered_paths.load()
                 print('Skipping filter_paths_colors_only...')
                 return
             else:
@@ -104,7 +106,7 @@ class RectangleGridPuzzle(GraphImage):
         
         print('Filtered', len(self.paths),
               'paths to', len(self.potential_paths))
-        self.filtered_paths_pickler.dump(self.potential_paths)
+        self._filtered_paths.dump(self.potential_paths)
         
     def has_violations(self):
         # Innocent until proven guilty ;)
@@ -154,7 +156,7 @@ class RectangleGridPuzzle(GraphImage):
             
             if solution:
                 self.solutions.append(p)
-                print('Found solution!', p)
+                linf('Found solution!', p)
                 self.render_solution()
                 if break_on_first:
                     break

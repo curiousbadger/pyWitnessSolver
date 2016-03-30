@@ -1,17 +1,19 @@
 import cProfile
-
 import glob
 import os
 import unittest
 import pstats
 import io
 
-
+import logging
+from src.log.simpleLogger import defaultLogger,linf, ldbg
 from lib.Geometry import MultiBlock
 from lib.GraphImage import chImg
 from lib.RectangleGridPuzzle import RectangleGridPuzzle
 from lib.util import simplePickler, WastedCounter, defaultValueServer
 from ast import literal_eval
+
+
 
 
 class Test(unittest.TestCase):
@@ -113,14 +115,26 @@ class Test(unittest.TestCase):
 
     def testBunker6(self, overwrite=False):
      
-        # Color Puzzle 1
-        cp1 = RectangleGridPuzzle(5, 5, 'testBunker6')
+        '''
+        -------------------
+        u v w x y
+         L M N O
+        p q r s t
+         H I J K
+        k l m n o
+         D E F G
+        f g h i j
+         z A B C
+        a b c d e
+        ********************
+        '''
+        g = RectangleGridPuzzle(5, 5, 'testBunker6')
         # Initialize the entrance/exit Nodes
-        cp1.lower_left().is_entrance = True
-        cp1.upper_right().is_exit = True
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
 
         # Initialize the colored Squares
-        square_grid = cp1.inner_grid
+        square_grid = g.inner_grid
 
         square_grid[0, 0].set_rule_color('aqua')
         square_grid[0, 3].set_rule_color('aqua')
@@ -134,17 +148,27 @@ class Test(unittest.TestCase):
         square_grid[3, 0].set_rule_color('red')
         square_grid[3, 3].set_rule_color('red')
 
-        cp1.finalize()
-        cp1.render()
+        g.finalize()
+        g.render()
         # Generate all possible paths
-        cp1.generate_paths(overwrite)
+        g.generate_paths(overwrite)
         # Filter paths (if possible)
-        cp1.filter_paths_colors_only(overwrite, expecting_filtered=True)
+        g.filter_paths_colors_only(overwrite, expecting_filtered=True)
         # Solve but do NOT break on first first_solution to make sure we don't find
         # multiples
-        print(cp1.render_both())
-        cp1.solve(False)
+        print(g.render_both())
+        g.solve(False)
         
+        expected_solutions=[[(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)]]
+        expected_solutions = set(frozenset(p) for p in expected_solutions)
+        actual_solutions = set(frozenset(p) for p in g.solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+        self.assertTrue(len(missing_solutions) == 0,
+                        'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
+        self.assertTrue(len(extra_solutions) == 0,
+                        'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
+
         
     def testMultipleShapesInPartition(self):
         g = RectangleGridPuzzle(5, 5, 'MultipleShapesInPartition')
@@ -177,8 +201,11 @@ class Test(unittest.TestCase):
         g.inner_grid[0, 0].set_rule_shape(TshapeRight)
         g.inner_grid[1, 3].set_rule_shape(TshapeDown)
         g.inner_grid[3, 1].set_rule_shape(TshapeLeft)
+        
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
+        g.finalize()
+        g.render()
         g.generate_paths()
         g.load_paths()
         g.solve()
@@ -201,6 +228,8 @@ class Test(unittest.TestCase):
         g.inner_grid[1, 1].set_rule_shape(Ishape3Vert)
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
+        
+        g.finalize()
         g.generate_paths()
         g.load_paths()
         g.solve()
@@ -610,7 +639,7 @@ class Test(unittest.TestCase):
             p.print_stats()
             stats_output = [l for l in s.getvalue().split('\n') if l]
 
-            for l in stats_output[2:20]:
+            for l in stats_output[2:10]:
                 print(l)
             for l in stats_output[0:3]:
                 print(l)
@@ -625,22 +654,22 @@ def pass_print(*args):
 
 def test_singles():
     t = Test()
-
+    defaultLogger.set_master_level(logging.INFO)
     t.setUp(enable_profiler=True)
 
     
-    t.testBunker8()
+    t.testBunker8(overwrite=False)
     t.testBunker6()
 
-    #t.test2Ishapes()
-#    t.testMultipleShapesInPartition()
-    #t.testRotationShapes()
-#     t.testSinglePartition()
+    
+    t.testMultipleShapesInPartition()
+    t.testRotationShapes()
+    t.testSinglePartition()
 #
 #     t.testTreehouse0()
 
-    #t.testRuleShapeRendering()
-    #t.testMoveableShapes()
+    t.testRuleShapeRendering()
+    t.testMoveableShapes()
 
     #t.testVillageYellowDoorWindow()
     #t.testVillageSunDoor()
@@ -660,6 +689,7 @@ if __name__ == '__main__':
 
     
     test_singles()
+    #t.test2Ishapes()
     #test_all()
 
 

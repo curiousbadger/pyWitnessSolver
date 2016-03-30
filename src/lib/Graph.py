@@ -31,7 +31,7 @@ class Graph(dict):
         self.current_path = []
         self.solutions = []
         self.partitions = None
-        self.all_paths_pickler = None
+        self._all_paths = None
         # TODO: Might be handy, need to think about implementation
         self.unsearched_nodes = None
         self.edges=dict()

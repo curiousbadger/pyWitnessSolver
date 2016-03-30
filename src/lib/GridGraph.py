@@ -42,7 +42,7 @@ class RectGridGraph(Graph):
         self.gx = gx
         self.gy = gy
         Graph.__init__(self)
-        self.all_paths_pickler = simplePickler(self.all_path_filename())
+        
         self.is_outer = is_outer
 
         # Create the list of Nodes
@@ -72,7 +72,8 @@ class RectGridGraph(Graph):
 
         '''BEGIN: Outer-Grid specific setup '''
         if is_outer == True:
-
+            
+            
             # initialize the "inner squares" grid
             self.inner_grid = RectGridGraph(gx - 1, gy - 1, is_outer=False, auto_assign_edges=auto_assign_edges)
             # TODO: Move this out of __init__
@@ -198,6 +199,12 @@ class RectGridGraph(Graph):
         for n, sym in zip(self.iter_all_sorted(), usg):
             n.sym = sym
 
+    def all_paths(self):
+        if self._all_paths is None:
+            all_paths_filename=self.paths_filename() + '_all'
+            self._all_paths = simplePickler(all_paths_filename)
+        return self._all_paths
+    
     def iter_sorted(self):
         for sk in self.sorted_keys:
             yield self[sk]
@@ -305,7 +312,7 @@ class RectGridGraph(Graph):
             print('Warning: self.paths already loaded')
 
         #raise Exception('self.paths already loaded')
-        self.paths = self.all_paths_pickler.load()
+        self.paths = self.all_paths().load()
 
     def add_path(self, new_path, to_obj=True, to_db=False):
         if to_obj:
@@ -322,12 +329,12 @@ class RectGridGraph(Graph):
 
         TODO: Early dead-end detection?
         '''
-        if self.all_paths_pickler.file_exists():
+        if self.all_paths().file_exists():
             if not overwrite:
                 print('Skipping path generation...')
                 return
             else:
-                print('overwriting:', self.all_path_filename())
+                print('overwriting:', self.all_paths().pickle_filename())
 
         # TODO: make path a set based class with ordering (OrderedDict?)
         self.paths = set()
@@ -339,7 +346,7 @@ class RectGridGraph(Graph):
             self.travel(n, path)
 
         print('Done! found:', len(self.paths), 'total paths')
-        self.all_paths_pickler.dump(self.paths)
+        self.all_paths().dump(self.paths)
 
     def travel(self, n, path):
         ''' Depth-first traversal of all possible paths

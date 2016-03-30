@@ -178,20 +178,21 @@ class Partition(Graph):
         
         
     def get_img_rects(self):
-        for s in self.solution_shapes:
+        for solution_shape in self.solution_shapes:
+            # Auto color this shape
             col=Partition.cg.get()
-            print('Solution points:', s)
+            print('Solution points:', solution_shape)
             
-            for p in s:
-                #print('p', p)
-                if p not in self:
+            for square_key in solution_shape:
+                #print('square_key', square_key)
+                if square_key not in self:
                     print(self)
-                    raise Exception('p not in self',p)
+                    raise Exception('square_key not in self',square_key)
                 else:
-                    n=self[p]
+                    n=self[square_key]
                     #print('n', n)
                 #exit(0)
-                yield p,col
+                yield square_key,col
 
 def pass_print(*args):
     pass
