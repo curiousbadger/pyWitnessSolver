@@ -5,6 +5,7 @@ Created on Mar 9, 2016
 '''
 from collections import Counter
 
+from src.log.simpleLogger import linf
 from lib.Graph import Graph
 from lib.Geometry import MultiBlock, Point
 from lib.util import UniqueColorGenerator
@@ -175,8 +176,52 @@ class Partition(Graph):
         self.total_rule_shape_points=0
         self.color_violation=None
         self.sun_violation=None
+    
+    
+    def solution_shape_to_squares(self):
+        '''Yield the set of Squares corresponding to each
+        "Solution Shape".
+        '''
+        for solution_shape in self.solution_shapes:
+            squares=set([self[key] for key in solution_shape])
+            yield squares
+            
+    def solution_shape_to_edges(self):
+        '''Yield sets of Edges for each Solution Shape.
+         
+        A "Solution Shape" is a set of Points that correspond to
+        a sub-Partition of this Partition. Note that these Points
+        are not necessarily all neighbors, but return the Edges
+        corresponding to those that are'''
         
+        # Create a temporary set of all Edges in this Partition,
+        # Once we've found all of them, we're done
         
+        edges_to_find=set(self.edges)
+        # TODO: Needed?
+        found_edges=set()
+        for squares in self.solution_shape_to_squares():
+            linf('Looking for Edges in solution shape:', squares)
+            # Keep track of edges we've found in this particular set of squares
+            found_edges_in_shape=set()
+            for e in edges_to_find:
+                if e.issubset(squares):
+                    
+                    linf('found %s in %s' % (e, squares))
+                    found_edges_in_shape.add(e)
+                    squares = squares - e
+                    if not squares:
+                        linf('found all squares!!')
+                        break
+                edges_to_find = edges_to_find - found_edges_in_shape
+                
+                if not edges_to_find:
+                    linf('!!!found all edges!!!')
+                    break
+                found_edges = found_edges | found_edges_in_shape
+            
+            yield 'foo'
+            
     def get_img_rects(self):
         for solution_shape in self.solution_shapes:
             # Auto color this shape
@@ -196,9 +241,11 @@ class Partition(Graph):
 
 def pass_print(*args):
     pass
-print=pass_print
+#print=pass_print
 if __name__=='__main__':
-    pass
+    
+    exit(0)
+    
     
     
     

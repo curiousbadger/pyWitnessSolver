@@ -86,6 +86,7 @@ class chImg(object):
         self.d.line(xy,color,width)
     def polygon(self,xy,fill=None,outline=None): 
         self.d.polygon(xy, fill, outline)
+        
     def rectangle(self, xy, fill=None, outline=None):
         self.d.rectangle(xy, fill, outline)
         
@@ -156,11 +157,9 @@ class GraphImage(RectGridGraph):
         for n in self.values():
             if not (n.is_entrance or n.is_exit):
                 continue
-            #r=n.get_imgRect().abs_coords(scalar)
-            #r=self
-            #im.polygon(r,r.color)
+            
             img_rect, col = self.translate_node_to_rectangles(n)[0]
-            print('img_rect, col', img_rect, col)
+            ldbg('img_rect, col', img_rect, col)
             im.rectangle(img_rect, col, outline=None)
         
         # Iterate over Inner GridSquares
@@ -179,13 +178,11 @@ class GraphImage(RectGridGraph):
             if not e.is_fully_connected():
                 continue
             na,nb=e
-            
             ldbg2('na,nb', na,nb)
-            
             coordinate_list=[Point(GraphImage.calculate_inner_square_offset(*n.pt,n))+Point((1.5,1.5)) for n in e]
             coordinate_list=[p.scaled(scalar) for p in coordinate_list]
-            linf('coordinate_list', coordinate_list)
-            im.line(coordinate_list, 'green', 5)
+            ldbg('coordinate_list', coordinate_list)
+            im.line(coordinate_list, 'purple', int(.15*self.scalar()))
            
         # Draw rule shapes inside the GridSquares
         # TODO: This is an ABSOLUTE mess... LAYERING!!!
@@ -252,30 +249,38 @@ class GraphImage(RectGridGraph):
             transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
             d=PILImageDraw.Draw(transp_layer)
             for p in self.partitions:
+                for e in p.solution_shape_to_edges():
+                    linf(e)
+                    
+                    exit(0)
+                # Overlay Rule Shape solution positions
                 for square_key,col in p.get_img_rects():
                     
                     corresponding_square=self.inner_grid[square_key]
-                    offset=GraphImage.calculate_inner_square_offset(*corresponding_square.key(),corresponding_square)
-                    linf('corresponding_square',corresponding_square, offset)
-                    pl=[[0,0],[3,0],[3,3],[0,3]]
-                    plp=[Point(p) for p in pl]
+                    ldbg('corresponding_square',corresponding_square)
+                    rule_shape_rect, _=self.translate_node_to_rectangles(corresponding_square)[0]
+                    print('rule_shape_rect', rule_shape_rect)
+                    #offset=GraphImage.calculate_inner_square_offset(*corresponding_square.key(),corresponding_square)
+                    
+                    #pl=[[0,0],[3,0],[3,3],[0,3]]
+                    #plp=[Point(p) for p in pl]
                     col=chImg.color_with_alpha(col, 75)
     
-                    squ_and_n_rect=Rectangle(plp,offset,col).abs_coords(scalar)
-                    #ldbg2('squ_and_n_rect', squ_and_n_rect)
-                    
+                    #squ_and_n_rect=Rectangle(plp,offset,col).abs_coords(scalar)
+                    #print('squ_and_n_rect', squ_and_n_rect)
                     #im.polygon(squ_and_n_rect, col, 'red')
-                    d.polygon(squ_and_n_rect, col, 'purple')
+                    #d.polygon(squ_and_n_rect, col, 'purple')
+                    d.rectangle(rule_shape_rect, col, 'purple')
             im.im=PILImage.alpha_composite(im.im, transp_layer)
 
         
-        # Draw path and traversable links between Squares
+        # Draw path
         draw_path=True
         if self.current_path and draw_path:
             transp_layer=PILImage.new('RGBA',int_canvas,(255,255,255,0))
             d=PILImageDraw.Draw(transp_layer)
             
-            # 
+            '''Render traversable Edges as little Rectangles between Squares (now using lines)
             for sq in self.inner_grid.values():
                 #Draw traversable links for each square
                 new_rects=sq.overlay_traversable_rects()
@@ -284,20 +289,28 @@ class GraphImage(RectGridGraph):
                     coords,col=r.abs_coords(scalar), r.color
                     col=chImg.color_with_alpha(r.color,75)
                     #ldbg2('col', col)
-                    
                     d.polygon(coords, col, 'red')
                     #sd.polygon(coords, col, 'green')
-            
+            '''
         
             # Draw path
             for e in self.current_path:
                 f,s=e.nodes
-                #ldbg2('f',f,'s',s)
                 
-                new_rect=f.get_imgRect(scalar)+s.get_imgRect(scalar)
+                # "Add" the two path Node rectangles together to draw a rectangle between them
+                rect_points=[]
+                for n in e.nodes:
+                    rect_points.extend(self.translate_node_to_rectangles(n)[0][0])
+                
+                path_rectangle=Rectangle.get_bounding_rectangle(rect_points)
+                path_2_pt_rect=path_rectangle.as_2_points()
+
+                ldbg('rect_points', rect_points)
+                ldbg('path_rectangle',path_rectangle)
+                ldbg('path_2_pt_rect', path_2_pt_rect)
+
                 col=chImg.color_with_alpha('blue', 150)
-                #ldbg2('new_rect',new_rect)
-                d.polygon(new_rect, col)
+                d.rectangle(path_2_pt_rect, col, outline=None)
             im.im=PILImage.alpha_composite(im.im, transp_layer)
         
         
@@ -335,10 +348,10 @@ class GraphImage(RectGridGraph):
         TODO: Handle rule shape/colors here as well '''
         ret_list=[]
         background_rect=GraphImage.get_node_rectangle(gs, self.scalar())
-        
         ret_list.append((background_rect, gs.get_color()))
         return ret_list
-        
+    
+    
     @staticmethod
     def calculate_total_element_dimensions(object_dimensions):
         ''' Given an object with dimensions object_dimensions (x,y) 
@@ -361,13 +374,13 @@ class GraphImage(RectGridGraph):
         return element_dimensions
     
     @staticmethod
-    def get_node_rectangle(n, scalar=1):
+    def get_node_rectangle(n, scalar=1, shrink=1):
         # How big is the node?
         width=GraphImage.render_weights[n.__class__]
         # Where is it, in relative coordinates?
         offset=GraphImage.calculate_inner_square_offset(*n.key(),n)
         # Return a square scaled and offset appropriately
-        return Rectangle.get_2_point_square(width, offset, scalar)
+        return Rectangle.get_2_point_square(width, offset, scalar, shrink)
         
     @staticmethod
     def calculate_inner_square_offset(x,y,n=None):

@@ -4,6 +4,8 @@ Created on Feb 26, 2016
 @author: charper
 '''
 from math import hypot
+
+from src.log.simpleLogger import linf, ldbg, ldbg2
 from lib.util import MasterUniqueColorGenerator
 
 class Point(tuple):
@@ -78,12 +80,29 @@ class Rectangle(tuple):
     put it in a sub-class, if at all.
     '''
     @staticmethod
-    def get_2_point_rect(w, h, offset=(0,0), scalar=1):
+    def get_2_point_rect(w, h, offset=(0,0), scalar=1, shrink_factor=1):
         ''' Given relative width, height and offset values, return 
         2 absolute Points representing the absolute lower-left and upper-right 
-        coordinates '''
-        lower_left=Point(offset)
-        upper_right=Point((w, h))+lower_left
+        coordinates.
+        
+        shrink_factor causes the Rectangle to be shrunken (shrunked, shurkien?)
+        but still centered. 
+        We remove min(w,h)*shrink_factor in all 4 directions. (Note that this will be the
+        same number of pixels "removed" in all directions.)  '''
+        offset=Point(offset)
+        dimensions=Point((w,h))
+        linf('offset',offset,'dimensions',dimensions)
+        if shrink_factor!=1:
+            # Amount to trim from each side
+            shrink_offset=dimensions.min_dimension() * (1-shrink_factor)
+            shrink_offset_point=Point((shrink_offset, shrink_offset))
+            linf('    shrink_offset',shrink_offset,shrink_offset_point)
+            offset += shrink_offset_point
+            dimensions -= shrink_offset_point
+            linf('    after: offset',offset,'dimensions',dimensions)
+            exit(0)
+        lower_left=offset
+        upper_right=lower_left+dimensions
         return [p.scaled(scalar) for p in [lower_left, upper_right]]
     
     @staticmethod
@@ -103,6 +122,7 @@ class Rectangle(tuple):
     def get_square(w, offset=(0,0), scalar=1):
         pl=Rectangle.get_sqare_points(w)
         return Rectangle(pl, offset=offset).abs_coords(scalar)
+    
     
     def __new__(cls, p, *args, **kwds):
         return tuple.__new__(cls, tuple(p))
@@ -139,10 +159,14 @@ class Rectangle(tuple):
     def abs_coords(self,scalar=1):
         return Rectangle([Point(p+self.offset).scaled(scalar) for p in self],(0,0),self.color)
     
-    def abs_dimensions(self):
-        t=tuple(tuple(p) for p in self)
-        return t
+#     def abs_dimensions(self):
+#         t=tuple(tuple(p) for p in self)
+#         return t
     
+    # TODO: Hack until I convert the Rectangle class to always use this representation
+    def as_2_points(self):
+        'Get the Rectangle as the absolute low-left and upper-right Points'
+        return [self.lower_left, self.upper_right]
     @property
     def lower_left(self): return self[0]+self.offset
     @property

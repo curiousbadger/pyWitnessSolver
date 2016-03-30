@@ -658,18 +658,18 @@ def test_singles():
     t.setUp(enable_profiler=True)
 
     
-    t.testBunker8(overwrite=False)
-    t.testBunker6()
+    #t.testBunker8(overwrite=False)
+    #t.testBunker6()
 
     
-    t.testMultipleShapesInPartition()
+    #t.testMultipleShapesInPartition()
     t.testRotationShapes()
-    t.testSinglePartition()
+    #t.testSinglePartition()
 #
 #     t.testTreehouse0()
 
-    t.testRuleShapeRendering()
-    t.testMoveableShapes()
+    #t.testRuleShapeRendering()
+    #t.testMoveableShapes()
 
     #t.testVillageYellowDoorWindow()
     #t.testVillageSunDoor()
@@ -691,5 +691,26 @@ if __name__ == '__main__':
     test_singles()
     #t.test2Ishapes()
     #test_all()
-
+    exit(0)
+    to_find=set(frozenset(s for s in e) for e in [(1,2),(7,4),(5,3),(8,9),(11,12)])
+    squares_list=list(set(l) for l in [[1,2,7,4,5,3],[12,9,8,11,13]])
+    found=set()
+    
+    for squares in squares_list:
+        print('squares', squares)
+        print('to_find', to_find)
+        for tf in to_find:
+            print('        looking for ', tf)
+            if tf.issubset(squares):
+                print('            found', tf)
+                found.add(tf)
+                squares=squares - tf
+                if not squares:
+                    print('            found all squares!')
+                    break
+                print('            squares', squares)
+        to_find = to_find - found
+        if not to_find:
+            print('done!',squares_list)
+            break
 

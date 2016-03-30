@@ -5,9 +5,9 @@ Created on Feb 4, 2016
 
 TODO: Get rid of code invalidated by Edge logic. Make the Nodes "dumber" and less aware of things outside themselves.
 '''
-import string
+
 import random
-from math import hypot
+
 from lib.Geometry import Point, Rectangle
 from lib.util import MasterUniqueNumberGenerator, MasterUniqueStringGenerator
 
@@ -325,5 +325,4 @@ if __name__ == '__main__':
     n.neighbors.remove(n2)
     print(n, n.neighbors, n.print_nbrs())
     print(n2, n2.neighbors, n2.print_nbrs())
-    print(n.get_imgRect(), n2.get_imgRect())
-    print(n.get_imgRect() + n2.get_imgRect())
+
