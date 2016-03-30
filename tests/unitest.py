@@ -7,7 +7,7 @@ import io
 
 import logging
 from src.log.simpleLogger import defaultLogger,linf, ldbg
-from lib.Geometry import MultiBlock
+from lib.Geometry import MultiBlock, Point
 from lib.GraphImage import chImg
 from lib.RectangleGridPuzzle import RectangleGridPuzzle
 from lib.util import simplePickler, WastedCounter, defaultValueServer
@@ -266,6 +266,19 @@ class Test(unittest.TestCase):
         g.lower_left().is_entrance = True
         g.upper_right().is_exit = True
         g.finalize()
+        print(g.render_both())
+        '''-------------------
+        q r s t
+         D E F
+        m n o p
+         A B C
+        i j k l
+         x y z
+        e f g h
+         u v w
+        a b c d
+        ********************
+        '''
         g.render()
         g.generate_paths()
         g.load_paths()
@@ -663,13 +676,13 @@ def test_singles():
 
     
     #t.testMultipleShapesInPartition()
-    t.testRotationShapes()
+    #t.testRotationShapes()
     #t.testSinglePartition()
 #
 #     t.testTreehouse0()
 
     #t.testRuleShapeRendering()
-    #t.testMoveableShapes()
+    t.testMoveableShapes()
 
     #t.testVillageYellowDoorWindow()
     #t.testVillageSunDoor()
@@ -686,11 +699,12 @@ def test_all():
     unittest.main()
 
 if __name__ == '__main__':
-
     
     test_singles()
     #t.test2Ishapes()
     #test_all()
+    
+    
     exit(0)
     to_find=set(frozenset(s for s in e) for e in [(1,2),(7,4),(5,3),(8,9),(11,12)])
     squares_list=list(set(l) for l in [[1,2,7,4,5,3],[12,9,8,11,13]])

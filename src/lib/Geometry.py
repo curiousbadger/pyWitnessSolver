@@ -32,7 +32,7 @@ class Point(tuple):
     
     def __add__(self,other): return Point([self.x+other.x,self.y+other.y])
     def __mul__(self,other): return Point([self.x*other.x,self.y*other.y])
-    def __repr__(self): return '(%d,%d)' % (self.x,self.y)
+    def __repr__(self): return '(%.2f,%.2f)' % (self.x,self.y)
     
     
     def strict_left(self, other):
@@ -63,6 +63,8 @@ class Point(tuple):
     
     def max_dimension(self):
         return max(d for d in self)
+    def min_dimension(self):
+        return min(d for d in self)
     def as_int_tuple(self):
         return tuple([int(d) for d in self])
     
@@ -90,24 +92,27 @@ class Rectangle(tuple):
         We remove min(w,h)*shrink_factor in all 4 directions. (Note that this will be the
         same number of pixels "removed" in all directions.)  '''
         offset=Point(offset)
-        dimensions=Point((w,h))
-        linf('offset',offset,'dimensions',dimensions)
+        dimensions=Point([w,h])
+        
         if shrink_factor!=1:
+            ldbg('offset',offset,'dimensions',dimensions)
             # Amount to trim from each side
-            shrink_offset=dimensions.min_dimension() * (1-shrink_factor)
-            shrink_offset_point=Point((shrink_offset, shrink_offset))
-            linf('    shrink_offset',shrink_offset,shrink_offset_point)
-            offset += shrink_offset_point
-            dimensions -= shrink_offset_point
-            linf('    after: offset',offset,'dimensions',dimensions)
-            exit(0)
+            shrink_offset=(dimensions.min_dimension() * (1-shrink_factor)) / 2
+            shrink_offset_point=Point([shrink_offset, shrink_offset])
+            ldbg('    shrink_offset',shrink_offset,shrink_offset_point)
+            offset = offset + shrink_offset_point
+            # TODO: Hack
+            dimensions = dimensions - shrink_offset_point
+            dimensions = dimensions - shrink_offset_point
+            ldbg('    after: offset',offset,'dimensions',dimensions)
+            
         lower_left=offset
         upper_right=lower_left+dimensions
         return [p.scaled(scalar) for p in [lower_left, upper_right]]
     
     @staticmethod
-    def get_2_point_square(w, offset=(0,0), scalar=1):
-        return Rectangle.get_2_point_rect(w, w, offset, scalar)
+    def get_2_point_square(w, offset=(0,0), scalar=1, shrink_factor=1):
+        return Rectangle.get_2_point_rect(w, w, offset, scalar, shrink_factor)
         
     @staticmethod
     def get_rectangle_points(w, h, scalar=1):
@@ -181,6 +186,10 @@ class Rectangle(tuple):
     
     def get_dimensions(self):
         return Point([self.width(),self.height()])
+    def get_aspect(self):
+        if self.height() == 0:
+            return None
+        return self.width() / float(self.height())
     
     def could_contain(self, other):
         return not (self.width()<other.width() or self.height()<other.height())

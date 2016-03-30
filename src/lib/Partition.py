@@ -5,7 +5,7 @@ Created on Mar 9, 2016
 '''
 from collections import Counter
 
-from src.log.simpleLogger import linf
+from src.log.simpleLogger import linf,ldbg,ldbg2
 from lib.Graph import Graph
 from lib.Geometry import MultiBlock, Point
 from lib.util import UniqueColorGenerator
@@ -43,24 +43,24 @@ class Partition(Graph):
     def can_be_composed_of(self,rule_shapes, partition_multiblock, depth_counter):
         cur_multiblock=rule_shapes[depth_counter]
         t='\t'*depth_counter
-        print(t,'partition_multiblock', partition_multiblock)
-        print(t,'cur_multiblock', cur_multiblock)
+        ldbg2(t,'partition_multiblock', partition_multiblock)
+        ldbg2(t,'cur_multiblock', cur_multiblock)
         found_solution=False
         
         for cur_shape in cur_multiblock.rotations:
             
-            #print('    cur_shape',cur_shape)
+            #ldbg2('    cur_shape',cur_shape)
             # Is the shape bigger than the partition?
             if not partition_multiblock.could_contain(cur_shape):
-                #print('            %s can''t contain %s', partition_multiblock, cur_shape)
+                #ldbg2('            %s can''t contain %s', partition_multiblock, cur_shape)
                 continue
             
             # Put the shape in the lower-left corner
             cur_shape.set_offset(partition_multiblock.offset_point())
-            #print('    cur_shape.offset_point', cur_shape.offset_point())
+            #ldbg2('    cur_shape.offset_point', cur_shape.offset_point())
             
             max_shift_point=partition_multiblock.upper_right()-cur_shape.upper_right()
-            #print('    max_shift_point', max_shift_point)
+            #ldbg2('    max_shift_point', max_shift_point)
             
             # TODO: Change to MultiBlock yield?
             for y in range(max_shift_point.y+1):
@@ -69,7 +69,7 @@ class Partition(Graph):
                     cur_shape.set_offset(Point((x,y)))
                     
                     abs_points=cur_shape.get_absolute_point_set()
-                    #print('        abs_points', abs_points)
+                    #ldbg2('        abs_points', abs_points)
                     '''There are now several possibilities:
                     1. The shifted points completely cover the partition points
                         We're done no matter what. If the last shape has been placed then
@@ -85,21 +85,21 @@ class Partition(Graph):
                     # TODO: Change to yield? No reason to check all points, just need first violation
                     outside_points=abs_points - partition_multiblock
                     if outside_points:
-                        #print('            !!outside_points', outside_points)
+                        #ldbg2('            !!outside_points', outside_points)
                         continue
                     # Return all the points in the partition that are left
                     remaining_partition_points=partition_multiblock - abs_points
-                    #print('        remaining_partition_points', remaining_partition_points)
+                    #ldbg2('        remaining_partition_points', remaining_partition_points)
                     
                     # Haven't filled all our points yet...
                     if remaining_partition_points:
                         if depth_counter==len(rule_shapes)-1:
-                            #print( '            still points')
+                            #ldbg2( '            still points')
                             raise Exception('still points')
                         else:
-                            #print('            keep on truckin...')
+                            #ldbg2('            keep on truckin...')
                             new_partition=MultiBlock(remaining_partition_points,auto_shift_Q1=False)
-                            #print('            new_partition', new_partition)
+                            #ldbg2('            new_partition', new_partition)
                             found_solution=self.can_be_composed_of(rule_shapes, new_partition, depth_counter+1)
                     # Filled all our points, are we at the end?
                     else:
@@ -111,7 +111,7 @@ class Partition(Graph):
                             raise Exception('Filled too soon')
                             return False
                     if found_solution:
-                        print('\t'*(depth_counter)+'FOUND SOLUTION!!', cur_shape)
+                        ldbg2('\t'*(depth_counter)+'FOUND SOLUTION!!', cur_shape)
                         sol_pts=cur_shape.get_absolute_point_set()
                         self.solution_shapes.append(sol_pts)
                         return True
@@ -124,7 +124,7 @@ class Partition(Graph):
             return self.shape_violation
         self.solution_shapes=[]
         rule_shapes=self.get_rule_shapes()
-        #print('rule_shapes', rule_shapes)
+        #ldbg2('rule_shapes', rule_shapes)
         
         if self.total_rule_shape_points != len(self):
             self.shape_violation=True
@@ -142,7 +142,7 @@ class Partition(Graph):
             return self.color_violation
         
         distinct_rule_colors = Counter([n.rule_color for n in self.values() if n.rule_color])
-        #print('distinct_rule_colors', distinct_rule_colors)
+        #ldbg2('distinct_rule_colors', distinct_rule_colors)
         
         # Only 1 rule_color allowed per Partition
         self.color_violation = len(distinct_rule_colors)>1
@@ -186,62 +186,41 @@ class Partition(Graph):
             squares=set([self[key] for key in solution_shape])
             yield squares
             
-    def solution_shape_to_edges(self):
+    def solution_shapes_to_edges(self):
         '''Yield sets of Edges for each Solution Shape.
          
         A "Solution Shape" is a set of Points that correspond to
         a sub-Partition of this Partition. Note that these Points
         are not necessarily all neighbors, but return the Edges
-        corresponding to those that are'''
+        corresponding to those that are.
+        
+        # TODO: Also yield Square with Rule Shape corresponding to Solution Shape?
+        '''
         
         # Create a temporary set of all Edges in this Partition,
-        # Once we've found all of them, we're done
-        
+        # (Actually Edge keys, which is a frozenset of two Squares,
+        # but the squares are what we want anyways)
         edges_to_find=set(self.edges)
         # TODO: Needed?
-        found_edges=set()
+        #found_edges=set()
         for squares in self.solution_shape_to_squares():
-            linf('Looking for Edges in solution shape:', squares)
-            # Keep track of edges we've found in this particular set of squares
-            found_edges_in_shape=set()
-            for e in edges_to_find:
-                if e.issubset(squares):
-                    
-                    linf('found %s in %s' % (e, squares))
-                    found_edges_in_shape.add(e)
-                    squares = squares - e
-                    if not squares:
-                        linf('found all squares!!')
-                        break
-                edges_to_find = edges_to_find - found_edges_in_shape
-                
-                if not edges_to_find:
-                    linf('!!!found all edges!!!')
-                    break
-                found_edges = found_edges | found_edges_in_shape
+            ldbg('Looking for Edges in solution shape:', ' '.join(s.sym for s in squares))
+            # Find all edges that are in this shape -> The Edge's Squares are both in this
+            # Solution Shape
+            edges_in_shape=set([e for e in edges_to_find if e.issubset(squares)])
             
-            yield 'foo'
+            # Finished looping over edges_to_find, remove what we found
+            edges_to_find = edges_to_find - edges_in_shape
+            yield edges_in_shape
             
-    def get_img_rects(self):
-        for solution_shape in self.solution_shapes:
-            # Auto color this shape
-            col=Partition.cg.get()
-            print('Solution points:', solution_shape)
+            if not edges_to_find:
+                # Will only happen if Partition is composed of 1 Rule Shape
+                linf('    !!!found all edges!!!')
+                break
+            #found_edges = found_edges | edges_in_shape
             
-            for square_key in solution_shape:
-                #print('square_key', square_key)
-                if square_key not in self:
-                    print(self)
-                    raise Exception('square_key not in self',square_key)
-                else:
-                    n=self[square_key]
-                    #print('n', n)
-                #exit(0)
-                yield square_key,col
 
-def pass_print(*args):
-    pass
-#print=pass_print
+
 if __name__=='__main__':
     
     exit(0)
