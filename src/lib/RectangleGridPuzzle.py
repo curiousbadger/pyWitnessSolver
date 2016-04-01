@@ -6,7 +6,14 @@ Created on Feb 24, 2016
 #TODO: Hack...
 from ast import literal_eval
 
-from src.log.simpleLogger import linf,ldbg,ldbg2
+import logging
+from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler
+module_logger=logging.getLogger(__name__)
+module_logger.addHandler(lib_dbg_filehandler)
+module_logger.addHandler(lib_inf_filehandler)
+#module_logger.addHandler(lib_consolehandler)
+linf, ldbg = module_logger.info, module_logger.debug
+
 from lib.util import simplePickler, WastedCounter, MasterUniqueNumberGenerator
 
 from lib.GraphImage import GraphImage
@@ -58,7 +65,12 @@ class RectangleGridPuzzle(GraphImage):
         color_boundaries = frozenset(s.different_color_boundaries for s in self.inner_grid.values(
         ) if s.different_color_boundaries)
 
-        print('color_boundaries',color_boundaries)
+        # print('color_boundaries',color_boundaries)
+        if not color_boundaries:
+            linf('No color boundaries, skipping...')
+            self.potential_paths=self.paths
+            return
+        
         self.potential_paths = []
         
         print('Attempting to filter:',len(self.paths),'total paths')
@@ -71,8 +83,8 @@ class RectangleGridPuzzle(GraphImage):
                 le_path=literal_eval(path)
             else:
                 le_path=path
-            ldbg2(path)
-            ldbg2(le_path)
+            ldbg(path)
+            ldbg(le_path)
             
             # for our purposes, path direction doesn't matter, only which segments (Node-Node) were traversed
             # if the path contains all of the segments we know MUST be
@@ -99,18 +111,20 @@ class RectangleGridPuzzle(GraphImage):
         violation = False
         
         '''We could break after each of these, but maybe we want to see where the
-        violation occurs?'''
-        if self.find_any_shape_violation():
-            violation = True
-            
-        if self.find_any_color_violation():
-            violation = True
-        else:
-            pass
-            
+        violation occurs, or check other violations just for fun?'''
+        
         if self.find_any_sun_violation():
             violation = True
+            return True
+        
+        if self.find_any_color_violation():
+            violation = True
+            return True
             
+        if self.find_any_shape_violation():
+            violation = True
+            return True
+
         return violation
     
     def solve(self, break_on_first=False, render_all=False, force_paths=None):
@@ -145,7 +159,7 @@ class RectangleGridPuzzle(GraphImage):
             
             if solution:
                 self.solutions.append(p)
-                linf('Found solution!', p)
+                linf('Found solution!'+str(p))
                 self.render_solution()
                 if break_on_first:
                     break

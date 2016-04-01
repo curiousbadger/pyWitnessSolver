@@ -5,16 +5,108 @@ import unittest
 import pstats
 import io
 
-from lib.Geometry import MultiBlock, Point
-from lib.GraphImage import chImg
+from lib.Geometry import MultiBlock, Point, Rectangle
+
 from lib.RectangleGridPuzzle import RectangleGridPuzzle
 from lib.util import simplePickler, WastedCounter, defaultValueServer
+
 from ast import literal_eval
 
 
+class PuzzleTestSuite(unittest.TestSuite):
+    pass
 
-
-class Test(unittest.TestCase):
+class PuzzleTest(unittest.TestCase):
+        
+    def assign_attributes(self, **kwargs):
+        
+        self.puzzle_grid=None
+        self.puzzle_dimensions=None
+        self.puzzle_name=None
+        self.description=None
+        
+        self.node_to_rule_map=dict()
+        
+        self.entrance_exit_node_map=[]
+        
+        self.overwrite_all_paths=None
+        self.overwrite_filtered_paths=None
+        self.expecting_filtered_paths=None
+        self.break_on_first_solution=None
+        self.render_all_attempts=None
+        
+        self.force_paths = []
+        self.expected_solutions = []
+        self.generated_solutions = []
+        self.missing_solutions = []
+        self.extra_solutions = []
+        
+        for k, v in kwargs.items():
+            self.__dict__[k]=v
+    
+    def setUp(self):
+        
+        # Initialize the Grid
+        self.puzzle_grid = RectangleGridPuzzle(*self.puzzle_dimensions, self.puzzle_name)
+        
+        # TODO: Hack until Path is used
+        self.expected_solutions = set(frozenset(p) for p in self.expected_solutions)
+        
+        # Setup entrance/exit Nodes
+        og = self.puzzle_grid # But is this the REAL og?
+        for node_key, val in self.entrance_exit_node_map.items():
+            node=og[node_key]
+            if val == 'entrance':
+                node.is_entrance = True
+            elif val == 'exit':
+                node.is_exit = True
+            else: raise ValueError(val)
+            
+        # Setup the rule Squares
+        ig=self.puzzle_grid.inner_grid
+        for node_key, rule in self.node_to_rule_map.items():
+            node=ig[node_key]
+            # TODO: Hack, should use polymorphic Rule class?
+            rule_type, rule_value = rule
+            if rule_type in ['shape']:
+                node.set_rule_shape(rule_value)
+            elif rule_type == 'distinct color':
+                node.set_rule_color(rule_value)
+            elif rule_type == 'sun color':
+                node.set_rule_sun(rule_value)
+            else: raise ValueError(rule_type)
+        
+        self.puzzle_grid.finalize()
+    def testSolvePuzzle(self):
+        
+        pg=self.puzzle_grid
+        # Render initial state
+        pg.render()
+        
+        # Generate all possible paths
+        pg.generate_paths()
+        
+        # Filter paths (if possible)
+        # TODO: Currently only working for color puzzles
+        pg.filter_paths_colors_only(overwrite=self.overwrite_filtered_paths)
+    
+        # Generate all solutions
+        pg.solve( \
+            break_on_first=self.break_on_first_solution, \
+            # TODO: Completely separate rendering from solving? 
+            render_all=self.render_all_attempts, \
+            force_paths=self.force_paths)
+        
+        self.generated_solutions = set(frozenset(s) for s in pg.solutions)
+    
+        self.missing_solutions = self.expected_solutions - self.generated_solutions
+        if self.expected_solutions:
+            self.extra_solutions = self.generated_solutions - self.expected_solutions
+        
+        self.assertFalse(self.missing_solutions)
+        self.assertFalse(self.extra_solutions)
+        
+class PuzzleTests(unittest.TestCase):
 
     def test2Ishapes(self):
         '''c d e f
@@ -24,7 +116,7 @@ class Test(unittest.TestCase):
            4 5 6 7
             g h i
            0 1 2 3'''
-        # 4x4 Grid with a 3-block "I" shape in the center and one on the left
+        
         g = RectangleGridPuzzle(4, 4, 'Ishape3test')
         Ishape3_1 = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3_1')
         Ishape3_2 = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3_2')
@@ -42,9 +134,9 @@ class Test(unittest.TestCase):
             3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]]
         expected_solutions = set(frozenset(p) for p in expected_solutions)
         # print('expected_solutions:',len(expected_solutions))
-        actual_sols = set(frozenset(p) for p in g.solutions)
-        missing_solutions = expected_solutions - actual_sols
-        extra_solutions = actual_sols - expected_solutions
+        actual_solutions = set(frozenset(p) for p in g.solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
         self.assertTrue(len(missing_solutions) == 0,
                         'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
         self.assertTrue(len(extra_solutions) == 0,
@@ -98,7 +190,7 @@ class Test(unittest.TestCase):
         # Solve but do NOT break on first first_solution to make sure we don't find
         # multiples
         print(cp1.render_both())
-        cp1.solve(False)
+        cp1.solve(break_on_first=False, render_all=False, force_paths=None)
         actual_solutions = cp1.solutions
 
         expected_solution = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (
@@ -152,23 +244,113 @@ class Test(unittest.TestCase):
         g.generate_paths(overwrite)
         # Filter paths (if possible)
         g.filter_paths_colors_only(overwrite, expecting_filtered=True)
-        # Solve but do NOT break on first first_solution to make sure we don't find
-        # multiples
-        print(g.render_both())
-        g.solve(break_on_first=True)
         
-        expected_solutions=[[(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)]]
+        print(g.render_both())
+        # I only like this one...
+        force_paths=[[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)]]
+        g.solve(break_on_first=False, force_paths=force_paths)
+        
+        #expected_solutions=[[(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2), (0, 3), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (3, 3), (3, 4), (4, 4)], [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (3, 4), (4, 4)]]
+        expected_solutions=force_paths
         expected_solutions = set(frozenset(p) for p in expected_solutions)
         actual_solutions = set(frozenset(p) for p in g.solutions)
         missing_solutions = expected_solutions - actual_solutions
         extra_solutions = actual_solutions - expected_solutions
-        # TODO: Commented out because I don't care about all 16 solutions
-        # I just want to know if none were returned
-        #self.assertTrue(len(missing_solutions) == 0,
-        #                'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
-        self.assertTrue(len(extra_solutions) == 0,
-                        'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
 
+        self.assertTrue(len(missing_solutions) == 0,
+            'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
+        self.assertTrue(len(extra_solutions) == 0,
+            'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
+
+    def testSimpleColorDemo(self, overwrite=False):
+        
+        g = RectangleGridPuzzle(4, 3, 'testSimpleColorDemo')
+        # Initialize the entrance/exit Nodes
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+
+        # Initialize the colored Squares
+        square_grid = g.inner_grid
+
+        square_grid[0,0].set_rule_color('red')
+        
+        square_grid[1,1].set_rule_color('green')
+        square_grid[1,0].set_rule_color('green')
+        square_grid[2,0].set_rule_color('green')
+        
+        square_grid[2,1].set_rule_color('blue')
+        
+        g.finalize()
+        g.render()
+        # Generate all possible paths
+        g.generate_paths(overwrite)
+        # Filter paths (if possible)
+        g.filter_paths_colors_only(overwrite, expecting_filtered=True)
+        
+        print(g.render_both())
+        
+        force_paths=[]
+        g.solve(break_on_first=False, force_paths=force_paths)
+        
+        expected_solutions=[]
+        #expected_solutions=force_paths
+        expected_solutions = set(frozenset(p) for p in expected_solutions)
+        actual_solutions = set(frozenset(p) for p in g.solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+
+        self.assertTrue(len(missing_solutions) == 0,
+            'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
+        #self.assertTrue(len(extra_solutions) == 0,
+        #    'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
+
+    def testColorDemo(self, overwrite=False):
+        
+        g = RectangleGridPuzzle(4, 4, 'testColorDemo')
+        # Initialize the entrance/exit Nodes
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+
+        # Initialize the colored Squares
+        square_grid = g.inner_grid
+
+        square_grid[0, 0].set_rule_color('red')
+        square_grid[0, 1].set_rule_color('red')
+        
+        square_grid[1, 1].set_rule_color('green')
+        square_grid[1, 2].set_rule_color('green')
+        square_grid[2, 1].set_rule_color('green')
+        square_grid[0, 2].set_rule_color('green')
+        
+        square_grid[2, 0].set_rule_color('blue')
+        square_grid[2, 2].set_rule_color('blue')
+
+#         square_grid[3, 0].set_rule_color('red')
+#         square_grid[3, 3].set_rule_color('red')
+
+        g.finalize()
+        g.render()
+        # Generate all possible paths
+        g.generate_paths(overwrite)
+        # Filter paths (if possible)
+        g.filter_paths_colors_only(overwrite, expecting_filtered=True)
+        
+        print(g.render_both())
+        
+        force_paths=[]
+        g.solve(break_on_first=False, force_paths=force_paths)
+        
+        expected_solutions=[]
+        #expected_solutions=force_paths
+        expected_solutions = set(frozenset(p) for p in expected_solutions)
+        actual_solutions = set(frozenset(p) for p in g.solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+
+        self.assertTrue(len(missing_solutions) == 0,
+            'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
+        #self.assertTrue(len(extra_solutions) == 0,
+        #    'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
         
     def testMultipleShapesInPartition(self):
         g = RectangleGridPuzzle(5, 5, 'MultipleShapesInPartition')
@@ -419,6 +601,76 @@ class Test(unittest.TestCase):
                         'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
         self.assertTrue(len(extra_solutions) == 0,
                         'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
+        
+    def testRuleShapeExample(self):
+
+        g = RectangleGridPuzzle(3, 4, 'testRuleShapeExample')
+
+        Zshape= MultiBlock(
+            [(0, 1), (1, 1), (1, 0), (0, 2)], 'Zshape')
+
+        g.inner_grid[1,0].set_rule_shape(Zshape)
+
+        g.finalize()
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        g.render()
+        g.generate_paths()
+        g.load_paths()
+        g.solve()
+
+        expected_solutions = []
+        expected_solutions = set(frozenset(p) for p in expected_solutions)
+
+        print('expected_solutions:', expected_solutions)
+        actual_solutions = set(frozenset(p) for p in g.solutions)
+        print('actual_solutions', actual_solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+        self.assertTrue(len(missing_solutions) == 0,
+                        'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
+        #self.assertTrue(len(extra_solutions) == 0,
+        #                'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
+
+    def testBlueSubtractionCube(self):
+
+        g = RectangleGridPuzzle(5, 5, 'testBlueSubtractionCube')
+
+        Lshape0 = MultiBlock(
+            [(0,0),(1,0),(2,0),(0,1)], 'Lshape0')
+        Lshape1 = MultiBlock(
+            [(0,0),(1,0),(2,0),(2,1)], 'Lshape1')
+        Lshape2 = MultiBlock(
+            [(1,0),(1,1),(1,2),(0,2)], 'Lshape2')
+        Ibar0 = MultiBlock(
+            [(0,0),(1,0)], 'Ibar0')
+        Ibar1 = MultiBlock(
+            [(0,0),(1,0)], 'Ibar1')
+        
+        g.inner_grid[0,0].set_rule_shape(Lshape0)
+        g.inner_grid[3,0].set_rule_shape(Ibar0)
+        g.inner_grid[3,1].set_rule_shape(Ibar1)
+
+        g.finalize()
+        g.lower_left().is_entrance = True
+        g.upper_right().is_exit = True
+        g.render()
+        g.generate_paths()
+        g.load_paths()
+        g.solve()
+
+        expected_solutions = []
+        expected_solutions = set(frozenset(p) for p in expected_solutions)
+
+        print('expected_solutions:', expected_solutions)
+        actual_solutions = set(frozenset(p) for p in g.solutions)
+        print('actual_solutions', actual_solutions)
+        missing_solutions = expected_solutions - actual_solutions
+        extra_solutions = actual_solutions - expected_solutions
+        self.assertTrue(len(missing_solutions) == 0,
+                        'Missing solutions:' + ','.join(str(s) for s in missing_solutions))
+        #self.assertTrue(len(extra_solutions) == 0,
+        #                'Extra solutions:' + ','.join(str(s) for s in extra_solutions))
 
     def testVillageYellowDoorWindow(self):
         '''The puzzle on a door with a yellow window. 
@@ -456,6 +708,7 @@ class Test(unittest.TestCase):
 #         extra_solutions = actual_solutions - expected_solutions
 #         self.assertTrue(len(missing_solutions)==0, 'Missing solutions:'+','.join(str(s) for s in missing_solutions))
 #         self.assertTrue(len(extra_solutions)==0, 'Extra solutions:'+','.join(str(s) for s in extra_solutions))
+    
     def testVillageSunDoor(self):
         '''After solving testVillageYellowDoorWindow, look through window to see true
         colors of all the suns in this puzzle '''
@@ -487,7 +740,7 @@ class Test(unittest.TestCase):
 
         g.load_paths()
         force_paths = [
-            '[(0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (2, 3), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]']
+            [(0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 3), (3, 3), (2, 3), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]]
         g.solve(force_paths=None)
 
     def testVillageVentWall0(self):
@@ -638,12 +891,7 @@ class Test(unittest.TestCase):
 
         # Remove all images
         if clear_img_directory:
-            d, e = defaultValueServer.get_directory_extension_pair('image')
-            search_pattern = os.path.join(d, '*' + e)
-            r = glob.glob(search_pattern)
-            for f in r:
-                #print (f)
-                os.remove(f)
+            clear_image_directory()
 
     def tearDown(self):
         if self.enable_profiler:
@@ -663,34 +911,86 @@ class Test(unittest.TestCase):
             print('Wasted:', WastedCounter.get())
 
 
-def pass_print(*args):
-    pass
-
+def copy_images():
+    from shutil import copyfile
+    import sys
+    # copy example images
+    im_d, im_e = defaultValueServer.get_directory_extension_pair('image')
+    ex_d = defaultValueServer.get_directory('example')
+    img_to_example={ \
+        'testMoveableShapes_5x5RectGridGraph': '3_tshapes_moveable_unsolved' , \
+        'testMoveableShapes_5x5RectGridGraph0': '3_tshapes_moveable_solved', \
+        'testRuleShapeRendering_5x5RectGridGraph': '3_tshapes_unsolved', \
+        'testRuleShapeRendering_5x5RectGridGraph0': '3_tshapes_solved', \
+        'testRotationShapes_4x5RectGridGraph': 'rotatable_shapes_unsolved', \
+        'testRotationShapes_4x5RectGridGraph0': 'rotatable_shapes_solved0', \
+        'testRotationShapes_4x5RectGridGraph1': 'rotatable_shapes_solved1', \
+        'testColorDemo_4x4RectGridGraph': 'medium_color_demo_unsolved', \
+        'testColorDemo_4x4RectGridGraph0': 'medium_color_demo_solved'
+    }
+    for src, tgt in img_to_example.items(): 
+        src=os.path.join(im_d, src+im_e)
+        tgt=os.path.join(ex_d, tgt+im_e)
+        #print(src, tgt)
+        try:
+            copyfile(src, tgt)
+        except Exception as e:
+            pass
+            #print('copy failed:', src, tgt)
+    # copy solution images
+    sol_d = defaultValueServer.get_directory('solution')
+    img_to_solution={ \
+        'testBunker6_5x5RectGridGraph': 'Bunker6_unsolved_generated' , \
+        'testBunker6_5x5RectGridGraph0': 'Bunker6_solution0_generated', \
+        'Bunker8_6x5RectGridGraph': 'Bunker8_unsolved_generated' , \
+        'Bunker8_6x5RectGridGraph0': 'Bunker8_solved_generated', \
+    }
+    for src, tgt in img_to_solution.items(): 
+        src=os.path.join(im_d, src+im_e)
+        tgt=os.path.join(sol_d, tgt+im_e)
+        #print(src, tgt)
+        try:
+            copyfile(src, tgt)
+        except Exception as e:
+            #print('copy failed:', src, tgt)
+            pass
+            
+def clear_image_directory():
+    d, e = defaultValueServer.get_directory_extension_pair('image')
+    search_pattern = os.path.join(d, '*' + e)
+    r = glob.glob(search_pattern)
+    for f in r:
+        os.remove(f)
 
 def test_singles():
     # 18.210 seconds
-    t = Test()
+    t = PuzzleTests()
     #defaultLogger.set_master_level(logging.INFO)
     t.setUp(enable_profiler=True)
 
+    #t.testBlueSubtractionCube()
     
     t.testBunker8(overwrite=False)
     t.testBunker6()
-
-    
-    t.testMultipleShapesInPartition()
+#     
+    t.testSimpleColorDemo()
+    t.testColorDemo()
+# 
+    t.testRuleShapeRendering()
+    t.testMoveableShapes()
     t.testRotationShapes()
+    t.testRuleShapeExample()
+    #t.testMultipleShapesInPartition()
+    
     #t.testSinglePartition()
 #
     t.testTreehouse0()
 
-    t.testRuleShapeRendering()
-    t.testMoveableShapes()
 
     #t.testVillageYellowDoorWindow()
-    t.testVillageSunDoor()
+    #t.testVillageSunDoor()
     
-    t.testVillageVentWall0()
+    #t.testVillageVentWall0()
 #     t.testVillageVentWall1()
     #t.testVillageVentWall2()
 #     t.testVillageVentWall3()
@@ -703,19 +1003,331 @@ def test_all():
 
 if __name__ == '__main__':
     
+    #clear_image_directory()
     test_singles()
+    #exit(0)
+    #test_singles()
+    # BEGIN Ishape3test ***************************************************************
     
-    #test_all()
+    description='''4x4 Grid with a 3-block "I" shape in the center and one on the left'''
     
-'''
-cp .\testMoveableShapes_5x5RectGridGraph.png .\example\3_tshapes_moveable_unsolved.png
-cp .\testMoveableShapes_5x5RectGridGraph0.png .\example\3_tshapes_moveable_solved.png
+    puzzle_name='Ishape3test'
+    puzzle_dimensions = Rectangle.get_rectangle(4, 4)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right((-1,-1))
+    
+    Ishape3_0 = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3_0')
+    Ishape3_1 = MultiBlock([(0, 0), (0, 1), (0, 2)], 'Ishape3_1')
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={ \
+        (1,1):('shape', Ishape3_0), \
+        (0,0):('shape',Ishape3_1)}
+    
+    expected_solutions = [
+        [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)],
+        [(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], 
+        [(0, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3)], 
+        [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 3)]
+    ]
+    Ishape3test=PuzzleTest()
+    Ishape3test.assign_attributes(puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+    )
+    
+    #t.setUp()
+    #t.testSolvePuzzle()
+    #print(Ishape3test._testMethodName)
+    # END   2IShapes ---------------------------------------------------------------
+    
+    # BEGIN Bunker8 ****************************************************************
+    description='''TODO: Bunker8'''
+    
+    puzzle_name='Bunker8'
+    puzzle_dimensions = Rectangle.get_rectangle(6, 5)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={ \
+        (0,1):('distinct color','aqua') , \
+        (0,2):('distinct color','aqua') , \
+        (0,3):('distinct color','aqua') , \
 
-cp .\testRuleShapeRendering_5x5RectGridGraph.png .\example\3_tshapes_unsolved.png
-cp .\testRuleShapeRendering_5x5RectGridGraph0.png .\example\3_tshapes_solved.png
+        (1,3):('distinct color','white') , \
+        (2,3):('distinct color','white') , \
+        (3,0):('distinct color','white') , \
+        (4,0):('distinct color','white') , \
 
-cp .\testRotationShapes_4x5RectGridGraph.png .\example\rotatable_shapes_unsolved.png
-cp .\testRotationShapes_4x5RectGridGraph0.png .\example\rotatable_shapes_solved0.png
-cp -v .\testRotationShapes_4x5RectGridGraph.png .\example\rotatable_shapes_solved1.png
+        (2,1):('distinct color','red') , \
+        (2,2):('distinct color','red') , \
 
-'''
+        (4,1):('distinct color','yellow') , \
+        (4,2):('distinct color','yellow') , \
+        (4,3):('distinct color','yellow') , \
+    }
+    
+    expected_solutions = [
+        [(0,0),(0,1),(0,2),(0,3),(0,4),(1,4),(1,3),(1,2),(1,1),(1,0),(2,0),(2,1),(2,2),(2,3),(3,3),(3,2),(3,1),(3,0),(4,0),(5,0),(5,1),(4,1),(4,2),(4,3),(4,4),(5,4)]
+    ]
+    Bunker8=PuzzleTest()
+    Bunker8.assign_attributes(puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+        overwrite_filtered_paths=False , \
+    )
+    
+    #t.setUp()
+    #t.testSolvePuzzle()
+    # END   Bunker8 ----------------------------------------------------------------
+    # BEGIN ColorDemoMedium ********************************************************
+
+    description='''ColorDemoMedium'''
+    
+    puzzle_name='ColorDemoMedium '
+    puzzle_dimensions = Rectangle.get_rectangle(4,4)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={ \
+        (0,0):('distinct color','red') , \
+        (0,1):('distinct color','red') , \
+        
+        (1,1):('distinct color','green') , \
+        (1,2):('distinct color','green') , \
+        (2,1):('distinct color','green') , \
+        (0,2):('distinct color','green') , \
+
+        (2,0):('distinct color','blue') , \
+        (2,2):('distinct color','blue') , \
+    }
+    
+    expected_solutions = [ \
+        [(0,0),(0,1),(0,2),(1,2),(1,1),(1,0),(2,0),(2,1),(3,1),(3,2),(2,2),(2,3),(3,3)]
+    ]
+    
+    ColorDemoMedium=PuzzleTest()
+    ColorDemoMedium.assign_attributes( \
+        puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+        overwrite_filtered_paths=False , \
+    )
+    # END   ColorDemoMedium --------------------------------------------------------
+    # BEGIN MountainCabinet0 ********************************************************
+
+    description='''The purple puzzle inside the Mountain that is squished
+    inside all the cabinets and drawers that you can't see very well'''
+    
+    puzzle_name='MountainCabinet0 '
+    puzzle_dimensions = Rectangle.get_rectangle(6,6)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    Ishape4_0 = MultiBlock([(0,0), (1,0), (2,0), (3,0)], 'Ishape4_0')
+    Ishape4_1 = MultiBlock([(0,0), (0,1), (0,2), (0,3)], 'Ishape4_1')
+    
+    node_to_rule_map={ \
+        (0,0):('distinct color','white') , \
+        (1,4):('distinct color','white') , \
+        
+        (4,0):('distinct color','black') , \
+        (2,4):('distinct color','black') , \
+        (3,2):('distinct color','black') , \
+        
+        (4,2):('shape', Ishape4_0) , \
+        (2,2):('shape', Ishape4_1) , \
+    }
+    
+    expected_solutions = [ \
+        [(0,0),(0,1),(0,2),(1,2),(2,2),(3,2),(4,2),(4,1),(4,0),(5,0),(5,1),(5,2),(5,3),(5,4),(4,4),(4,3),(3,3),(2,3),(1,3),(0,3),(0,4),(0,5),(1,5),(2,5),(2,4),(3,4),(3,5),(4,5),(5,5)]
+    ]
+    
+    MountainCabinet0=PuzzleTest()
+    MountainCabinet0.assign_attributes( \
+        puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+        overwrite_filtered_paths=False , \
+        break_on_first_solution=True , \
+    )
+    
+    # END   MountainCabinet0 --------------------------------------------------------
+    # BEGIN MountainCabinet1 ********************************************************
+
+    description='''This one is laying flatter and is on the right side'''
+    
+    puzzle_name='MountainCabinet1 '
+    puzzle_dimensions = Rectangle.get_rectangle(6,6)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    Ishape2_0 = MultiBlock([(0,0), (1,0)], 'Ishape2_0')
+    Ishape3_1 = MultiBlock([(0,0), (0,1), (0,2)], 'Ishape3_1')
+    
+    node_to_rule_map={ \
+        (0,4):('distinct color','white') , \
+        (4,3):('distinct color','white') , \
+        
+        (0,1):('distinct color','black') , \
+        (4,0):('distinct color','black') , \
+        
+        (2,2):('shape', Ishape2_0) , \
+        (2,3):('shape', Ishape3_1) , \
+    }
+    
+    expected_solutions = [ \
+        
+    ]
+    
+    MountainCabinet1=PuzzleTest()
+    MountainCabinet1.assign_attributes( \
+        puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+        overwrite_filtered_paths=False , \
+        break_on_first_solution=True , \
+    )
+#     MountainCabinet1.setUp()
+#     MountainCabinet1.testSolvePuzzle()
+    
+    # END   MountainCabinet1 -------------------------------------------------------- 
+    # BEGIN MountainLeft4 ********************************************************
+
+    description='''This is the first one where it's off-centered and tilted'''
+    
+    puzzle_name='MountainLeft4 '
+    puzzle_dimensions = Rectangle.get_rectangle(6,6)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    Ishape3_0 = MultiBlock([(0,0), (0,1), (0,2)], 'Ishape3_0', can_rotate=True)
+    Ishape3_1 = MultiBlock([(0,0), (1,0), (2,0)], 'Ishape3_1')
+    LShape4 = MultiBlock([(0,0),(0,1),(0,2),(1,0)], 'LShape4', can_rotate=True)
+    
+    node_to_rule_map={ \
+        (0,0):('shape', Ishape3_0) , \
+        (4,0):('shape', Ishape3_1) , \
+        (2,4):('shape', LShape4) , \
+    }
+    
+    expected_solutions = [ \
+        
+    ]
+    
+    MountainLeft4=PuzzleTest()
+    MountainLeft4.assign_attributes( \
+        puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+        overwrite_filtered_paths=False , \
+        break_on_first_solution=True , \
+    )
+    #MountainLeft4.setUp()
+    #pg=MountainLeft4.puzzle_grid
+    #pg.get_edge_by_coordinates((2,3), (2,4)).sever_both()
+    #pg.get_edge_by_coordinates((3,3), (4,3)).sever_both()
+    #MountainLeft4.testSolvePuzzle()
+    
+    # END   MountainLeft4 --------------------------------------------------------       
+    # BEGIN MountainLeft5 ********************************************************
+
+    description='''This is the first one that is sloooowly tracking diagonally.
+    Who repairs these things?'''
+    
+    puzzle_name='MountainLeft5 '
+    puzzle_dimensions = Rectangle.get_rectangle(5,5)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', \
+        inner_dimmensions.upper_right:'exit'}
+    
+    
+    
+    node_to_rule_map={ \
+        (0,0):('distinct color','black') , \
+        (1,0):('distinct color','black') , \
+        (2,2):('distinct color','black') , \
+        
+        (1,1):('distinct color','white') , \
+        (2,3):('distinct color','white') , \
+        (3,3):('distinct color','white') , \
+        
+        (0,3):('sun color','purple') , \
+        (3,0):('sun color','purple') , \
+    }
+    
+    expected_solutions = [ \
+        
+    ]
+    force_paths = [ \
+        #[(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (1, 2), (1, 1), (2, 1), (3, 1), (3, 0), (4, 0), (4, 1), (4, 2), (3, 2), (3, 3), (2, 3), (2, 4), (3, 4), (4, 4)]
+    ]
+    MountainLeft5=PuzzleTest()
+    MountainLeft5.assign_attributes( \
+        puzzle_name=puzzle_name, \
+        description=description, \
+        puzzle_dimensions=puzzle_dimensions.get_dimensions(), \
+        entrance_exit_node_map=entrance_exit_node_map, \
+        node_to_rule_map=node_to_rule_map, \
+        expected_solutions=expected_solutions, \
+        force_paths=force_paths, \
+        overwrite_filtered_paths=False , \
+        break_on_first_solution=False , \
+    )
+    MountainLeft5.setUp()
+    
+    pg=MountainLeft5.puzzle_grid
+    
+    pg.get_edge_by_coordinates((2,0), (2,1)).sever_both()
+    pg.get_edge_by_coordinates((3,1), (3,2)).sever_both()
+    pg.get_edge_by_coordinates((0,4), (1,4)).sever_both()
+    pg.get_edge_by_coordinates((3,3), (4,3)).sever_both()
+    
+    MountainLeft5.testSolvePuzzle()
+    exit(0)
+    # END   MountainLeft5 --------------------------------------------------------
+    ''' BEGIN Hacked test suite... '''
+    test_all_puzzles= [ \
+        Ishape3test , \
+        Bunker8 , \
+        ColorDemoMedium , \
+    ]
+    
+    for t in test_all_puzzles:
+        t.setUp()
+        t.testSolvePuzzle()
+        t.tearDown()
+    copy_images()
+    ''' END Hacked test suite... '''
+    
+    

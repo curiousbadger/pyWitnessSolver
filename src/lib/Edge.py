@@ -62,11 +62,12 @@ class Edge(object):
             raise Exception('Connection state logic')
         return self.connected
         
+    # TODO: Need to clearly differentiate sever and connect
+    # sever for bi-directional, disconnect for uni-directional?
     def sever(self, from_node):
         self.state_map[from_node]=False
         
     def sever_both(self):
-        self.disconnect()
         self.sever(self.a)
         self.sever(self.b)
         

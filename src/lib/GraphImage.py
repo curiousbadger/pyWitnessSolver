@@ -20,7 +20,7 @@ module_logger.addHandler(lib_dbg_filehandler)
 module_logger.addHandler(lib_inf_filehandler)
 #module_logger.addHandler(lib_consolehandler)
 linf, ldbg = module_logger.info, module_logger.debug
-ldbg('init:'+__name__)
+
 
 from lib.Geometry import Point, Rectangle
 from lib.util import UniqueNumberGenerator, defaultValueServer,\
@@ -45,9 +45,8 @@ class chImg(object):
         ''' Given two images a and b as PILImage objects or file paths,
         return a new combined image of them side-by-side.
         
-        If necessary, scale the shorter image up to be the same height 
-        as the taller while maintaining aspect-ratio, then put them 
-        side-by-side in the new image.'''
+        If necessary, scale the images to be the same height while 
+        maintaining aspect-ratio, then put them side-by-side in the new image.'''
         converted_imgs=[]
         for i in img_list:
             if type(i)==str: i=PILImage.open(i)
@@ -55,23 +54,23 @@ class chImg(object):
         im_list=converted_imgs
         
         # How big are they?
-        max_height = max([i.size[1] for i in im_list])
+        min_height = min([i.size[1] for i in im_list])
         
         new_imgs=[]
         for i in im_list:
             w,h=i.size
-            if h != max_height:
+            if h != min_height:
                 if w == 0: raise ValueError('Singularity!', w)
                 asp = w / float(h)
                 new_width = int(round(w * asp))
-                new_size = (new_width, max_height)
+                new_size = (new_width, min_height)
 
                 i.thumbnail(new_size, PILImage.LANCZOS)
             new_imgs.append(i)
             #i.show()
         
         combined_width = sum([i.size[0] for i in new_imgs])
-        combined_img = PILImage.new('RGBA', (combined_width, max_height))
+        combined_img = PILImage.new('RGBA', (combined_width, min_height))
         running_sum=0
         for i in new_imgs:
             
@@ -98,7 +97,7 @@ class chImg(object):
         img_filename=os.path.join(d,paths_filename+ext)
         
         flipped_im=self.flipped()
-        if title:
+        if False and title:
             # Create a new image that is the same width plus some percentage of the height
             title_height=int(.05*self.size[1])
             new_sz=(self.size[0], self.size[1]+title_height)
@@ -109,7 +108,7 @@ class chImg(object):
             title_image=PILImage.new('RGB',title_sz,(0,0,0))
             
             td=PILImageDraw.Draw(title_image)
-            font = ImageFont.truetype(font='arial', size=50)
+            font = ImageFont.truetype(font='arial', size=25)
             td.text((10,10), title, fill='white', font=font)
             bigger_image.paste(title_image, (0,0), mask=None)
             bigger_image.paste(flipped_im,(0,title_height), mask=None)
@@ -164,13 +163,13 @@ class GraphImage(RectGridGraph):
         element_dimensions=self.element_dimensions
         ldbg(element_dimensions.max_dimension())
         aspect=element_dimensions.x / element_dimensions.y
-        max_desired_dimension=2000.0
+        max_desired_dimension=1000.0
         w,h=max_desired_dimension,max_desired_dimension
         if aspect > 1:
             w=max_desired_dimension
             h=max_desired_dimension / aspect
         elif aspect < 1:
-            w=max_desired_dimension / aspect
+            w=max_desired_dimension * aspect
             h=max_desired_dimension
             
         # Default canvas size
@@ -301,7 +300,7 @@ class GraphImage(RectGridGraph):
             for img_rect, col in img_rects:
                 cnt+=1
                 if cnt==2 and gs.sun_color:
-                    im.ellipse(img_rect, col, 'red')
+                    im.ellipse(img_rect, col)
                 else:
                     im.rectangle(img_rect, col)
                 pass

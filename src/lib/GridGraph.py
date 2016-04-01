@@ -207,6 +207,11 @@ class RectGridGraph(Graph):
         for n, sym in zip(self.iter_all_sorted(), usg):
             n.sym = sym
 
+    def get_edge_by_coordinates(self, n1_key, n2_key):
+        n1,n2 = self[n1_key], self[n2_key]
+        node_set=frozenset([n1,n2])
+        return self.edges[node_set]
+    
     def all_paths(self):
         if self._all_paths is None:
             all_paths_filename=self.paths_filename() + '_all'
@@ -284,8 +289,6 @@ class RectGridGraph(Graph):
                 {n for n in self.inner_grid.values() if n.rule_shape})
             self.rule_sun_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.sun_color})
-#         for e in self.inner_grid.edges.values():
-#             e.assign_default_state()
 
     def prepare_for_partitioning(self):
         self.partitions = []
@@ -432,8 +435,7 @@ class RectGridGraph(Graph):
 
     def find_any_shape_violation(self):
 
-        rule_shape_nodes = {
-            n for n in self.inner_grid.values() if n.rule_shape}
+        rule_shape_nodes = set(self.rule_shape_nodes)
         if not rule_shape_nodes:
             return False
 
@@ -457,7 +459,7 @@ class RectGridGraph(Graph):
 
     def find_any_sun_violation(self):
 
-        rule_sun_nodes = {n for n in self.inner_grid.values() if n.sun_color}
+        rule_sun_nodes = set(self.rule_sun_nodes)
 
         if not rule_sun_nodes:
             return False
@@ -501,7 +503,7 @@ class RectGridGraph(Graph):
         # Find the partition that contains this Node (for now just GridSquares)
         found_partition = None
 
-        found_partitions=[ p for p in self.partitions if n in p ]
+        found_partitions=[ p for p in self.partitions if n.key() in p ]
         if len(found_partitions) == 1:
             return found_partitions[0]
         elif not found_partitions:
