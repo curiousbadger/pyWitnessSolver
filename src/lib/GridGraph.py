@@ -6,13 +6,26 @@ Created on Mar 23, 2016
 
 import itertools
 from collections import OrderedDict
+
+import logging
+from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler
+module_logger=logging.getLogger(__name__)
+module_logger.addHandler(lib_dbg_filehandler)
+module_logger.addHandler(lib_inf_filehandler)
+#module_logger.addHandler(lib_consolehandler)
+linf, ldbg = module_logger.info, module_logger.debug
+ldbg('init:'+__name__)
+
+
 from lib.util import simplePickler, UniqueStringGenerator
 
 from lib.Graph import Graph
 
 from lib.Node import GridNode, GridSquare
 from lib.Edge import OuterEdge, InnerEdge
-from log.simpleLogger import linf
+
+
+
 
 
 class GridGraph(Graph):
@@ -87,7 +100,6 @@ class RectGridGraph(Graph):
             # Graph
             self.assign_symbols()
 
-            
         '''END: Outer-Grid specific setup '''
     '''END: __init__ '''
 
@@ -99,35 +111,31 @@ class RectGridGraph(Graph):
         for y in range(gy):
             for x in range(gx):
                 n = self[x, y]
+                # Figure out which neighbors this Node has
                 nbr = None
                 nbr_list = []
-                # Figure out which neighbors this Node has
                 # add top neighbor unless this is the top row: y=gy-1
                 if y < gy - 1:
-                    nbr_list.append([self[x, y + 1], 'upper'])
-                # add bottom ex y=0
+                    nbr_list.append([self[x,y+1], 'upper'])
+                # add bottom except y=0
                 if y > 0:
-                    nbr_list.append([self[x, y - 1], 'lower'])
-                # add right ex x=0
+                    nbr_list.append([self[x,y-1], 'lower'])
+                # add right except x=0
                 if x < gx - 1:
-                    nbr_list.append([self[x + 1, y], 'right'])
-                # add left ex x=0
+                    nbr_list.append([self[x+1,y], 'right'])
+                # add left except x=0
                 if x > 0:
-                    nbr_list.append([self[x - 1, y], 'left'])
+                    nbr_list.append([self[x-1,y], 'left'])
 
                 # Each node-neighbor pair corresponds to an Edge
                 for nbr, direction in nbr_list:
-                    # Teach the node it's neighbor directly 
-                    # TODO: May just use Node.edges later?
-                    #n.add_neighbor(nbr)
-                    # Order doesn't really matter for an Edge's Nodes, use a
-                    # frozenset
+                    # An Edge is a set of Nodes
                     node_set = frozenset([n, nbr])
                     # Have we already encountered this pair?
                     if node_set in self.edges:
-                        #print('already created', node_set)
                         cur_edge = self.edges[node_set]
                     else:
+                        # Create a new Edge
                         if self.is_outer:
                             cur_edge = OuterEdge(node_set)
                         else:
@@ -156,41 +164,41 @@ class RectGridGraph(Graph):
                     e.sever(n)
 
     def associate_outer_to_inner(self):
-        ''' Teach the Outer Edges which corresponding Inner Edge runs
-        "below" them, if any.
-        '''
+        ''' Teach the OuterEdges which corresponding InnerEdge runs
+        "below" them, if any. '''
 
-        for cur_edge in self.edges.values():
+        for edge in self.edges.values():
             # Sort the nodes so that they are always in lower-upper or
             # left-right order
-            first_node, second_node = sorted(
-                [outer_node for outer_node in cur_edge.nodes], key=lambda x: x.pt)
-            inner_edge = None
+            n1, n2 = sorted(
+                [outer_node for outer_node in edge.nodes], key=lambda x: x.pt)
+            
             first_square, second_square = None, None
 
             # vertical segment, add left-right squares if they exist
-            if first_node.is_vertical_with(second_node):
-                if not first_node.on_left_boundary:
+            if n1.is_vertical_with(n2):
+                if (n1.on_left_boundary or n2.on_left_boundary): continue
+                if not n1.on_left_boundary:
                     first_square = self.inner_grid[
-                        first_node.x - 1, first_node.y]
-                if not first_node.on_right_boundary:
-                    second_square = self.inner_grid[first_node.x, first_node.y]
+                        n1.x - 1, n1.y]
+                if not n1.on_right_boundary:
+                    second_square = self.inner_grid[n1.x, n1.y]
 
             # horizontal segment, add above-below squares
-            elif first_node.is_horizontal_with(second_node):
-                if not first_node.on_lower_boundary:
+            elif n1.is_horizontal_with(n2):
+                if not n1.on_lower_boundary:
                     first_square = self.inner_grid[
-                        first_node.x, first_node.y - 1]
-                if not first_node.on_upper_boundary:
-                    second_square = self.inner_grid[first_node.x, first_node.y]
+                        n1.x, n1.y - 1]
+                if not n1.on_upper_boundary:
+                    second_square = self.inner_grid[n1.x, n1.y]
 
-            # If there is an Inner GridSquare on both sides of the cur_edge,
+            # If there is an Inner GridSquare on both sides of the edge,
             # tie it to the InnerEdge that runs "beneath" it
             if first_square and second_square:
                 inner_edge = self.inner_grid.get_edge(
                     first_square, second_square)
-                #print('cur_edge', cur_edge,'inner_edge', inner_edge)
-                cur_edge.set_inner_edge(inner_edge)
+                #print('edge', edge,'inner_edge', inner_edge)
+                edge.set_inner_edge(inner_edge)
 
     def assign_symbols(self):
         '''Optional, should assign an ASCII string for visualization.'''
@@ -262,7 +270,7 @@ class RectGridGraph(Graph):
             raise Exception('Already finalized!')
         self.finalized=True
         
-        linf('Finalizing Grid:', str(self))
+        ldbg('Finalizing Grid')
         for n in self.iter_all():
             n.finalize()
         for e in self.edges.values():

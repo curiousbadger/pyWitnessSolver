@@ -5,7 +5,16 @@ Created on Mar 9, 2016
 '''
 from collections import Counter
 
-from src.log.simpleLogger import linf,ldbg,ldbg2
+import logging
+from src.lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
+module_logger=logging.getLogger(__name__)
+module_logger.addHandler(lib_inf_filehandler)
+module_logger.addHandler(lib_dbg_filehandler)
+module_logger.addHandler(lib_consolehandler)
+linf, ldbg, ldbg2 = module_logger.info, module_logger.debug, module_logger.debug
+ldbg('init:'+__name__)
+
+
 from lib.Graph import Graph
 from lib.Geometry import MultiBlock, Point
 from lib.util import UniqueColorGenerator
@@ -26,7 +35,6 @@ class Partition(Graph):
                 self.edges[e.nodes]=e
             self.travel_partition(e.traverse_from_node(n))
 
-    
     def get_rule_shapes(self):
         if self.rule_shapes is not None and len(self.rule_shapes)==0:
             raise Exception('ruleshapes')
@@ -43,8 +51,9 @@ class Partition(Graph):
     def can_be_composed_of(self,rule_shapes, partition_multiblock, depth_counter):
         cur_multiblock=rule_shapes[depth_counter]
         t='\t'*depth_counter
-        ldbg2(t,'partition_multiblock', partition_multiblock)
-        ldbg2(t,'cur_multiblock', cur_multiblock)
+        
+        #ldbg2(t,'partition_multiblock', partition_multiblock)
+        #ldbg2(t,'cur_multiblock', cur_multiblock)
         found_solution=False
         
         for cur_shape in cur_multiblock.rotations:
@@ -105,13 +114,12 @@ class Partition(Graph):
                     else:
                         if depth_counter==len(rule_shapes)-1:
                             found_solution=True
-                            
                         else:
                             # Should not happen till we start implementing SubtractionSquare 
                             raise Exception('Filled too soon')
                             return False
                     if found_solution:
-                        ldbg2('\t'*(depth_counter)+'FOUND SOLUTION!!', cur_shape)
+                        #ldbg2('\t'*(depth_counter)+'FOUND SOLUTION!!', cur_shape)
                         sol_pts=cur_shape.get_absolute_point_set()
                         self.solution_shapes.append(sol_pts)
                         return True
@@ -203,7 +211,7 @@ class Partition(Graph):
         edges_to_find=set(self.edges)
 
         for squares in self.solution_shape_to_squares():
-            ldbg('Looking for Edges in solution shape:', ' '.join(s.sym for s in squares))
+            ldbg('Looking for Edges in solution shape:'+' '.join(s.sym for s in squares))
             # Find all edges that are in this shape -> The Edge's Squares are both in this
             # Solution Shape
             edges_in_shape=set([e for e in edges_to_find if e.issubset(squares)])
@@ -214,7 +222,7 @@ class Partition(Graph):
             
             if not edges_to_find:
                 # Will only happen if Partition is composed of 1 Rule Shape
-                linf('    !!!found all edges!!!')
+                ldbg('    !!!found all edges!!!')
                 break
 
 

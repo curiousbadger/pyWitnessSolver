@@ -13,7 +13,15 @@ from PIL import Image as PILImage
 from PIL import ImageDraw as PILImageDraw
 from PIL import ImageFont,ImageColor
 
-from src.log.simpleLogger import linf, ldbg, ldbg2
+import logging
+from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler
+module_logger=logging.getLogger(__name__)
+module_logger.addHandler(lib_dbg_filehandler)
+module_logger.addHandler(lib_inf_filehandler)
+#module_logger.addHandler(lib_consolehandler)
+linf, ldbg = module_logger.info, module_logger.debug
+ldbg('init:'+__name__)
+
 from lib.Geometry import Point, Rectangle
 from lib.util import UniqueNumberGenerator, defaultValueServer,\
     MasterUniqueColorGenerator, UniqueColorGenerator
@@ -32,6 +40,45 @@ class chImg(object):
         self.im=PILImage.new(mode,self.size,color)
         self.d=PILImageDraw.Draw(self.im)
     
+    @staticmethod
+    def combine_horizontal(new_name, img_list):
+        ''' Given two images a and b as PILImage objects or file paths,
+        return a new combined image of them side-by-side.
+        
+        If necessary, scale the shorter image up to be the same height 
+        as the taller while maintaining aspect-ratio, then put them 
+        side-by-side in the new image.'''
+        converted_imgs=[]
+        for i in img_list:
+            if type(i)==str: i=PILImage.open(i)
+            converted_imgs.append(i)
+        im_list=converted_imgs
+        
+        # How big are they?
+        max_height = max([i.size[1] for i in im_list])
+        
+        new_imgs=[]
+        for i in im_list:
+            w,h=i.size
+            if h != max_height:
+                if w == 0: raise ValueError('Singularity!', w)
+                asp = w / float(h)
+                new_width = int(round(w * asp))
+                new_size = (new_width, max_height)
+
+                i.thumbnail(new_size, PILImage.LANCZOS)
+            new_imgs.append(i)
+            #i.show()
+        
+        combined_width = sum([i.size[0] for i in new_imgs])
+        combined_img = PILImage.new('RGBA', (combined_width, max_height))
+        running_sum=0
+        for i in new_imgs:
+            
+            combined_img.paste(i, (running_sum, 0))
+            running_sum+=i.size[0]
+        combined_img.save(new_name)
+        pass
     @staticmethod
     def color_with_alpha(col_str,alpha):
         '''Convert a color string to a tuple of 2-byte RGB values and add
@@ -58,8 +105,8 @@ class chImg(object):
             title_sz=(self.size[0], title_height)
             #ldbg2('new_sz',new_sz,'title_sz',title_sz)
             
-            bigger_image=PILImage.new('RGBA',new_sz,(255,255,255,0))
-            title_image=PILImage.new('RGBA',title_sz,(255,255,255,0))
+            bigger_image=PILImage.new('RGB',new_sz,(0,0,0))
+            title_image=PILImage.new('RGB',title_sz,(0,0,0))
             
             td=PILImageDraw.Draw(title_image)
             font = ImageFont.truetype(font='arial', size=50)
@@ -70,7 +117,7 @@ class chImg(object):
             flipped_im=bigger_image
             #flipped_im.paste(title_image, (0,title_height))
             
-        linf('Saving image:',img_filename)
+        linf('Saving image:'+img_filename)
         
         flipped_im.save(img_filename,fmt=None)
         
@@ -114,9 +161,21 @@ class GraphImage(RectGridGraph):
         return self._scalar
     
     def default_dimensions(self):
+        element_dimensions=self.element_dimensions
+        ldbg(element_dimensions.max_dimension())
+        aspect=element_dimensions.x / element_dimensions.y
+        max_desired_dimension=2000.0
+        w,h=max_desired_dimension,max_desired_dimension
+        if aspect > 1:
+            w=max_desired_dimension
+            h=max_desired_dimension / aspect
+        elif aspect < 1:
+            w=max_desired_dimension / aspect
+            h=max_desired_dimension
+            
         # Default canvas size
-        cw,ch=2000.0,2000.0
-        canvas=Point([cw,ch])
+        
+        canvas=Point([w,h])
         return canvas
     
     def get_overlay_image(self, dimensions=None):
@@ -136,7 +195,7 @@ class GraphImage(RectGridGraph):
             if not e.is_fully_connected():
                 continue
             na,nb=e
-            ldbg2('Drawing Path between:', na,nb)
+            #ldbg2('Drawing Path between:', na,nb)
             # We want to draw the lines from the center of each Square, 
             #so calculate how much we'll need to shift from low-left corner
             half_square=self.render_weights[GridSquare] / 2.0
@@ -189,9 +248,7 @@ class GraphImage(RectGridGraph):
             overlay_draw.rectangle(path_2_pt_rect, col, outline=None)
             
     def render(self,paths_filename=None,title=None):
-        '''TODO: Convert this mess to use partial opacity layers...
-        
-        To make this (hopefully) simpler, I have decided that the
+        '''To make this (hopefully) simpler, I have decided that the
         GridSquares will be 3x as wide,tall as the Path GridNodes.
         
         I don't really care about how big the image itself is, just make
@@ -213,7 +270,7 @@ class GraphImage(RectGridGraph):
         We use whichever dimension is greater, element_width or element_height
         to set the scalar, but the idea is the same.
         '''
-        element_dimensions=GraphImage.calculate_total_element_dimensions([self.gx,self.gy])
+        element_dimensions=self.element_dimensions=GraphImage.calculate_total_element_dimensions([self.gx,self.gy])
         
         dimensions=self.default_dimensions()
         im=chImg(dimensions)
@@ -228,10 +285,10 @@ class GraphImage(RectGridGraph):
         for n in self.values():
             if not (n.is_entrance or n.is_exit):
                 continue
-            
-            img_rect, col = self.translate_node_to_rectangles(n)[0]
+            col = 'red' if n.is_entrance else 'blue'
+            img_rect, _ = self.translate_node_to_rectangles(n)[0]
             ldbg('img_rect, col', img_rect, col)
-            im.rectangle(img_rect, col, outline=None)
+            im.ellipse(img_rect, col, outline=None)
         
         # Iterate over Inner GridSquares
         for gs in self.inner_grid.values():
@@ -251,10 +308,9 @@ class GraphImage(RectGridGraph):
         # END  : Draw background
         
         
-        # Draw GridSquare Edges as lines instead of small, pink squares :)
+        # Several following steps will draw partially opaque overlays,
+        # setup a new transparent layer for them
         overlay_img, overlay_draw = self.get_overlay_image()
-        self.render_square_traversable_edges(overlay_draw)
-        
         
         ''' Draw rule shapes inside the GridSquares.
         
@@ -263,7 +319,7 @@ class GraphImage(RectGridGraph):
         '''
         rule_shape_nodes=[n for n in self.inner_grid.values() if n.rule_shape]
         if rule_shape_nodes:
-            ldbg2('rule_shape_nodes', rule_shape_nodes)
+            
             sq_transp_layer=PILImage.new('RGBA',dimensions.rounded(),(255,255,255,0))
             #sq_transp_layer=im.im
             #td=PILImageDraw.Draw(sq_transp_layer)
@@ -364,6 +420,8 @@ class GraphImage(RectGridGraph):
         if self.current_path and draw_path:
         
             self.render_path(overlay_draw)
+            # Draw GridSquare Edges as lines instead of small, pink squares :)
+            self.render_square_traversable_edges(overlay_draw)
         
         # Compose the overlay on top of the background
         im.im=PILImage.alpha_composite(im.im, overlay_img)
@@ -462,11 +520,18 @@ class GraphImage(RectGridGraph):
         if type(n)==GridSquare:
             offset = offset + Point([node_weight,node_weight])
 
-        ldbg2(n, offset)
         return offset
 
 if __name__=='__main__':
     
+    im_dir=defaultValueServer.get_directory('solution')
+    #im_ext=defaultValueServer.get_extension('image')
+    a='Bunker6_unsolved.jpg'
+    b='Bunker6_unsolved_generated.png'
+    new_name='Bunker6_unsolved_combined.png'
+    a,b,new_name=[os.path.join(im_dir,i) for i in [a,b,new_name]]
+    chImg.combine_horizontal(new_name, [a,b])
+    exit(0)
     gi=GraphImage(11,11,auto_assign_edges=False)
     na=gi.inner_grid[0,0]
     nb=gi.inner_grid[0,1]

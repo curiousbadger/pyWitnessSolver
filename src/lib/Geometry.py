@@ -34,18 +34,6 @@ class Point(tuple):
     def __mul__(self,other): return Point([self.x*other.x,self.y*other.y])
     def __repr__(self): return '(%.4g,%.4g)' % (self.x,self.y)
     
-    def __cmp__(self, other):
-        raise Exception('cmp',self,other)
-        ''' A point is considered less than another if it's x coordinate is lower, else if it's y is lower '''
-        if self.x==other.x:
-            if self.y < other.y: return -1
-            elif self.y > other.y: return 1
-            else: return 0 
-        else:
-            if self.x < other.x: return -1
-            elif self.x > other.x: return 1
-            else: return 0
-    
     def scaled(self,scalar):
         return Point([self.x*scalar,self.y*scalar])
     
@@ -65,15 +53,15 @@ class Point(tuple):
 class Rectangle(tuple):
     '''A Rectangle implemented as a set of 4 points.
     
-    Points need to be passed in order:
-    lower left, lower right, upper right, upper left
-    
     TODO: No need to use all 4 points. Change implementation
     to use a Point at lower-left and then a Point representing
     width,height 
     
     TODO: I don't want the base Geometry.Rectangle to have color,
     put it in a sub-class, if at all.
+    
+    TODO: Waaaaaay too many staticmethods... :(
+    This is what happens when you don't plan your class design carefully!
     '''
     @staticmethod
     def get_2_point_rect(w, h, offset=(0,0), scalar=1, shrink_factor=1):
@@ -110,7 +98,8 @@ class Rectangle(tuple):
         
     @staticmethod
     def get_rectangle_points(w, h, scalar=1):
-        pl = [Point(p).scaled(scalar) for p in [[0, 0], [w, 0], [w, h], [0, h]]]
+        pl = [Point(p) for p in [[0, 0], [w, 0], [w, h], [0, h]]]
+        if scalar != 1: pl = [ p.scaled(scalar) for p in pl ]
         return pl
     
     @staticmethod
@@ -122,16 +111,23 @@ class Rectangle(tuple):
         pl=Rectangle.get_square_points(w)
         return Rectangle(pl, offset=offset).get_absolute(scalar)
     
+    @staticmethod
+    def get_rectangle(w, h, offset=(0,0)):
+        pl = Rectangle.get_rectangle_points(w, h)
+        return Rectangle(pl, offset=offset)
     
     def __new__(cls, p, *args, **kwds):
         return tuple.__new__(cls, tuple(p))
     
     def __init__(self,p,offset=None,color='orange'):
+        ''' Points need to be passed in order:
+        lower left, lower right, upper right, upper left '''
+        
         self.offset=Point(offset) if offset else Point([0,0])
         
         #TODO: Needed here?
         self.color=color
-   
+
     # TODO: __add__ and get_bounding_rectangle are begging to be combined...
     def __add__(self,other):
         # Given 2 rectangles, return the smallest Rectangle that includes all of both

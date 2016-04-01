@@ -22,7 +22,7 @@ class defaultValueServer(object):
     #relative_path = os.path.abspath('../../')
     
     
-    directory_map = {'image': 'img', 'db': 'db', 'pickle': 'db'}
+    directory_map = {'image': 'img', 'db': 'db', 'pickle': 'db', 'example': 'img/example', 'solution':'img/solutions'}
     extension_map = {'image': '.png', 'db': '.pysqlite3', 'pickle': '.p'}
 
     @staticmethod
@@ -33,8 +33,6 @@ class defaultValueServer(object):
         default_val = defaultValueServer.directory_map[key]
         default_dir = abspath(os.path.join(proj_dir, default_val))
         #print('default_dir', default_dir)
-        
-        
         return default_dir
 
     @staticmethod

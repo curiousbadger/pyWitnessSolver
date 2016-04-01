@@ -3,14 +3,23 @@ Created on Feb 4, 2016
 
 @author: charper
 
-TODO: Get rid of code invalidated by Edge logic. Make the Nodes "dumber" and less aware of things outside themselves.
 '''
 
 import random
+import logging
+
 
 from lib.Geometry import Point, Rectangle
 from lib.util import MasterUniqueNumberGenerator, MasterUniqueStringGenerator
 
+from src.lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
+module_logger=logging.getLogger(__name__)
+module_logger.addHandler(lib_inf_filehandler)
+module_logger.addHandler(lib_dbg_filehandler)
+#module_logger.addHandler(lib_consolehandler)
+linf, ldbg = module_logger.info, module_logger.debug
+ldbg('init:'+__name__)
+linf('Info message!')
 
 class Node(object):
     '''A generic Node (or vertex) in a Graph '''
@@ -108,7 +117,6 @@ class GridNode(Node):
             self.on_upper_boundary = True
         # TODO: END HACK
         
-        # TODO: move to sub-class
         self.color = 'blue'
 
     def finalize(self):
@@ -198,7 +206,7 @@ class GridSquare(GridNode):
     
     def set_rule_sun(self, sun_color):
         self.sun_color=sun_color
-        
+    
     # colors are only "different" if both squares actually have a rule_color
     def different_color(self, other):
         return (self.rule_color and other.rule_color \

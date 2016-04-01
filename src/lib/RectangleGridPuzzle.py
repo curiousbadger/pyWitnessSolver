@@ -35,17 +35,16 @@ class RectangleGridPuzzle(GraphImage):
     def paths_filename(self):
         return '%s_%s' % (self.puzzle_name, super().paths_filename())
     
-    # TODO: Decorator?
-    def filter_paths_setup(self, overwrite=False):
-        if not self.paths:
-            self.load_paths()
+
+        
        
     def filter_paths_colors_only(self, overwrite=False, expecting_filtered=False):
         '''TODO: Currently only works for RectangleGridPuzzles with rule_color GridSquares.
         
         Filter paths to those containing segments bounding adjacent, differing rule_colors'''
         
-        self.filter_paths_setup(overwrite)
+        if not self.paths:
+            self.load_paths()
         
         if self._filtered_paths.file_exists():
             if not overwrite:
@@ -68,7 +67,10 @@ class RectangleGridPuzzle(GraphImage):
         for path in self.paths:
             
             # TODO: Hack...
-            le_path=literal_eval(path)
+            if type(path)==str:
+                le_path=literal_eval(path)
+            else:
+                le_path=path
             ldbg2(path)
             ldbg2(le_path)
             
@@ -84,14 +86,12 @@ class RectangleGridPuzzle(GraphImage):
                     self.potential_paths.append(path)
                     break
                     
-        self.filter_paths_cleanup(expecting_filtered)
-
-    def filter_paths_cleanup(self, expecting_filtered):
         if not self.potential_paths and expecting_filtered:
             raise Exception('No filtered paths')
         
-        print('Filtered', len(self.paths),
-              'paths to', len(self.potential_paths))
+        linf('Filtered %d paths to %d' % \
+            (len(self.paths), len(self.potential_paths)))
+            
         self._filtered_paths.dump(self.potential_paths)
         
     def has_violations(self):
@@ -136,7 +136,8 @@ class RectangleGridPuzzle(GraphImage):
         for p in self.potential_paths:
             
             # TODO: Hack... Use Path class instead of OrderededDict and encapsulate efficient search/serialization
-            p=literal_eval(p)
+            if type(p)==str:
+                p=literal_eval(p)
             #print('Evaluating:\n'+str(p))
             self.set_current_path(p)
             
