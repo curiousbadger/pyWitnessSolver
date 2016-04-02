@@ -56,7 +56,6 @@ class Edge(object):
     def is_connected(self,from_node):
         raise NotImplemented
         
-    
     def is_fully_connected(self):
         if self.connected and not (self.is_connected(self.a) and self.is_connected(self.b)):
             raise Exception('Connection state logic')
@@ -117,7 +116,6 @@ class Edge(object):
         self.disconnect(from_node)
         return self.get_other_node(from_node)
 
-        
     def __repr__(self):
         return 'Edge:(%s)' % ','.join(str(n) for n in self.nodes)
 
@@ -126,6 +124,7 @@ class OuterEdge(Edge):
     def __init__(self, node_set):
         Edge.__init__(self, node_set)
         self.inner_edge=None
+        self.must_travel=None
     
     def set_inner_edge(self, inner_edge):
         '''If this is an Edge between "outer" GridNodes, then this

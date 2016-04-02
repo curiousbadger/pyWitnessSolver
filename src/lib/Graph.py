@@ -38,6 +38,7 @@ class Graph(dict):
         self.rule_color_nodes = None
         self.rule_shape_nodes = None
         self.rule_sun_nodes = None
+        self.must_travel_nodes = None
         
         # TODO: Hack
         self.finalized=False

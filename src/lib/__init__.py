@@ -3,7 +3,7 @@ import logging
 
 # TODO: Cleaner way to do this?
 absolute_file_path=str(dirname(abspath(__file__)))
-print('absolute_file_path', absolute_file_path)
+#print('absolute_file_path', absolute_file_path)
 
 lib_log=logging.getLogger(__name__)
 lib_log.setLevel(logging.INFO)

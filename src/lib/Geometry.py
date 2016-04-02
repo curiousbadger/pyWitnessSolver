@@ -5,9 +5,6 @@ Created on Feb 26, 2016
 '''
 from math import hypot
 
-from src.log.simpleLogger import linf, ldbg, ldbg2
-from lib.util import MasterUniqueColorGenerator
-
 class Point(tuple):
     
     @staticmethod
@@ -77,16 +74,16 @@ class Rectangle(tuple):
         dimensions=Point([w,h])
         
         if shrink_factor!=1:
-            ldbg('offset',offset,'dimensions',dimensions)
+            #ldbg('offset',offset,'dimensions',dimensions)
             # Amount to trim from each side
             shrink_offset=(dimensions.min_dimension() * (1-shrink_factor)) / 2
             shrink_offset_point=Point([shrink_offset, shrink_offset])
-            ldbg('    shrink_offset',shrink_offset,shrink_offset_point)
+            #ldbg('    shrink_offset',shrink_offset,shrink_offset_point)
             offset = offset + shrink_offset_point
             # TODO: Hack
             dimensions = dimensions - shrink_offset_point
             dimensions = dimensions - shrink_offset_point
-            ldbg('    after: offset',offset,'dimensions',dimensions)
+            #ldbg('    after: offset',offset,'dimensions',dimensions)
             
         lower_left=offset
         upper_right=lower_left+dimensions
@@ -200,6 +197,7 @@ class Rectangle(tuple):
         return 'Rectangle: %s | %s to %s | offset: %s color: %s' % \
             (self.points_str(), self.lower_left,self.upper_right,self.offset,self.color) 
 
+
 class MultiBlock(set):
     '''A MultiBlock is the underlying shape for the MultiBlockSquare.
     
@@ -217,8 +215,6 @@ class MultiBlock(set):
     It's kind of like Tetris.
     
     '''
-    
-    MultiBlockColorGenerator=MasterUniqueColorGenerator
     
     def could_contain(self,other):
         return self.bounding_rectangle.could_contain(other.bounding_rectangle)
@@ -253,7 +249,7 @@ class MultiBlock(set):
             new_point=Point((p.x*c-p.y*s,p.x*s+p.y*c))
             new_points.append(new_point)
         
-        new_points_shifted,subtraction_vector=Point.get_Q1_shifted(new_points)
+        new_points_shifted, subtraction_vector=Point.get_Q1_shifted(new_points)
 
         return new_points_shifted
 
@@ -337,7 +333,7 @@ class MultiBlock(set):
     
     def get_color(self):
         if not self.color:
-            self.color=MultiBlock.MultiBlockColorGenerator.get()
+            self.color='green'
         return self.color
 
     def __repr__(self):

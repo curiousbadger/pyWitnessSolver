@@ -102,6 +102,9 @@ class GridNode(Node):
         ''' 
         self.edge_map={'left':None,'upper':None,'right':None,'lower':None}
         
+        # TODO: Make this a type of Rule instead?
+        self.must_travel = None
+        
         # TODO: BEGIN HACK. I don't like this
         self.on_left_boundary = False
         self.on_right_boundary = False

@@ -9,9 +9,9 @@ from ast import literal_eval
 import logging
 from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler
 module_logger=logging.getLogger(__name__)
-module_logger.addHandler(lib_dbg_filehandler)
+#module_logger.addHandler(lib_dbg_filehandler)
 module_logger.addHandler(lib_inf_filehandler)
-#module_logger.addHandler(lib_consolehandler)
+module_logger.addHandler(lib_consolehandler)
 linf, ldbg = module_logger.info, module_logger.debug
 
 from lib.util import simplePickler, WastedCounter, MasterUniqueNumberGenerator
@@ -43,10 +43,8 @@ class RectangleGridPuzzle(GraphImage):
         return '%s_%s' % (self.puzzle_name, super().paths_filename())
     
 
-        
-       
-    def filter_paths_colors_only(self, overwrite=False, expecting_filtered=False):
-        '''TODO: Currently only works for RectangleGridPuzzles with rule_color GridSquares.
+    def filter_paths(self, overwrite=False, expecting_filtered=False):
+        '''TODO: Hacked to remove pairs (Edges) or indiv Nodes
         
         Filter paths to those containing segments bounding adjacent, differing rule_colors'''
         
@@ -56,7 +54,7 @@ class RectangleGridPuzzle(GraphImage):
         if self._filtered_paths.file_exists():
             if not overwrite:
                 self.potential_paths = self._filtered_paths.load()
-                print('Skipping filter_paths_colors_only...')
+                print('Skipping filter_paths...')
                 return
             else:
                 print('Overwriting filter_paths_colors_only...')
@@ -64,10 +62,15 @@ class RectangleGridPuzzle(GraphImage):
         # get a list of all boundaries between adjacent differing colors
         color_boundaries = frozenset(s.different_color_boundaries for s in self.inner_grid.values(
         ) if s.different_color_boundaries)
-
-        # print('color_boundaries',color_boundaries)
-        if not color_boundaries:
-            linf('No color boundaries, skipping...')
+        
+        # TODO: Hack to remove pairs (Edges) or indiv Nodes
+        must_travel_nodes = frozenset(self.must_travel_nodes | color_boundaries)
+        linf('must_travel_nodes '+str(must_travel_nodes))
+        
+        if not must_travel_nodes:
+            if expecting_filtered:
+                raise Exception('No must_travel nodes!')
+            linf('No must_travel_nodes, skipping...')
             self.potential_paths=self.paths
             return
         
@@ -83,18 +86,22 @@ class RectangleGridPuzzle(GraphImage):
                 le_path=literal_eval(path)
             else:
                 le_path=path
-            ldbg(path)
-            ldbg(le_path)
+            #ldbg(path)
+            #ldbg(le_path)
             
-            # for our purposes, path direction doesn't matter, only which segments (Node-Node) were traversed
-            # if the path contains all of the segments we know MUST be
-            # traversed, append it
-            cb_copy=set(color_boundaries)
+            '''Build a copy of the nodes we have to travel, as soon as we've hit
+            all of them, we're done, this is a potential path.
+            '''
+            must_travel_copy=set(must_travel_nodes)
             for i in range(len(le_path)-1):
                 seg=frozenset(le_path[i:i+2])
-                if seg in cb_copy:
-                    cb_copy.remove(seg)
-                if len(cb_copy)==0:
+                
+                # TODO: Hack to remove pairs (Edges) or indiv Nodes
+                # Remove Edge
+                must_travel_copy -= frozenset([seg])
+                # Remove individual Nodes
+                must_travel_copy -= seg
+                if not must_travel_copy:
                     self.potential_paths.append(path)
                     break
                     

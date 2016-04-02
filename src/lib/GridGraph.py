@@ -25,9 +25,6 @@ from lib.Node import GridNode, GridSquare
 from lib.Edge import OuterEdge, InnerEdge
 
 
-
-
-
 class GridGraph(Graph):
     ''' A Graph where each Node can be described with (x,y) coordinates.
 
@@ -283,13 +280,18 @@ class RectGridGraph(Graph):
             
         # Build lists of Nodes that have particular rules, since this shouldn't change once set (I think)?
         if self.is_outer:
+            # Path Nodes with "must-travel" hexagons
+            self.must_travel_nodes = frozenset(
+                {n.key() for n in self.values() if n.must_travel})
+            # TODO: "must-travel" Edges...
+            
             self.rule_color_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.rule_color})
             self.rule_shape_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.rule_shape})
             self.rule_sun_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.sun_color})
-
+            
     def prepare_for_partitioning(self):
         self.partitions = []
         self.reset()
@@ -312,6 +314,7 @@ class RectGridGraph(Graph):
         if to_obj:
             # TODO: make path a set based class with ordering
             # self.paths.add(new_path)
+            
             self.paths.add(new_path)
             if not len(self.paths) % 10000:
                 print(len(self.paths))
