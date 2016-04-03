@@ -237,17 +237,14 @@ def MountainLeft8():
     entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
         inner_dimmensions.upper_right:'exit'}
     
-    node_to_rule_map={ 
-
+    node_to_rule_map={
     }
     
     expected_solutions = [ 
-        
     ]
     
     path_edges_to_sever = [
     ]
-    
     must_travel_nodes = [
         (1,2)
     ]
@@ -263,14 +260,141 @@ def MountainLeft8():
         'expected_solutions':expected_solutions,
         'path_edges_to_sever':path_edges_to_sever ,
         'must_travel_nodes': must_travel_nodes,
+        'must_travel_edges': must_travel_edges,
         'overwrite_all_paths':True,
         'overwrite_filtered_paths':True ,
         'expecting_filtered_paths':True, 
-        'break_on_first_solution':False ,
+        'break_on_first_solution':True ,
     }
     return puzzle_definition
     # END   MountainLeft8 --------------------------------------------------------
+
+def MountainRight1():
+    '''Second puzzle on Right with Colors and MustTravel hexagons'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(5,5)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={
+    }
+    
+    expected_solutions = [ 
+    ]
+    
+    path_edges_to_sever = [
+    ]
+    must_travel_nodes = [
+        (1,2)
+    ]
+    must_travel_edges = [
+        ((2,1), (3,1)) ,
+        ((2,4), (3,4)) ,
+        ((4,2), (4,3)) ,
+    ]
+    puzzle_definition={
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map,
+        'node_to_rule_map':node_to_rule_map,
+        'expected_solutions':expected_solutions,
+        'path_edges_to_sever':path_edges_to_sever ,
+        'must_travel_nodes': must_travel_nodes,
+        'must_travel_edges': must_travel_edges,
+        'overwrite_all_paths':False,
+        'overwrite_filtered_paths':False,
+        'expecting_filtered_paths':True, 
+        'break_on_first_solution':True ,
+        'copy_to_solutions':True
+    }
+    return puzzle_definition
+    # END   MountainLeft8 --------------------------------------------------------
+
+def Bunker6():
+    '''Simpler puzzle from first Bunker room.'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(5, 5)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={
+        (0,0):('distinct color','aqua') , 
+        (0,3):('distinct color','aqua') ,  
+
+        (1,1):('distinct color','yellow') , 
+        (1,2):('distinct color','yellow') , 
         
+        (2,1):('distinct color','antiquewhite') , 
+        (2,2):('distinct color','antiquewhite') ,  
+
+        (3,0):('distinct color','red') ,
+        (3,3):('distinct color','red') ,
+    }
+    
+    force_paths = [
+        [(0,0),(0,1),(0,2),(0,3),(0,4),(1,4),(1,3),(1,2),(1,1),(1,0),(2,0),(2,1),(2,2),(2,3),(2,4),(3,4),(3,3),(3,2),(3,1),(3,0),(4,0),(4,1),(4,2),(4,3),(4,4)]
+    ]
+    expected_solutions = [
+        [(0,0),(0,1),(0,2),(0,3),(0,4),(1,4),(1,3),(1,2),(1,1),(1,0),(2,0),(2,1),(2,2),(2,3),(2,4),(3,4),(3,3),(3,2),(3,1),(3,0),(4,0),(4,1),(4,2),(4,3),(4,4)]
+    ]
+    
+    puzzle_definition={ 
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map, 
+        'node_to_rule_map':node_to_rule_map,
+        'force_paths':force_paths,
+        'expected_solutions':expected_solutions,
+        'overwrite_filtered_paths':False ,
+        'expecting_filtered_paths':True,
+        'copy_to_solutions':True
+    }
+    return puzzle_definition
+
+def Bunker7():
+    '''Medium puzzle from first Bunker room.'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(5, 5)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={
+        (0,0):('distinct color','aqua') , 
+        (0,3):('distinct color','aqua') ,  
+
+        (1,1):('distinct color','yellow') , 
+        (2,1):('distinct color','yellow') , 
+         
+        (1,2):('distinct color','antiquewhite') ,
+        (2,2):('distinct color','antiquewhite') ,  
+
+        (3,0):('distinct color','red') ,
+        (3,3):('distinct color','red') ,
+    }
+    
+    force_paths = [
+        [(0,0),(0,1),(1,1),(1,0),(2,0),(3,0),(3,1),(4,1),(4,2),(3,2),(2,2),(1,2),(0,2),(0,3),(1,3),(1,4),(2,4),(3,4),(3,3),(4,3),(4,4)]
+    ]
+    expected_solutions = [
+        [(0,0),(0,1),(1,1),(1,0),(2,0),(3,0),(3,1),(4,1),(4,2),(3,2),(2,2),(1,2),(0,2),(0,3),(1,3),(1,4),(2,4),(3,4),(3,3),(4,3),(4,4)]
+    ]
+    
+    puzzle_definition={ 
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map, 
+        'node_to_rule_map':node_to_rule_map,
+        'force_paths':force_paths,
+        'expected_solutions':expected_solutions,
+        'overwrite_filtered_paths':False,
+        'expecting_filtered_paths':True,
+        'copy_to_solutions':True
+    }
+    return puzzle_definition
+
 def Bunker8():
     '''Last puzzle in first Bunker room.'''
     
@@ -307,8 +431,9 @@ def Bunker8():
         'entrance_exit_node_map':entrance_exit_node_map, 
         'node_to_rule_map':node_to_rule_map, 
         'expected_solutions':expected_solutions, 
-        'overwrite_filtered_paths':True ,
-        'expecting_filtered_paths':True
+        'overwrite_filtered_paths':False ,
+        'expecting_filtered_paths':True,
+        'copy_to_solutions':True
     }
     return puzzle_definition
 
@@ -344,6 +469,7 @@ def ColorDemoMedium():
         'node_to_rule_map':node_to_rule_map,
         'expected_solutions':expected_solutions,
         'overwrite_filtered_paths':False ,
+        'copy_to_examples':True , 
     }
     return puzzle_definition
 
@@ -374,7 +500,7 @@ def Ishape3test():
         'puzzle_dimensions':puzzle_dimensions.get_dimensions(), 
         'entrance_exit_node_map':entrance_exit_node_map, 
         'node_to_rule_map':node_to_rule_map, 
-        'expected_solutions':expected_solutions, 
+        'expected_solutions':expected_solutions,
     }
     return puzzle_definition
     # END   Ishape3test ---------------------------------------------------------------

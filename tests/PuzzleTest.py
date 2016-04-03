@@ -3,7 +3,12 @@ Created on Apr 2, 2016
 
 @author: charper
 '''
+import os
+import glob
 import unittest
+import shutil
+
+from src.lib.util import defaultValueServer
 
 from src.lib.RectangleGridPuzzle import RectangleGridPuzzle
 
@@ -37,9 +42,13 @@ class PuzzleTest(unittest.TestCase):
         self.missing_solutions = []
         self.extra_solutions = []
         
+        self.copy_to_examples = None
+        self.copy_to_solutions = None
+        
+        
+        # Here's where the magic happens ;)
         self.definition_function=definition_function
         
-    
     def setUp(self):
         # Get my list of attributes from the puzzle_definitions function
         self.puzzle_name=self.definition_function.__name__
@@ -83,7 +92,11 @@ class PuzzleTest(unittest.TestCase):
         for node_list in self.path_edges_to_sever:
             n1_key, n2_key = node_list
             self.puzzle_grid.get_edge_by_coordinates(n1_key, n2_key).sever_both()
-            
+        
+        for node_list in self.must_travel_edges:
+            n1_key, n2_key = node_list
+            self.puzzle_grid.get_edge_by_coordinates(n1_key, n2_key).must_travel=True    
+        
         for node_key in self.must_travel_nodes:
             self.puzzle_grid[node_key].must_travel = True
             
@@ -119,3 +132,20 @@ class PuzzleTest(unittest.TestCase):
         
         self.assertFalse(self.missing_solutions)
         self.assertFalse(self.extra_solutions)
+        
+        # Find the unsolved and first solved image
+        img_dir, img_ext = defaultValueServer.get_directory_extension_pair('image')
+        example_dir = defaultValueServer.get_directory('example')
+        solution_dir = defaultValueServer.get_directory('solution')
+        
+        images_basename=self.puzzle_grid.images_basename()
+        unsolved_img = os.path.join(img_dir, images_basename + img_ext)
+        first_solved_img = os.path.join(img_dir, images_basename+'0' + img_ext)
+        
+        all_imgs = [unsolved_img, first_solved_img]
+        if self.copy_to_examples:
+            for i in all_imgs:
+                shutil.copy(i, example_dir)
+        if self.copy_to_solutions:
+            for i in all_imgs:
+                shutil.copy(i, solution_dir)

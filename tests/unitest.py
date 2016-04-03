@@ -137,17 +137,17 @@ class PuzzleTests(unittest.TestCase):
         # Initialize the colored Squares
         square_grid = g.inner_grid
 
-        square_grid[0, 0].set_rule_color('aqua')
-        square_grid[0, 3].set_rule_color('aqua')
+        square_grid[0,0].set_rule_color('aqua')
+        square_grid[0,3].set_rule_color('aqua')
         
-        square_grid[1, 1].set_rule_color('yellow')
-        square_grid[1, 2].set_rule_color('yellow')
+        square_grid[1,1].set_rule_color('yellow')
+        square_grid[1,2].set_rule_color('yellow')
         
-        square_grid[2, 1].set_rule_color('antiquewhite')
-        square_grid[2, 2].set_rule_color('antiquewhite')
+        square_grid[2,1].set_rule_color('antiquewhite')
+        square_grid[2,2].set_rule_color('antiquewhite')
 
-        square_grid[3, 0].set_rule_color('red')
-        square_grid[3, 3].set_rule_color('red')
+        square_grid[3,0].set_rule_color('red')
+        square_grid[3,3].set_rule_color('red')
 
         g.finalize()
         g.render()
@@ -824,7 +824,7 @@ class PuzzleTests(unittest.TestCase):
 
 def copy_images():
     from shutil import copyfile
-    import sys
+    
     # copy example images
     im_d, im_e = defaultValueServer.get_directory_extension_pair('image')
     ex_d = defaultValueServer.get_directory('example')

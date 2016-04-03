@@ -1,5 +1,6 @@
 import os
 import glob
+from shutil import copyfile
 from tests import puzzle_definitions
 
 from tests.PuzzleTest import PuzzleTest
@@ -16,7 +17,7 @@ def clear_image_directory():
 
 if __name__ == '__main__':
     clear_image_directory()
-    t=PuzzleTest(puzzle_definitions.MountainLeft6)
+    t=PuzzleTest(puzzle_definitions.Bunker7)
     
     t.setUp()
     t.testSolvePuzzle()

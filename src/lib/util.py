@@ -19,11 +19,18 @@ class defaultValueServer(object):
     
     real_path=absolute_file_path
     
-    #relative_path = os.path.abspath('../../')
-    
-    
-    directory_map = {'image': 'img', 'db': 'db', 'pickle': 'db', 'example': 'img/example', 'solution':'img/solutions'}
-    extension_map = {'image': '.png', 'db': '.pysqlite3', 'pickle': '.p'}
+    directory_map = {
+        'image': 'img', 
+        'db': 'db', 
+        'pickle': 'db', 
+        'example': 'img/example', 
+        'solution':'img/solutions'
+    }
+    extension_map = {
+        'image': '.png', 
+        'db': '.pysqlite3', 
+        'pickle': '.p'
+    }
 
     @staticmethod
     def get_directory(key):

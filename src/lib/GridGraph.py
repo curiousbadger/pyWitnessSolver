@@ -283,7 +283,9 @@ class RectGridGraph(Graph):
             # Path Nodes with "must-travel" hexagons
             self.must_travel_nodes = frozenset(
                 {n.key() for n in self.values() if n.must_travel})
-            # TODO: "must-travel" Edges...
+            
+            self.must_travel_edges = frozenset(
+                {frozenset([n.key() for n in e]) for e in self.edges.values() if e.must_travel})
             
             self.rule_color_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.rule_color})

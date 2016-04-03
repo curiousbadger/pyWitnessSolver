@@ -150,9 +150,14 @@ class GraphImage(RectGridGraph):
         self.ung=UniqueNumberGenerator()
         self._scalar=1
 
+    def images_basename(self):
+        '''Base string for all image names (for globbing) '''
+        return self.paths_filename()
+    
     def render_solution(self,title=None):
-        paths_filename=self.paths_filename()+str(self.ung.get())
+        paths_filename=self.images_basename()+str(self.ung.get())
         self.render(paths_filename,title)
+        
         
     def set_scalar(self,scalar):
         self._scalar=scalar
@@ -173,7 +178,6 @@ class GraphImage(RectGridGraph):
             h=max_desired_dimension
             
         # Default canvas size
-        
         canvas=Point([w,h])
         return canvas
     

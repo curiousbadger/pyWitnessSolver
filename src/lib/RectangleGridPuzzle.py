@@ -64,7 +64,7 @@ class RectangleGridPuzzle(GraphImage):
         ) if s.different_color_boundaries)
         
         # TODO: Hack to remove pairs (Edges) or indiv Nodes
-        must_travel_nodes = frozenset(self.must_travel_nodes | color_boundaries)
+        must_travel_nodes = frozenset(self.must_travel_nodes | self.must_travel_edges | color_boundaries)
         linf('must_travel_nodes '+str(must_travel_nodes))
         
         if not must_travel_nodes:
