@@ -24,6 +24,7 @@ class Partition(Graph):
         
     def travel_partition(self, n):
         '''Travel the partition to discover all Nodes.
+        
         TODO: accumulate some simple rule info as we go?'''
         if n.key() in self:
             return

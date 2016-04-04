@@ -270,7 +270,9 @@ def MountainLeft8():
     # END   MountainLeft8 --------------------------------------------------------
 
 def MountainRight1():
-    '''Second puzzle on Right with Colors and MustTravel hexagons'''
+    '''TODO: Not completed. I think I figured this one out too soon ;)
+    
+    Second puzzle on Right with Colors and MustTravel hexagons'''
     
     puzzle_dimensions = Rectangle.get_rectangle(5,5)
     inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
@@ -311,6 +313,193 @@ def MountainRight1():
     return puzzle_definition
     # END   MountainLeft8 --------------------------------------------------------
 
+def MountainMultiPuzzle():
+    '''6 Puzzles in a bank that must be solved simultaneously.'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(6,6)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    Ishape3 = MultiBlock([(0,0), (0,1), (0,2)], 'Ishape3')
+    LShape3 = MultiBlock([(0,0),(0,1),(1,1)], 'LShape3')
+    Ishape2 = MultiBlock([(0,0), (0,1)], 'Ishape2')
+    node_to_rule_map={
+        (2,3):('shape',Ishape3),
+        (4,3):('shape',LShape3),
+        
+        (0,2):('shape',Ishape2), #6th (last) panel
+        
+        #(0,4):('distinct color', 'black'), #2nd panel
+        #(4,2):('distinct color', 'white'), #2nd panel
+        
+        (2,0):('distinct color', 'black'), #5th panel
+        (0,1):('distinct color', 'white'), #5th panel
+        (0,4):('distinct color', 'white'), #5th panel
+        (4,2):('distinct color', 'white'), #5th panel
+        
+        (0,4):('sun color', 'hotpink'),
+        (3,0):('sun color', 'hotpink'),
+        
+        (3,4):('sun color', 'lime'),
+        (4,0):('sun color', 'lime'),
+    }
+    
+    expected_solutions = [ 
+    ]
+    
+    path_edges_to_sever = [
+    ]
+    must_travel_nodes = [
+        (1,4)
+    ]
+    must_travel_edges = [
+        #((4,0),(4,1)) WRONG! rule suns do NOT have to be segregated :(
+    ]
+    
+    puzzle_definition={
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map,
+        'node_to_rule_map':node_to_rule_map,
+        'expected_solutions':expected_solutions,
+        'path_edges_to_sever':path_edges_to_sever ,
+        'must_travel_nodes': must_travel_nodes,
+        'must_travel_edges': must_travel_edges,
+        'overwrite_all_paths':False,
+        'overwrite_filtered_paths':False,
+        'force_check_all_paths':False,
+        'expecting_filtered_paths':True, 
+        'break_on_first_solution':False ,
+        'copy_to_solutions':True
+    }
+    return puzzle_definition
+    # END   MountainMultiPuzzle --------------------------------------------------------
+
+def MountainDoublePathPuzzleFirstSide():
+    '''The 1st of 2 walkway-creating puzzles on the 2nd floor down from the top of the mountain.
+    
+    Note: Incomplete, solved this one on my own :)'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(7,5)
+    
+    entrance_exit_node_map={ (3,0): 'entrance', 
+        #(0,4):'exit', #upper-left
+        #(6,4):'exit', #upper-right
+        
+        (0,0):'exit', #lower-left
+        (6,0):'exit', #lower-right
+        
+        (0,1):'exit', #final exit
+    }
+    
+    node_to_rule_map={
+        
+        (0,2):('distinct color', 'black'),
+        (5,2):('distinct color', 'white'),
+        
+        (0,0):('sun color', 'orange'),
+        (0,1):('sun color', 'orange'),
+        
+        (2,3):('sun color', 'orange'),
+        (3,2):('sun color', 'orange'),
+        
+        (5,0):('sun color', 'orange'),
+        (5,1):('sun color', 'orange'),
+    }
+    
+    expected_solutions = [ 
+    ]
+    
+    path_edges_to_sever = [
+        # lower-left breaks
+        ((0,0),(0,1)),
+        ((0,1),(0,2)),
+        
+        # top row breaks
+        ((1,4),(2,4)),
+        ((4,4),(5,4)),
+        
+        #other entrance-node
+        ((2,4),(3,4)),
+        ((3,3),(3,4)),
+        ((4,4),(4,3)),
+        
+        #TODO: Experimental!
+        #((1,3),(2,3)),
+    ]
+    must_travel_nodes = [
+        
+    ]
+    must_travel_edges = [
+        #((4,0),(4,1)) WRONG! rule suns do NOT have to be segregated :(
+    ]
+    
+    puzzle_definition={
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map,
+        'node_to_rule_map':node_to_rule_map,
+        'expected_solutions':expected_solutions,
+        'path_edges_to_sever':path_edges_to_sever ,
+        'must_travel_nodes': must_travel_nodes,
+        'must_travel_edges': must_travel_edges,
+        'overwrite_all_paths':True,
+        'overwrite_filtered_paths':False,
+        'force_check_all_paths':False,
+        'expecting_filtered_paths':False, 
+        'break_on_first_solution':False ,
+        'copy_to_solutions':False
+    }
+    return puzzle_definition
+    # END   MountainDoublePathPuzzle --------------------------------------------------------
+
+def MountainQuadFloorPuzzle():
+    '''TODO: Needs symmetric paths first.
+    
+    4 Shape sub-puzzles, then must solve a symmetry puzzle that is the
+    combination of all of them. '''
+    puzzle_dimensions = Rectangle.get_rectangle(6,6)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+#     Ishape3 = MultiBlock([(0,0), (0,1), (0,2)], 'Ishape3')
+#     LShape3 = MultiBlock([(0,0),(0,1),(1,1)], 'LShape3')
+#     Ishape2 = MultiBlock([(0,0), (0,1)], 'Ishape2')
+    node_to_rule_map={
+        (2,3):('shape',Ishape3),
+        (4,3):('shape',LShape3),
+        
+        (0,2):('shape',Ishape2), #6th (last) panel
+    }
+    
+    expected_solutions = [ 
+    ]
+    path_edges_to_sever = [
+    ]
+    must_travel_nodes = [
+    ]
+    must_travel_edges = [
+    ]
+    
+    puzzle_definition={
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map,
+        'node_to_rule_map':node_to_rule_map,
+        'expected_solutions':expected_solutions,
+        'path_edges_to_sever':path_edges_to_sever ,
+        'must_travel_nodes': must_travel_nodes,
+        'must_travel_edges': must_travel_edges,
+        'overwrite_all_paths':False,
+        'overwrite_filtered_paths':False,
+        'force_check_all_paths':False,
+        'expecting_filtered_paths':True, 
+        'break_on_first_solution':False ,
+        'copy_to_solutions':True
+    }
+    return puzzle_definition
+    # END   MountainQuadFloorPuzzle --------------------------------------------------------
 def Bunker6():
     '''Simpler puzzle from first Bunker room.'''
     

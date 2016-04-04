@@ -77,7 +77,7 @@ class RectangleGridPuzzle(GraphImage):
         self.potential_paths = []
         
         print('Attempting to filter:',len(self.paths),'total paths')
-        
+        paths_searched=0
         # iterate over each path
         for path in self.paths:
             
@@ -104,7 +104,17 @@ class RectangleGridPuzzle(GraphImage):
                 if not must_travel_copy:
                     self.potential_paths.append(path)
                     break
-                    
+            
+            paths_searched+=1
+            if not paths_searched % 50000:
+                print(
+                    ('Filtered %.2g%% paths: %d, paths found: %d') % (
+                        100 * paths_searched / len(self.paths), 
+                        paths_searched, 
+                        len(self.potential_paths)
+                    )
+                )
+            
         if not self.potential_paths and expecting_filtered:
             raise Exception('No filtered paths')
         
@@ -134,7 +144,7 @@ class RectangleGridPuzzle(GraphImage):
 
         return violation
     
-    def solve(self, break_on_first=False, render_all=False, force_paths=None):
+    def solve(self, break_on_first=False, render_all=False, force_paths=None, force_check_all_paths=False):
         if not self.finalized:
             raise Exception('Attempting to solve unfinalized Grid!')
         
@@ -144,16 +154,21 @@ class RectangleGridPuzzle(GraphImage):
         # Auto-load paths if they have been previously generated
         if not self.paths:
             self.generate_paths()
-        if not self.potential_paths:
+        if not self.potential_paths or force_check_all_paths:
+            if not self.potential_paths:
+                print('WARNING: No filtered paths found')
+            if force_check_all_paths:
+                print('WARNING: Force check all paths')
             self.potential_paths = self.paths
             if not self.potential_paths:
                 raise Exception('Unable to find any paths')
         
         if force_paths:
-            print('WARNING: Forcing single-path solve', force_paths)
+            print('WARNING: Forcing pre-set paths:', force_paths)
             self.potential_paths=force_paths
             
         print('Checking',len(self.potential_paths),'paths...')
+        paths_searched=0
         for p in self.potential_paths:
             
             # TODO: Hack... Use Path class instead of OrderededDict and encapsulate efficient search/serialization
@@ -172,5 +187,15 @@ class RectangleGridPuzzle(GraphImage):
                     break
             if render_all:
                 self.render_solution('render_all_'+(MasterUniqueNumberGenerator.get()))
+            
+            paths_searched+=1
+            if not paths_searched % 50000:
+                print(
+                    ('Searched: %.2g%% paths: %d, paths found: %d') % (
+                        100 * paths_searched / len(self.potential_paths), 
+                        paths_searched, 
+                        len(self.solutions)
+                    )
+                )
         print('Found', len(self.solutions), 'total solutions!')
 

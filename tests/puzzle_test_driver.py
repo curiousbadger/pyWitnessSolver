@@ -14,10 +14,9 @@ def clear_image_directory():
     for f in r:
         os.remove(f)
 
-
 if __name__ == '__main__':
     clear_image_directory()
-    t=PuzzleTest(puzzle_definitions.Bunker7)
+    t=PuzzleTest(puzzle_definitions.MountainDoublePathPuzzleFirstSide)
     
     t.setUp()
     t.testSolvePuzzle()

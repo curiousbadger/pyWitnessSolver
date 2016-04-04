@@ -31,6 +31,7 @@ class PuzzleTest(unittest.TestCase):
         self.must_travel_nodes = []
         self.must_travel_edges = []
         self.overwrite_all_paths=None
+        self.force_check_all_paths=None
         self.overwrite_filtered_paths=None
         self.expecting_filtered_paths=None
         self.break_on_first_solution=None
@@ -121,7 +122,8 @@ class PuzzleTest(unittest.TestCase):
             break_on_first=self.break_on_first_solution,
             # TODO: Completely separate rendering from solving? 
             render_all=self.render_all_attempts,
-            force_paths=self.force_paths
+            force_paths=self.force_paths,
+            force_check_all_paths=self.force_check_all_paths,
         )
         
         self.generated_solutions = set(frozenset(s) for s in pg.solutions)
