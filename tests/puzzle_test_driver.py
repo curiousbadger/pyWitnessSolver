@@ -10,6 +10,7 @@ from lib.GraphImage import chImg
 
 img_dir, img_ext = defaultValueServer.get_directory_extension_pair('image')
 solution_img_dir = defaultValueServer.get_directory('solution')
+example_img_dir = defaultValueServer.get_directory('example')
 def clear_image_directory():
     ''' Delete all .png images in the img/example dir '''
     search_pattern = os.path.join(img_dir, '*' + img_ext)
@@ -19,17 +20,38 @@ def clear_image_directory():
 def combine_images():
     '''Combine images side-by side '''
     solutions_combine_list=[
-        ('Bunker_2_unsolved_combined.jpg', 'Bunker2_unsolved.jpg', 'Bunker2_4x4RectGridGraph.png'),
-        ('Bunker_2_solved_combined.jpg', 'Bunker2_solved.jpg','Bunker2_4x4RectGridGraph0.png')
+        ('Bunker2_unsolved_combined.jpg', 'Bunker2_unsolved.jpg', 'Bunker2_4x4RectGridGraph.png'),
+        ('Bunker2_solved_combined.jpg', 'Bunker2_solved.jpg','Bunker2_4x4RectGridGraph0.png'),
+        
+        ('Bunker6_unsolved_combined.jpg', 'Bunker6_unsolved.jpg', 'Bunker6_5x5RectGridGraph.png'),
+        ('Bunker6_solved_combined.jpg', 'Bunker6_solved.jpg','Bunker6_5x5RectGridGraph0.png'),
+        
+        ('Bunker7_unsolved_combined.jpg', 'Bunker7_unsolved.jpg', 'Bunker7_5x5RectGridGraph.png'),
+        ('Bunker7_solved_combined.jpg', 'Bunker7_solved.jpg','Bunker7_5x5RectGridGraph0.png'),
+        
+        ('Bunker8_unsolved_combined.jpg', 'Bunker8_unsolved.jpg', 'Bunker8_6x5RectGridGraph.png'),
+        ('Bunker8_solved_combined.jpg', 'Bunker8_solved.jpg','Bunker8_6x5RectGridGraph0.png'),
     ]
     solutions_combine_list=[[os.path.join(solution_img_dir, i) for i in e] for e in solutions_combine_list]
     #print('solutions_combine_list', solutions_combine_list)
     for combined, orig, generated in solutions_combine_list:
-        print('combined, img_list', combined, [orig,generated])
+        #print('combined, img_list', combined, [orig,generated])
         chImg.combine_horizontal(combined, [orig,generated])
+    
+    examples_combine_list=[
+        ('SimpleColorDemo_4x3RectGridGraph_combined.png', 'SimpleColorDemo_4x3RectGridGraph.png', 'SimpleColorDemo_4x3RectGridGraph0.png'),
+        
+    ]
+    examples_combine_list=[[os.path.join(example_img_dir, i) for i in e] for e in examples_combine_list]
+    #print('examples_combine_list', examples_combine_list)
+    for combined, orig, generated in examples_combine_list:
+        #print('combined, img_list', combined, [orig,generated])
+        chImg.combine_horizontal(combined, [orig,generated])    
+        
+        
 if __name__ == '__main__':
     clear_image_directory()
-    t=PuzzleTest(puzzle_definitions.Bunker2)
+    t=PuzzleTest(puzzle_definitions.Bunker6)
     
     t.setUp()
     t.testSolvePuzzle()
