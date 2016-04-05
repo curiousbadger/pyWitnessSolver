@@ -6,7 +6,7 @@ Created on Mar 9, 2016
 from collections import Counter
 
 import logging
-from src.lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
+from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
 module_logger=logging.getLogger(__name__)
 module_logger.addHandler(lib_inf_filehandler)
 module_logger.addHandler(lib_dbg_filehandler)

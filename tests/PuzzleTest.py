@@ -8,9 +8,9 @@ import glob
 import unittest
 import shutil
 
-from src.lib.util import defaultValueServer
+from lib.util import defaultValueServer
 
-from src.lib.RectangleGridPuzzle import RectangleGridPuzzle
+from lib.RectangleGridPuzzle import RectangleGridPuzzle
 
 class PuzzleTest(unittest.TestCase):
 

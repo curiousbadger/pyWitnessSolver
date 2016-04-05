@@ -8,10 +8,13 @@ describing a puzzle setup.
 
 TODO: Let PuzzleTest instantiate Multiblock items during setUp()
 
-
+Regex:
+Old color to new dict assignment:
+.*\[(.+)\].*('.*').*
+(\1):('distinct color',\2) ,
 '''
 
-from src.lib.Geometry import Rectangle,MultiBlock
+from lib.Geometry import Rectangle,MultiBlock
 
 def MountainCabinet0():
     '''The purple puzzle inside the Mountain that is squished inside all the cabinets and drawers that you can't see very well'''
@@ -454,7 +457,7 @@ def MountainDoublePathPuzzleFirstSide():
     # END   MountainDoublePathPuzzle --------------------------------------------------------
 
 def MountainQuadFloorPuzzle():
-    '''TODO: Needs symmetric paths first.
+    '''TODO: Needs symmetric paths first?
     
     4 Shape sub-puzzles, then must solve a symmetry puzzle that is the
     combination of all of them. '''
@@ -468,10 +471,7 @@ def MountainQuadFloorPuzzle():
 #     LShape3 = MultiBlock([(0,0),(0,1),(1,1)], 'LShape3')
 #     Ishape2 = MultiBlock([(0,0), (0,1)], 'Ishape2')
     node_to_rule_map={
-        (2,3):('shape',Ishape3),
-        (4,3):('shape',LShape3),
-        
-        (0,2):('shape',Ishape2), #6th (last) panel
+        #(2,3):('shape',Ishape3),
     }
     
     expected_solutions = [ 
@@ -500,6 +500,7 @@ def MountainQuadFloorPuzzle():
     }
     return puzzle_definition
     # END   MountainQuadFloorPuzzle --------------------------------------------------------
+
 def Bunker6():
     '''Simpler puzzle from first Bunker room.'''
     
@@ -539,6 +540,46 @@ def Bunker6():
         'overwrite_filtered_paths':False ,
         'expecting_filtered_paths':True,
         'copy_to_solutions':True
+    }
+    return puzzle_definition
+
+def SimpleColorDemo():
+    '''Example Color puzzle.'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(4,3)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={
+        (0,0):('distinct color','red') ,
+                
+        (1,1):('distinct color','green') ,
+        (1,0):('distinct color','green') ,
+        (2,0):('distinct color','green') ,
+                
+        (2,1):('distinct color','blue') ,
+        
+    }
+    
+    force_paths = [
+        [(0, 0), (0, 1), (1, 1), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2), (3, 2)]
+    ]
+    expected_solutions = [
+        [(0, 0), (0, 1), (1, 1), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2), (3, 2)]
+    ]
+    
+    puzzle_definition={ 
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map, 
+        'node_to_rule_map':node_to_rule_map,
+        'force_paths':force_paths,
+        'expected_solutions':expected_solutions,
+        'overwrite_filtered_paths':False ,
+        'expecting_filtered_paths':True,
+        'copy_to_solutions':False,
+        'copy_to_examples':True
     }
     return puzzle_definition
 
@@ -583,6 +624,46 @@ def Bunker7():
         'copy_to_solutions':True
     }
     return puzzle_definition
+
+
+def Bunker2():
+    '''Simple puzzle from first Bunker room.'''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(4, 4)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right([-1,-1])
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={
+        (0,0):('distinct color','antiquewhite') ,
+        
+        (1,0):('distinct color','purple') , 
+        (0,1):('distinct color','purple') ,  
+        
+        (2,1):('distinct color','green') ,
+        (1,2):('distinct color','green') ,
+    }
+    
+    force_paths = [
+        [(0,0),(1,0),(1,1),(0,1),(0,2),(0,3),(1,3),(1,2),(2,2),(2,1),(3,1),(3,2),(3,3)]
+    ]
+    expected_solutions = [
+        [(0,0),(1,0),(1,1),(0,1),(0,2),(0,3),(1,3),(1,2),(2,2),(2,1),(3,1),(3,2),(3,3)]   
+    ]
+    
+    puzzle_definition={ 
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(),
+        'entrance_exit_node_map':entrance_exit_node_map, 
+        'node_to_rule_map':node_to_rule_map,
+        'force_paths':force_paths,
+        'expected_solutions':expected_solutions,
+        'overwrite_filtered_paths':False,
+        'expecting_filtered_paths':True,
+        'copy_to_solutions':True
+    }
+    return puzzle_definition
+
 
 def Bunker8():
     '''Last puzzle in first Bunker room.'''
