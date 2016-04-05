@@ -2,31 +2,38 @@
 Created on Feb 4, 2016
 
 @author: charper
+
 '''
-import string
+
 import random
-from math import hypot
+import logging
+
+
 from lib.Geometry import Point, Rectangle
 from lib.util import MasterUniqueNumberGenerator, MasterUniqueStringGenerator
 
+from src.lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
+module_logger=logging.getLogger(__name__)
+module_logger.addHandler(lib_inf_filehandler)
+module_logger.addHandler(lib_dbg_filehandler)
+#module_logger.addHandler(lib_consolehandler)
+linf, ldbg = module_logger.info, module_logger.debug
+ldbg('init:'+__name__)
+linf('Info message!')
 
 class Node(object):
     '''A generic Node (or vertex) in a Graph '''
 
-#     def __hash__(self):
-#         return self.hash_int
-#
-#     def __eq__(self,other):
-#         return self.__hash__() == other.__hash__()
-
-    def vec(self):
-        '''Some way to identify position within the Graph. For Nodes is a Grid this
-        is simply coordinates. Not sure yet how to handle for others. '''
+    def key(self):
+        '''Some way to identify position within the Graph. For Nodes 
+        in a Grid this is simply (x,y) coordinates. 
+        
+        TODO: Not sure yet how to handle for others. '''
         raise NotImplementedError
         return ''
 
     def __repr__(self):
-        return '%s:%s @%s' % (self.__class__.__name__, self.sym, str(self.vec()))
+        return '%s:%s @%s' % (self.__class__.__name__, self.sym, str(self.key()))
 
     def __init__(self, hash_int=None):
         self.hash_int = hash_int or MasterUniqueNumberGenerator.get()
@@ -34,20 +41,11 @@ class Node(object):
         self.is_exit = None
         self.is_entrance = None
         self.edges = set()
-        self.been_traversed = False
 
-        # TODO: GridSquare only?
-        self.been_partitioned = False
+        
         self.neighbors = set()
         self.traversable_neighbors = set()
         self.finalized_traversable_neighbors = set()
-        #self.has_rule = False
-        self.has_rule_color = False
-        self.has_rule_shape = False
-        #self.passed_rule_check = False
-
-        # A list of all the nodes that have me as a neighbor
-        self.backref_nbrs = []
 
         self.color = 'black'
 
@@ -55,64 +53,26 @@ class Node(object):
         #raise NotImplementedError
         if self.sym == '!':
             self.sym = MasterUniqueStringGenerator.get()
-#         if len(self.traversable_neighbors) == 0:
-#             raise Exception('No traversable_neighbors', str(self))
-        self.finalized_traversable_neighbors = frozenset(
-            self.traversable_neighbors)
-        self.neighbors = frozenset(self.neighbors)
+#         self.finalized_traversable_neighbors = frozenset(
+#             self.traversable_neighbors)
+#         self.neighbors = frozenset(self.neighbors)
         self.edges = frozenset(self.edges)
 
-    def has_rule(self):
-        raise Exception('foo')
-        return self.rule_color or self.sun_color or self.rule_shape
-
-    def add_neighbor(self, nbr, backref=False):
-        self.neighbors.add(nbr)
-        self.traversable_neighbors.add(nbr)
-        if backref:
-            nbr.backref_nbrs.append(self)
-
-    # Get a random neighbor
-    def get_random_traversable_neighbor(self):
-        return self.neighbors[random.randint(0, len(self.neighbors) - 1)]
 
     def reset_node(self):
         pass
-        #self.been_traversed = False
-        #self.traversable_neighbors = set(self.finalized_traversable_neighbors)
-        # TODO: Redundant?
-        #self.been_partitioned = False
-
-    def remove_traversable(self, other):
-        try:
-            self.traversable_neighbors.remove(other)
-        except KeyError:
-            raise Exception(
-                '%s does not have %s in traversable_neighbors' % (self, other))
-
-    def remove_traversable_no_err(self, other, warn=True):
-        if not other in self.traversable_neighbors:
-            if warn:
-                print(self.vec(), 'does not have', other.vec())
-            #raise Exception(str(self),'does not have', other.vec())
-            return
-        self.remove_traversable(other)
-
-    def pop_any_traversable(self):
-        return self.traversable_neighbors.pop()
     
     def traversable_edges(self):
         for e in self.edges:
-            if e.is_connected():
+            if e.is_connected(self):
                 yield e
                 
-    def traversable_nodes(self):
+    def traversable_nodes(self, auto_cut=True):
         for e in self.traversable_edges():
-            yield e.traverse_from_node(self)
-            
-
-#     def print_nbrs(self):
-#         return [n.str() for n in self.traversable_neighbors]
+            if auto_cut:
+                yield e.traverse_from_node(self)
+            else:
+                yield e.get_other_node(self)
 
 
 class GridNode(Node):
@@ -122,15 +82,9 @@ class GridNode(Node):
         Doesn't make sense for all Nodes, but it sure does
         for those on a RectangleGrid
     '''
-    ColorList = ['white', 'aqua', 'red', 'yellow', 'blue', 'green', 'purple']
-    ColorDict = dict(enumerate(ColorList, start=1))
-
-    rendering_weight = 1
     
-
     @property
     def x(self): return self.pt[0]
-
     @property
     def y(self): return self.pt[1]
 
@@ -138,13 +92,24 @@ class GridNode(Node):
         Node.__init__(self)
 
         self.pt = Point((x, y))
+        
+        # TODO: I don't like this name
+        self.linear_order = x + (y * gx)
+        
+        ''' TODO: Assumes only 90 degree neighbors,
+        but Nodes can be laid out in Grid and still have
+        non-90 degree neighbor.
+        ''' 
         self.edge_map={'left':None,'upper':None,'right':None,'lower':None}
+        
+        # TODO: Make this a type of Rule instead?
+        self.must_travel = None
+        
+        # TODO: BEGIN HACK. I don't like this
         self.on_left_boundary = False
         self.on_right_boundary = False
         self.on_lower_boundary = False
         self.on_upper_boundary = False
-        
-        
         if x == 0:
             self.on_left_boundary = True
         elif x == gx - 1:
@@ -153,146 +118,98 @@ class GridNode(Node):
             self.on_lower_boundary = True
         elif y == gy - 1:
             self.on_upper_boundary = True
-
-        self.rendering_weight = GridNode.rendering_weight
-        # TODO: move to sub-class
-        self.color = 'blue'
+        # TODO: END HACK
         
-        #self.has_rule = None
+        self.color = 'blue'
 
     def finalize(self):
         super().finalize()
-
+        
     # TODO: possibly should make GridNode a sub-class of Point?
     def strict_left(self, other):
         return self.pt.x < other.pt.x
-
     def strict_below(self, other):
         return self.pt.y < other.pt.y
-
     def is_vertical_with(self, other):
         return self.pt.x == other.pt.x
-
     def is_horizontal_with(self, other):
         return self.pt.y == other.pt.y
 
-    def dimensions(self):
-        return self.get_sqare_points(self.rendering_weight)
-
-    # TODO: GraphImage should handle this...
-    def offset(self):
-        #offset= self.x*4, self.y*4
-        offset = self.x * \
-            (GridSquare.rendering_weight + 1), self.y * \
-            (GridSquare.rendering_weight + 1)
-        return Point(offset)
-
     def get_color(self):
-        return self.color
-
-    def get_imgRect(self, scalar=1):
-        raw_rect = Rectangle(
-            self.dimensions(), self.offset(), self.get_color()).abs_coords(scalar)
-        return raw_rect
-
-    def get_rectangle_points(self, w, h):
-        pl = [[0, 0], [w, 0], [w, h], [0, h]]
-        # print(offset)
-        rl = [Point(p) for p in pl]
-        return rl
-
-    def get_sqare_points(self, w):
-        return self.get_rectangle_points(w, w)
-
-    def vec(self):
+        col=self.color
+        return col
+    
+    def key(self):
         return self.pt
     
-    def add_edge(self, e, direction):
-        self.edges.add(e)
+    def add_90_degree_edge(self, e, direction):
+        # TODO: Don't like this name
         self.edge_map[direction]=e
-
-    def has_right_traversable_nbr(self):
-        return self.edge_map['right'] and self.edge_map['right'].is_connected()
-
-    def has_left_traversable_nbr(self):
-        return self.edge_map['left'] and self.edge_map['left'].is_connected()
-
-    def has_lower_traversable_nbr(self):
-        return self.edge_map['lower'] and self.edge_map['lower'].is_connected()
-
-    def has_upper_traversable_nbr(self):
-        return self.edge_map['upper'] and self.edge_map['upper'].is_connected()
-
+        self.add_edge(e)
+        
+    def add_edge(self, e):
+        self.edges.add(e)
+        
     def str(self):
         return self.__repr__()
 
-
 class GridSquare(GridNode):
-
-    rendering_weight = 3
     default_color = 'grey'
 
     def __init__(self, x, y, gx, gy):
         GridNode.__init__(self, x, y, gx, gy)
 
-        ''' Since this is actually a "square" between Nodes, return the coordinates of all "outer" Nodes
-        This is NOT the same as the coordinates of my "neighbors"! (It's the corners) '''
-
+        ''' Since this is actually a "square" between Nodes, return 
+        the coordinates of all "outer" Nodes. This is NOT the same 
+        as the coordinates of my "neighbors"! (It's the corners) 
+        TODO: Use edges instead? '''
         self.outer_node_rect = Rectangle(
             [(x, y), (x + 1, y), (x + 1, y + 1), (x, y + 1)])
         self.outer_node_coordinates = frozenset(
             [p for p in self.outer_node_rect])
 
         self.color = GridSquare.default_color
-
-        self.rendering_weight = GridSquare.rendering_weight
-        self.been_partitioned = False
-        self.partition_neighbors = []
+        
         self.rule_shape = None
         self.rule_color = None
         self.sun_color = None
-        self.partition_color = None
 
     def set_rule_shape(self, shape):
-        #self.has_rule = True
-        self.has_rule_shape = True
         self.rule_shape = shape
 
     def finalize(self):
         super().finalize()
-        self.different_color_boundaries = self.get_different_color_boundaries()
-
+        # TODO: Only for Squares with color, but should be low-cost if this is only called once (as intended)
+        # Still wasteful though
+        self.different_color_boundaries = \
+            self.get_different_color_boundaries()
+    
+    # TODO: needed?
     def prepare_for_partitioning(self):
-        self.partition_color = None
+        pass
+        #print("wasted")
 
     def reset_node(self):
         super().reset_node()
-        self.prepare_for_partitioning()
+        #print("wasted")
+        #self.prepare_for_partitioning()
         #self.passed_rule_check = False
 
-    def offset(self):
-        # The weight of a PathNode and a GridSquare
-        total_weight = GridSquare.rendering_weight + GridNode.rendering_weight
-        x, y = self.x, self.y
-        offset = (x * total_weight) + 1, (y * total_weight) + 1
-        return Point(offset)
-
     def get_color(self):
-        
         if self.sun_color:
             return self.sun_color
-#         if self.partition_color:
-#             return self.partition_color
-        return self.color
         if self.rule_color:
             return self.rule_color
-
-    def set_rule_color(self, color):
+        return self.color
+        
+    def set_rule_color(self, rule_color):
         #self.has_rule = True
-        self.has_rule_color = True
         # self.color=color
-        self.rule_color = color
-
+        self.rule_color = rule_color
+    
+    def set_rule_sun(self, sun_color):
+        self.sun_color=sun_color
+    
     # colors are only "different" if both squares actually have a rule_color
     def different_color(self, other):
         return (self.rule_color and other.rule_color \
@@ -300,9 +217,17 @@ class GridSquare(GridNode):
     
     # the "outer nodes" I share with neighbor squares of a different color
     def get_different_color_boundaries(self):
-        for n in self.neighbors:
-            if self.different_color(n):
-                return frozenset(self.outer_node_coordinates & n.outer_node_coordinates)
+        if not self.rule_color:
+            return None
+        for e in self.traversable_edges():
+            nbr=e.get_other_node(self)
+            if self.different_color(nbr):
+                
+                return frozenset(self.outer_node_coordinates & nbr.outer_node_coordinates)
+            
+#         for n in self.neighbors:
+#             if self.different_color(n):
+#                 return frozenset(self.outer_node_coordinates & n.outer_node_coordinates)
 
     def overlay_traversable_rects(self):
         trl = []
@@ -320,30 +245,14 @@ class GridSquare(GridNode):
                 Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 3)), 'pink'))
         return trl
     
-    # I don't want the individual Nodes to be responsible for their own rendering logic.
-    # Making GraphImage handle this 
-#     def overlay_rule(self):
-#         c=self.color
-#         if self.rule_color:
-#             c=self.rule_color
-#         elif self.rule_shape:
-#             c=self.rule_shape.get_color()
-#         
-#         return Rectangle(self.get_sqare_points(1), self.offset() + Point((1, 1)), c)
-#     
+
 if __name__ == '__main__':
-    a = None
-    b = 'purple'
-    # b=None
-    print(a and b and a != b)
-    exit(0)
+    
     n = GridNode(1, 0, gx=7, gy=5)
     n2 = GridNode(1, 1, gx=7, gy=5)
     n.finalize(), n2.finalize()
-    n.add_neighbor(n2)
-    n2.add_neighbor(n)
+
     n.neighbors.remove(n2)
     print(n, n.neighbors, n.print_nbrs())
     print(n2, n2.neighbors, n2.print_nbrs())
-    print(n.get_imgRect(), n2.get_imgRect())
-    print(n.get_imgRect() + n2.get_imgRect())
+

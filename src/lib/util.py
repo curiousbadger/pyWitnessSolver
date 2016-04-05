@@ -8,6 +8,8 @@ import string
 import pickle
 import os
 from os.path import abspath, dirname 
+import collections
+import functools
 
 import sqlite3
 from lib import absolute_file_path
@@ -17,11 +19,18 @@ class defaultValueServer(object):
     
     real_path=absolute_file_path
     
-    #relative_path = os.path.abspath('../../')
-    
-    
-    directory_map = {'image': 'img', 'db': 'db', 'pickle': 'db'}
-    extension_map = {'image': '.png', 'db': '.pysqlite3', 'pickle': '.p'}
+    directory_map = {
+        'image': 'img', 
+        'db': 'db', 
+        'pickle': 'db', 
+        'example': 'img/example', 
+        'solution':'img/solutions'
+    }
+    extension_map = {
+        'image': '.png', 
+        'db': '.pysqlite3', 
+        'pickle': '.p'
+    }
 
     @staticmethod
     def get_directory(key):
@@ -31,8 +40,6 @@ class defaultValueServer(object):
         default_val = defaultValueServer.directory_map[key]
         default_dir = abspath(os.path.join(proj_dir, default_val))
         #print('default_dir', default_dir)
-        
-        
         return default_dir
 
     @staticmethod
@@ -94,6 +101,7 @@ class simplePickler(object):
     def __init__(self, paths_filename):
         d, e = defaultValueServer.get_directory_extension_pair('pickle')
         self.fn = os.path.join(d, paths_filename + e)
+        print('Created pickle handler:', self.fn)
 
     def dump(self, o):
         print('writing pickle to', self.fn)
@@ -113,7 +121,7 @@ class simplePickler(object):
     def file_exists(self):
         return os.path.exists(self.fn)
 
-    def filename(self):
+    def pickle_filename(self):
         return self.fn
 
 
@@ -166,7 +174,8 @@ class UniqueStringGenerator(object):
                 self.generator = self.generator = itertools.permutations(
                     UniqueStringGenerator.symbol_string, self.r_length)
         return n
-
+    def __iter__(self):
+        return self
     def get(self):
         return next(self)
 
@@ -175,6 +184,34 @@ MasterUniqueStringGenerator = UniqueStringGenerator()
 MasterUniqueColorGenerator = UniqueColorGenerator()
 WastedCounter = UniqueNumberGenerator()
 
+
+
+class memoized(object):
+    '''Decorator. Caches permutations function's return value each time it is called.
+       If called later with the same arguments, the cached value is returned
+       (not reevaluated).
+    '''
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+    
+    def __call__(self, *args):
+        if not isinstance(args, collections.Hashable):
+            # uncacheable. permutations list, for instance.
+            # better to not cache than blow up.
+            return self.func(*args)
+        if args in self.cache:
+            return self.cache[args]
+        else:
+            value = self.func(*args)
+            self.cache[args] = value
+            return value
+    def __repr__(self):
+        '''Return the function's docstring.'''
+        return self.func.__doc__
+    def __get__(self, obj, objtype):
+        '''Support instance methods.'''
+        return functools.partial(self.__call__, obj)
 
 if __name__ == '__main__':
 

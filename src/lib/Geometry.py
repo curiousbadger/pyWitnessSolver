@@ -4,7 +4,6 @@ Created on Feb 26, 2016
 @author: charper
 '''
 from math import hypot
-from lib.util import MasterUniqueColorGenerator
 
 class Point(tuple):
     
@@ -17,6 +16,7 @@ class Point(tuple):
     def get_Q1_shifted(point_list):
         subtraction_vector=Point.get_subtraction_vector(point_list)
         return [p-subtraction_vector for p in point_list],subtraction_vector
+    
     def __new__(cls,p):
         return tuple.__new__(cls, tuple(p))
 
@@ -29,64 +29,102 @@ class Point(tuple):
     
     def __add__(self,other): return Point([self.x+other.x,self.y+other.y])
     def __mul__(self,other): return Point([self.x*other.x,self.y*other.y])
-    def __repr__(self): return '(%d,%d)' % (self.x,self.y)
-    
-    
-    def strict_left(self, other):
-        return self.x < other.x
-    def strict_below(self,other):
-        return self.y < other.y
-    def is_vertical_with(self,other):
-        return self.x==other.x
-    def is_horizontal_with(self,other):
-        return self.y==other.y
-    
-    def __cmp__(self, other):
-        raise Exception('cmp',self,other)
-        ''' A point is considered less than another if it's x coordinate is lower, else if it's y is lower '''
-        if self.x==other.x:
-            if self.y < other.y: return -1
-            elif self.y > other.y: return 1
-            else: return 0 
-        else:
-            if self.x < other.x: return -1
-            elif self.x > other.x: return 1
-            else: return 0
+    def __repr__(self): return '(%.4g,%.4g)' % (self.x,self.y)
     
     def scaled(self,scalar):
         return Point([self.x*scalar,self.y*scalar])
+    
     def dist(self,other): return hypot(self.x-other.x, self.y-other.y)
     
     def max_dimension(self):
         return max(d for d in self)
+    def min_dimension(self):
+        return min(d for d in self)
+    def dimension_delta(self):
+        return abs(self.x-self.y)
     def as_int_tuple(self):
         return tuple([int(d) for d in self])
+    def rounded(self):
+        return Point([int(round(d)) for d in self])
+    
 class Rectangle(tuple):
     '''A Rectangle implemented as a set of 4 points.
     
-    Points need to be passed in order:
-    lower left, lower right, upper right, upper left
-    
     TODO: No need to use all 4 points. Change implementation
     to use a Point at lower-left and then a Point representing
-    width,height '''
+    width,height 
+    
+    TODO: I don't want the base Geometry.Rectangle to have color,
+    put it in a sub-class, if at all.
+    
+    TODO: Waaaaaay too many staticmethods... :(
+    This is what happens when you don't plan your class design carefully!
+    '''
     @staticmethod
-    def get_rectangle_points(w, h):
+    def get_2_point_rect(w, h, offset=(0,0), scalar=1, shrink_factor=1):
+        ''' Given relative width, height and offset values, return 
+        2 absolute Points representing the absolute lower-left and upper-right 
+        coordinates.
+        
+        shrink_factor causes the Rectangle to be shrunken (shrunked, shurkien?)
+        but still centered. 
+        We remove min(w,h)*shrink_factor in all 4 directions. (Note that this will be the
+        same number of pixels "removed" in all directions.)  '''
+        offset=Point(offset)
+        dimensions=Point([w,h])
+        
+        if shrink_factor!=1:
+            #ldbg('offset',offset,'dimensions',dimensions)
+            # Amount to trim from each side
+            shrink_offset=(dimensions.min_dimension() * (1-shrink_factor)) / 2
+            shrink_offset_point=Point([shrink_offset, shrink_offset])
+            #ldbg('    shrink_offset',shrink_offset,shrink_offset_point)
+            offset = offset + shrink_offset_point
+            # TODO: Hack
+            dimensions = dimensions - shrink_offset_point
+            dimensions = dimensions - shrink_offset_point
+            #ldbg('    after: offset',offset,'dimensions',dimensions)
+            
+        lower_left=offset
+        upper_right=lower_left+dimensions
+        return [p.scaled(scalar) for p in [lower_left, upper_right]]
+    
+    @staticmethod
+    def get_2_point_square(w, offset=(0,0), scalar=1, shrink_factor=1):
+        return Rectangle.get_2_point_rect(w, w, offset, scalar, shrink_factor)
+        
+    @staticmethod
+    def get_rectangle_points(w, h, scalar=1):
         pl = [Point(p) for p in [[0, 0], [w, 0], [w, h], [0, h]]]
+        if scalar != 1: pl = [ p.scaled(scalar) for p in pl ]
         return pl
+    
     @staticmethod
-    def get_sqare_points(w):
-        return Rectangle.get_rectangle_points(w, w)
+    def get_square_points(w, scalar=1):
+        return Rectangle.get_rectangle_points(w, w, scalar)
+    
+    @staticmethod
+    def get_square(w, offset=(0,0), scalar=1):
+        pl=Rectangle.get_square_points(w)
+        return Rectangle(pl, offset=offset).get_absolute(scalar)
+    
+    @staticmethod
+    def get_rectangle(w, h, offset=(0,0)):
+        pl = Rectangle.get_rectangle_points(w, h)
+        return Rectangle(pl, offset=offset)
     
     def __new__(cls, p, *args, **kwds):
         return tuple.__new__(cls, tuple(p))
     
     def __init__(self,p,offset=None,color='orange'):
+        ''' Points need to be passed in order:
+        lower left, lower right, upper right, upper left '''
+        
         self.offset=Point(offset) if offset else Point([0,0])
         
         #TODO: Needed here?
         self.color=color
-   
+
     # TODO: __add__ and get_bounding_rectangle are begging to be combined...
     def __add__(self,other):
         # Given 2 rectangles, return the smallest Rectangle that includes all of both
@@ -110,9 +148,24 @@ class Rectangle(tuple):
         
         return Rectangle([nll,nlr,nur,nul])
 
-    def abs_coords(self,scalar=1):
-        return Rectangle([Point(p+self.offset).scaled(scalar) for p in self],(0,0),self.color)
+    def get_absolute(self,scalar=1):
+        abs_points=[Point(p+self.offset) for p in self]
+        if scalar != 1:
+            abs_points=[ p.scaled(scalar) for p in abs_points ]
+        return Rectangle(abs_points, (0,0), self.color)
     
+    def grow_upper_right(self, grow_dimensions):
+        gd = Point(grow_dimensions)
+        point_list=[p for p in self]
+        point_list[1] += Point([gd.x,0])
+        point_list[2] += gd
+        point_list[3] += Point([0,gd.y])
+        return Rectangle(point_list, self.offset, self.color)
+        
+    # TODO: Hack until I convert the Rectangle class to always use this representation
+    def as_2_points(self):
+        'Get the Rectangle as the absolute low-left and upper-right Points'
+        return [self.lower_left, self.upper_right]
     @property
     def lower_left(self): return self[0]+self.offset
     @property
@@ -128,16 +181,44 @@ class Rectangle(tuple):
     def get_dimensions(self):
         return Point([self.width(),self.height()])
     
+    def get_aspect(self):
+        if self.height() == 0:
+            return None
+        return self.width() / float(self.height())
+    
     def could_contain(self, other):
         return not (self.width()<other.width() or self.height()<other.height())
+    
+    def points_str(self):
+        s=','.join([str(p) for p in self])
+        return s
     # TODO: Mixes absolute and relative through properties
     def __repr__(self):
-        return 'Rectangle: %s to %s offset: %s color: %s' % (self.lower_left,self.upper_right,self.offset,self.color) 
+        return 'Rectangle: %s | %s to %s | offset: %s color: %s' % \
+            (self.points_str(), self.lower_left,self.upper_right,self.offset,self.color) 
+
 
 class MultiBlock(set):
-    MultiBlockColorGenerator=MasterUniqueColorGenerator
+    '''A MultiBlock is the underlying shape for the MultiBlockSquare.
+    
+    A MultiBock is composed of one or more (usually contiguous) 1-unit squares.
+    For the purposes of puzzle solving it is best to consider them as a set of
+    "Virtual Squares" that need to be perfectly bounded within a sub-section
+    of the Grid. Or conversely, there cannot be any Square within the Path-bounded 
+    sub-section that is not "filled" by a Virtual Square from a MultiBlock. 
+    
+    Virtual Squares within a sub-section need not all come from the same MultiBlock. 
+    Indeed they often won't, and in that case they need to fit together. However, a
+    MultiBlock cannot usually be "broken up", it must retain it's original shape,
+    but some do have gaps or holes.
+    
+    It's kind of like Tetris.
+    
+    '''
+    
     def could_contain(self,other):
         return self.bounding_rectangle.could_contain(other.bounding_rectangle)
+    
     def rotate(self,angle):
         '''
         In general if:
@@ -168,26 +249,11 @@ class MultiBlock(set):
             new_point=Point((p.x*c-p.y*s,p.x*s+p.y*c))
             new_points.append(new_point)
         
-        new_points_shifted,subtraction_vector=Point.get_Q1_shifted(new_points)
+        new_points_shifted, subtraction_vector=Point.get_Q1_shifted(new_points)
 
         return new_points_shifted
 
-    '''A MultiBlock is the underlying shape for the MultiBlockSquare.
     
-    A MultiBock is composed of one or more (usually contiguous) 1-unit squares.
-    For the purposes of puzzle solving it is best to consider them as a set of
-    "Virtual Squares" that need to be perfectly bounded within a sub-section
-    of the Grid. Or conversely, there cannot be any Square within the Path-bounded 
-    sub-section that is not "filled" by a Virtual Square from a MultiBlock. 
-    
-    Virtual Squares within a sub-section need not all come from the same MultiBlock. 
-    Indeed they often won't, and in that case they need to fit together. However, a
-    MultiBlock cannot usually be "broken up", it must retain it's original shape,
-    but some do have gaps or holes.
-    
-    It's kind of like Tetris.
-    
-    '''
     def __init__(self, point_list,name=None,auto_shift_Q1=True,color=None,can_rotate=False):
         '''PRE: Each Point has been assigned it's relative coordinates within the
         MultiBlock.
@@ -243,17 +309,7 @@ class MultiBlock(set):
                 # Shift all the shape's Points
                 shifted_points=frozenset([p+shift_vector for p in shape])
                 #print('shifted_points',shifted_points)
-                '''There are now several possibilities:
-                1. The shifted points completely cover the partition points
-                    We're done no matter what. If the last shape has been placed then
-                    this is a solution. If not, then we ran out of space.
-                2. The shifted points are a proper subset of the partition points.
-                    This is fine, pass the remaining points back to see if further shapes can fill them
-                3. The shifted points are not a subset of the partition points, ie.
-                    some lie outside the partition points.
-                    Invalid, discard and move on
                 
-                '''
                 outside_points=shifted_points - partition
                 if outside_points:
                     #print('outside_points', outside_points)
@@ -263,11 +319,6 @@ class MultiBlock(set):
                 #print('remaining_partition_points',remaining_partition_points)
                 yield remaining_partition_points,shift_vector
     
-
-    def yield_rotations(self):
-        for rotation in self.rotations:
-            self.last_rotation=(self.last_rotation+1) % len(self.rotations)
-            yield rotation
             
     def compose(self, partition):
         '''Given a partition, return all possible locations this shape could occupy
@@ -282,62 +333,16 @@ class MultiBlock(set):
     
     def get_color(self):
         if not self.color:
-            self.color=MultiBlock.MultiBlockColorGenerator.get()
+            self.color='green'
         return self.color
-    def get_last_rotation(self):
-        return self.rotations[self.last_rotation]
+
     def __repr__(self):
         if self.name: return self.name + self.point_str()
         return ''.join([str(p) for p in self.point_list])
     def point_str(self):
         return ''.join([str(p) for p in self.point_list]) +' ofst:'+ str(self.offset_point())
 
-    def part_off(self):
-        return self.__repr__()+' '+str(self.last_offset)
 
-def compose_shapes(counter, shapes_list, partition, last_offset):
-        print('START compose_shapes')
-        print('    counter',counter)
-        print('    partition',partition.part_off())
-        print('    shapes_list',shapes_list)
-        cur_shape = shapes_list[counter]
-
-        # Remember the last offset, if we find a solution this helps with
-        # rendering
-        cur_shape.last_offset = partition.last_offset
-
-        # Iterate over all possible positions this shape could occupy
-        for remaining_partition_points, new_offset in cur_shape.compose(partition):
-
-            # print('remaining_partition_points',remaining_partition_points)
-            if not remaining_partition_points:
-                # We filled up the partition, but have we placed all shapes?
-                if counter == len(shapes_list) - 1:
-                    #print('Found solution!!')
-                    return True
-                else:
-                    #print('Ran out of room')
-                    return False
-            elif counter < len(shapes_list) - 1:
-                remaining_partition = MultiBlock(remaining_partition_points)
-                remaining_partition.last_offset += partition.last_offset
-                # print('remaining_partition.last_offset',remaining_partition.last_offset)
-                ret = compose_shapes(
-                    counter + 1, shapes_list, remaining_partition, new_offset)
-                if ret == True:
-                    return True
-                else:
-                    # print('counter',counter,'cur_shape',cur_shape)
-                    pass
-            else:
-                #print('counter',counter,'at end of shape list')
-                pass
-        return False
-    
-
-def geom_print(*args):
-    pass
-#print=geom_print
 if __name__=='__main__':
     ''' XXX
          X  '''
@@ -379,7 +384,7 @@ if __name__=='__main__':
     ''' X
         X'''
     IshapeVert2=MultiBlock([(0,0),(1,0)])
-    Single0=MultiBlock([(0,0)])
+    
     Single1=MultiBlock([(0,0)])
     
     ''' STS
@@ -387,28 +392,12 @@ if __name__=='__main__':
     
     
     shape_list=[LshapeUpRight,IshapeHoriz2]
-    shape_list=[LshapeUpLeft,Single0,Single1]
-    shape_list=[TshapeUp,Single0,Single1]
-    
-    
+
     partition=r2x3
-    cs_ret=compose_shapes(0, shape_list, partition,None)
-    print('cs_ret',cs_ret)
     for s in shape_list:
         print(s,'last_offset',s.last_offset)
 #         for r in s.rotations:
 #             print('r', r,r.point_str())
     
     exit(0)
-    ishape3=[(0,0),(0,1),(0,2)]
-    mb=MultiBlock(ishape3)
-    print('r3x3',r3x3)
-    for s in mb.compose(r3x3):
-        print(s)
     
-    exit(0)
-    #test rotation
-    lshape=MultiBlock([(0,0),(0,1),(0,2),(1,2)])
-    for a in range(3):
-        print(lshape.rotate(a))
-        
