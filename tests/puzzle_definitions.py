@@ -743,6 +743,39 @@ def ColorDemoMedium():
     }
     return puzzle_definition
 
+def Shape3():
+    ''''''
+    
+    puzzle_dimensions = Rectangle.get_rectangle(3, 3)
+    inner_dimmensions = puzzle_dimensions.grow_upper_right((-1,-1))
+    
+    LShape3 = MultiBlock([(0, 0), (0, 1), (1, 0)], 'LShape3')
+    
+    entrance_exit_node_map={ inner_dimmensions.lower_left: 'entrance', 
+        inner_dimmensions.upper_right:'exit'}
+    
+    node_to_rule_map={ 
+        (0,0):('shape', LShape3), 
+        
+    }
+    force_paths = [
+        [(0, 0), (1, 0), (2, 0), (2, 1), (1, 1), (1, 2), (2, 2)]
+    ]
+    expected_solutions = [
+        [(0, 0), (1, 0), (2, 0), (2, 1), (1, 1), (1, 2), (2, 2)]
+    ]
+    
+    puzzle_definition={
+        'puzzle_dimensions':puzzle_dimensions.get_dimensions(), 
+        'entrance_exit_node_map':entrance_exit_node_map, 
+        'node_to_rule_map':node_to_rule_map, 
+        'force_paths':force_paths,
+        'expected_solutions':expected_solutions,
+        'copy_to_solutions':True,
+    }
+    return puzzle_definition
+    # END   Ishape3test ---------------------------------------------------------------
+
 def Ishape3test():
     '''4x4 Grid with a 3-block "I" shape in the center and one on the left'''
     

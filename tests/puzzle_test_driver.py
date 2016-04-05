@@ -31,6 +31,12 @@ def combine_images():
         
         ('Bunker8_unsolved_combined.jpg', 'Bunker8_unsolved.jpg', 'Bunker8_6x5RectGridGraph.png'),
         ('Bunker8_solved_combined.jpg', 'Bunker8_solved.jpg','Bunker8_6x5RectGridGraph0.png'),
+        
+        ('Shape3_unsolved_combined.jpg', 'Shape3_unsolved.jpg', 'Shape3_3x3RectGridGraph.png'),
+        ('Shape3_solved_combined.jpg', 'Shape3_solved.jpg','Shape3_3x3RectGridGraph0.png'),
+        
+        
+        
     ]
     solutions_combine_list=[[os.path.join(solution_img_dir, i) for i in e] for e in solutions_combine_list]
     #print('solutions_combine_list', solutions_combine_list)
@@ -51,7 +57,7 @@ def combine_images():
         
 if __name__ == '__main__':
     clear_image_directory()
-    t=PuzzleTest(puzzle_definitions.Bunker6)
+    t=PuzzleTest(puzzle_definitions.Shape3)
     
     t.setUp()
     t.testSolvePuzzle()
