@@ -881,16 +881,16 @@ def test_singles():
 
     #t.testBlueSubtractionCube()
     
-    t.testBunker8(overwrite=False)
-    t.testBunker6()
-#     
-    t.testSimpleColorDemo()
-    t.testColorDemo()
-# 
-    t.testRuleShapeRendering()
-    t.testMoveableShapes()
-    t.testRotationShapes()
-    t.testRuleShapeExample()
+#     t.testBunker8(overwrite=False)
+#     t.testBunker6()
+# #     
+#     t.testSimpleColorDemo()
+#     t.testColorDemo()
+# # 
+#     t.testRuleShapeRendering()
+#     t.testMoveableShapes()
+#     t.testRotationShapes()
+#     t.testRuleShapeExample()
     #t.testMultipleShapesInPartition()
     
     #t.testSinglePartition()

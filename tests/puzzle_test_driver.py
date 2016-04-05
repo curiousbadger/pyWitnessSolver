@@ -35,7 +35,8 @@ def combine_images():
         ('Shape3_unsolved_combined.jpg', 'Shape3_unsolved.jpg', 'Shape3_3x3RectGridGraph.png'),
         ('Shape3_solved_combined.jpg', 'Shape3_solved.jpg','Shape3_3x3RectGridGraph0.png'),
         
-        
+        ('TrehouseUnkown0_unsolved_combined.jpg', 'treehouse_unsolved.jpg', 'testTreehouse0_6x6RectGridGraph.png'),
+        ('TrehouseUnkown0_solved_combined.jpg', 'treehouse_solved.jpg','testTreehouse0_6x6RectGridGraph0.png'),
         
     ]
     solutions_combine_list=[[os.path.join(solution_img_dir, i) for i in e] for e in solutions_combine_list]
@@ -56,11 +57,20 @@ def combine_images():
         
         
 if __name__ == '__main__':
-    clear_image_directory()
-    t=PuzzleTest(puzzle_definitions.Shape3)
+    import inspect
+    #clear_image_directory()
     
-    t.setUp()
-    t.testSolvePuzzle()
+    for name, data in inspect.getmembers(puzzle_definitions, inspect.isfunction):
+        if name == '__builtins__': continue
+        print ('%s :' % name, repr(data))
+        
+        t=PuzzleTest(data)
+        t.setUp()
+        t.testSolvePuzzle()
+        
+    
+    
+    
     combine_images()
     
     exit(0)
