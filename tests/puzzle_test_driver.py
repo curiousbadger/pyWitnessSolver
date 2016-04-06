@@ -67,6 +67,7 @@ if __name__ == '__main__':
         t=PuzzleTest(data)
         t.setUp()
         t.testSolvePuzzle()
+        break
         
     
     
