@@ -5,14 +5,12 @@ Created on Feb 4, 2016
 
 '''
 
-import random
 import logging
-
 
 from lib.Geometry import Point, Rectangle
 from lib.util import MasterUniqueNumberGenerator, MasterUniqueStringGenerator
 
-from src.lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
+from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler 
 module_logger=logging.getLogger(__name__)
 module_logger.addHandler(lib_inf_filehandler)
 module_logger.addHandler(lib_dbg_filehandler)
