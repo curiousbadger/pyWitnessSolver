@@ -251,41 +251,6 @@ class MultiBlock(set):
     def could_contain(self, other):
         return self.bounding_rectangle.could_contain(other.bounding_rectangle)
 
-    def rotate(self, angle):
-        '''
-        In general if:
-        R=| cos(t) -sin(t) |
-          | sin(t)  cos(t) |
-        and the point we want to rotate is:
-        P=| x |
-          | y |
-        Then the new coordinates are the matrix product R*P
-        So our new points are:
-        transformedX = x * cos(t) - y * sin(t)
-        transformedY = x * sin(t) + y * cos(t)
-
-        Luckily we get to deal with 3 angles divisible by pi/2, so they collapse into:
-
-        angle=0 -> t=pi/2    -> sin(t)=1, cos(t)=0
-        angle=1 -> t=pi      -> sin(t)=0, cos(t)=-1
-        angle=2 -> t=3*pi/4  -> sin(t)=-1, cos(t)=0
-
-        Rotate all the points by the given angle. This will usually result in 
-        negative x or y values. These points are all relative, so shift them 
-        as little as possible to put the lowest point at y=0 and the leftmost 
-        point at x=0
-        '''
-        new_points = []
-        for p in self.point_list:
-            s, c = [(1, 0), (0, -1), (-1, 0)][angle]
-            new_point = Point((p.x * c - p.y * s, p.x * s + p.y * c))
-            new_points.append(new_point)
-
-        new_points_shifted, subtraction_vector = Point.get_Q1_shifted(
-            new_points)
-
-        return new_points_shifted
-
     def __init__(self, point_list, name=None, auto_shift_Q1=True, color=None, can_rotate=False):
         '''PRE: Each Point has been assigned it's relative coordinates within the
         MultiBlock.
@@ -327,43 +292,43 @@ class MultiBlock(set):
         op = self.offset_point()
         return set([p + op for p in self])
 
-    @staticmethod
-    def yield_all_arrangements(partition, shape):
-        shape_rect = shape.bounding_rectangle
-        p_rect = partition.bounding_rectangle
-        #print('shape', shape)
-        #print('partition', partition)
-        # Can we fit inside this partition at all?
-        if not p_rect.could_contain(shape_rect):
-            return None
-        max_shift_point = p_rect.upper_right - shape_rect.upper_right
-        # print('max_shift_point',max_shift_point)
-        for y in range(max_shift_point.y + 1):
-            for x in range(max_shift_point.x + 1):
-                shift_vector = Point((x, y))
-                # Shift all the shape's Points
-                shifted_points = frozenset([p + shift_vector for p in shape])
-                # print('shifted_points',shifted_points)
-
-                outside_points = shifted_points - partition
-                if outside_points:
-                    #print('outside_points', outside_points)
-                    continue
-                # Return all the points in the partition that are left
-                remaining_partition_points = partition - shifted_points
-                # print('remaining_partition_points',remaining_partition_points)
-                yield remaining_partition_points, shift_vector
-
-    def compose(self, partition):
-        '''Given a partition, return all possible locations this shape could occupy
-        within that partition'''
-
-        for rotation in self.rotations:
-            self.last_rotation = (self.last_rotation + 1) % len(self.rotations)
-            for rp, sv in MultiBlock.yield_all_arrangements(partition, rotation):
-                # self.last_offset=sv
-                yield rp, sv
-        return
+#     @staticmethod
+#     def yield_all_arrangements(partition, shape):
+#         shape_rect = shape.bounding_rectangle
+#         p_rect = partition.bounding_rectangle
+#         #print('shape', shape)
+#         #print('partition', partition)
+#         # Can we fit inside this partition at all?
+#         if not p_rect.could_contain(shape_rect):
+#             return None
+#         max_shift_point = p_rect.upper_right - shape_rect.upper_right
+#         # print('max_shift_point',max_shift_point)
+#         for y in range(max_shift_point.y + 1):
+#             for x in range(max_shift_point.x + 1):
+#                 shift_vector = Point((x, y))
+#                 # Shift all the shape's Points
+#                 shifted_points = frozenset([p + shift_vector for p in shape])
+#                 # print('shifted_points',shifted_points)
+#
+#                 outside_points = shifted_points - partition
+#                 if outside_points:
+#                     #print('outside_points', outside_points)
+#                     continue
+#                 # Return all the points in the partition that are left
+#                 remaining_partition_points = partition - shifted_points
+#                 # print('remaining_partition_points',remaining_partition_points)
+#                 yield remaining_partition_points, shift_vector
+#
+#     def compose(self, partition):
+#         '''Given a partition, return all possible locations this shape could occupy
+#         within that partition'''
+#
+#         for rotation in self.rotations:
+#             self.last_rotation = (self.last_rotation + 1) % len(self.rotations)
+#             for rp, sv in MultiBlock.yield_all_arrangements(partition, rotation):
+#                 # self.last_offset=sv
+#                 yield rp, sv
+#         return
 
     def get_color(self):
         if not self.color:
@@ -378,6 +343,40 @@ class MultiBlock(set):
     def point_str(self):
         return ''.join([str(p) for p in self.point_list]) + ' ofst:' + str(self.offset_point())
 
+    def rotate(self, angle):
+        '''
+        In general if:
+        R=| cos(t) -sin(t) |
+          | sin(t)  cos(t) |
+        and the point we want to rotate is:
+        P=| x |
+          | y |
+        Then the new coordinates are the matrix product R*P
+        So our new points are:
+        transformedX = x * cos(t) - y * sin(t)
+        transformedY = x * sin(t) + y * cos(t)
+
+        Luckily we get to deal with 3 angles divisible by pi/2, so they collapse into:
+
+        angle=0 -> t=pi/2    -> sin(t)=1, cos(t)=0
+        angle=1 -> t=pi      -> sin(t)=0, cos(t)=-1
+        angle=2 -> t=3*pi/4  -> sin(t)=-1, cos(t)=0
+
+        Rotate all the points by the given angle. This will usually result in 
+        negative x or y values. These points are all relative, so shift them 
+        as little as possible to put the lowest point at y=0 and the leftmost 
+        point at x=0
+        '''
+        new_points = []
+        for p in self.point_list:
+            s, c = [(1, 0), (0, -1), (-1, 0)][angle]
+            new_point = Point((p.x * c - p.y * s, p.x * s + p.y * c))
+            new_points.append(new_point)
+
+        new_points_shifted, subtraction_vector = Point.get_Q1_shifted(
+            new_points)
+
+        return new_points_shifted
 
 if __name__ == '__main__':
     ''' XXX

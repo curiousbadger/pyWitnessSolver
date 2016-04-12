@@ -1,9 +1,9 @@
 import os
 import glob
 from shutil import copyfile
-from tests import puzzle_definitions
+import puzzle_definitions
 
-from tests.PuzzleTest import PuzzleTest
+from PuzzleTest import PuzzleTest
 
 from lib.util import defaultValueServer
 from lib.GraphImage import chImg
@@ -75,10 +75,7 @@ def combine_images():
         chImg.combine_horizontal(combined, [orig, generated])
 
 
-if __name__ == '__main__':
-    import inspect
-    # clear_image_directory()
-
+def test_all():
     for name, data in inspect.getmembers(puzzle_definitions, inspect.isfunction):
         if name == '__builtins__':
             continue
@@ -88,6 +85,16 @@ if __name__ == '__main__':
         t.setUp()
         t.testSolvePuzzle()
         break
+
+
+def test_single(test_func):
+    t = PuzzleTest(test_func)
+    t.setUp()
+    t.testSolvePuzzle()
+if __name__ == '__main__':
+    import inspect
+    clear_image_directory()
+    test_single(puzzle_definitions.MountainQuadFloorTopLeftSubPuzzle)
 
     combine_images()
 

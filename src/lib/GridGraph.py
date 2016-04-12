@@ -9,12 +9,12 @@ from collections import OrderedDict
 
 import logging
 from lib import lib_dbg_filehandler, lib_consolehandler, lib_inf_filehandler
-module_logger=logging.getLogger(__name__)
+module_logger = logging.getLogger(__name__)
 module_logger.addHandler(lib_dbg_filehandler)
 module_logger.addHandler(lib_inf_filehandler)
-#module_logger.addHandler(lib_consolehandler)
+module_logger.addHandler(lib_consolehandler)
 linf, ldbg = module_logger.info, module_logger.debug
-ldbg('init:'+__name__)
+ldbg('init:' + __name__)
 
 
 from lib.util import simplePickler, UniqueStringGenerator
@@ -53,7 +53,7 @@ class RectGridGraph(Graph):
         self.gx = gx
         self.gy = gy
         Graph.__init__(self)
-        
+
         self.is_outer = is_outer
 
         # Create the list of Nodes
@@ -75,7 +75,7 @@ class RectGridGraph(Graph):
         the lowest row left-right then continue up.
         '''
         self.sorted_keys = sorted(self.keys(), key=lambda k: (k[1], k[0]))
-        
+
         # Assign 90 degree Edges to all nodes
         # TODO: Move this out of __init__
         if auto_assign_edges:
@@ -83,16 +83,16 @@ class RectGridGraph(Graph):
 
         '''BEGIN: Outer-Grid specific setup '''
         if is_outer == True:
-            
-            
+
             # initialize the "inner squares" grid
-            self.inner_grid = RectGridGraph(gx - 1, gy - 1, is_outer=False, auto_assign_edges=auto_assign_edges)
+            self.inner_grid = RectGridGraph(
+                gx - 1, gy - 1, is_outer=False, auto_assign_edges=auto_assign_edges)
             # TODO: Move this out of __init__
             if auto_assign_edges:
                 self.associate_outer_to_inner()
                 # some paths are best avoided...
                 self.remove_path_dead_ends()
-            
+
             # Assign each GridNode a unique symbol (if possible) within this
             # Graph
             self.assign_symbols()
@@ -113,16 +113,16 @@ class RectGridGraph(Graph):
                 nbr_list = []
                 # add top neighbor unless this is the top row: y=gy-1
                 if y < gy - 1:
-                    nbr_list.append([self[x,y+1], 'upper'])
+                    nbr_list.append([self[x, y + 1], 'upper'])
                 # add bottom except y=0
                 if y > 0:
-                    nbr_list.append([self[x,y-1], 'lower'])
+                    nbr_list.append([self[x, y - 1], 'lower'])
                 # add right except x=0
                 if x < gx - 1:
-                    nbr_list.append([self[x+1,y], 'right'])
+                    nbr_list.append([self[x + 1, y], 'right'])
                 # add left except x=0
                 if x > 0:
-                    nbr_list.append([self[x-1,y], 'left'])
+                    nbr_list.append([self[x - 1, y], 'left'])
 
                 # Each node-neighbor pair corresponds to an Edge
                 for nbr, direction in nbr_list:
@@ -144,6 +144,14 @@ class RectGridGraph(Graph):
 
     def remove_path_dead_ends(self):
         # TODO: This only applies to low-left entrance, upper-right exit...
+        entrance_nodes = [n for n in self.values() if n.is_entrance]
+        exit_nodes = [n for n in self.values() if n.is_exit]
+        if not(len(entrance_nodes) == 1 and len(exit_nodes) == 1 and self.lower_left().is_entrance and self.upper_right().is_exit):
+            linf('Not standard entrance-exit, skipping remove_path_dead_ends')
+            return
+
+        linf('Trimming dead paths')
+
         gx, gy = self.gx, self.gy
         for y in range(gy):
             for x in range(gx):
@@ -169,12 +177,13 @@ class RectGridGraph(Graph):
             # left-right order
             n1, n2 = sorted(
                 [outer_node for outer_node in edge.nodes], key=lambda x: x.pt)
-            
+
             first_square, second_square = None, None
 
             # vertical segment, add left-right squares if they exist
             if n1.is_vertical_with(n2):
-                if (n1.on_left_boundary or n2.on_left_boundary): continue
+                if (n1.on_left_boundary or n2.on_left_boundary):
+                    continue
                 if not n1.on_left_boundary:
                     first_square = self.inner_grid[
                         n1.x - 1, n1.y]
@@ -205,16 +214,16 @@ class RectGridGraph(Graph):
             n.sym = sym
 
     def get_edge_by_coordinates(self, n1_key, n2_key):
-        n1,n2 = self[n1_key], self[n2_key]
-        node_set=frozenset([n1,n2])
+        n1, n2 = self[n1_key], self[n2_key]
+        node_set = frozenset([n1, n2])
         return self.edges[node_set]
-    
+
     def all_paths(self):
         if self._all_paths is None:
-            all_paths_filename=self.paths_filename() + '_all'
+            all_paths_filename = self.paths_filename() + '_all'
             self._all_paths = simplePickler(all_paths_filename)
         return self._all_paths
-    
+
     def iter_sorted(self):
         for sk in self.sorted_keys:
             yield self[sk]
@@ -267,33 +276,34 @@ class RectGridGraph(Graph):
         return self.paths_filename() + '_all'
 
     def finalize(self):
-        
+
         if self.finalized:
             raise Exception('Already finalized!')
-        self.finalized=True
-        
+        self.finalized = True
+
         ldbg('Finalizing Grid')
         for n in self.iter_all():
             n.finalize()
         for e in self.edges.values():
             e.assign_default_state()
-            
-        # Build lists of Nodes that have particular rules, since this shouldn't change once set (I think)?
+
+        # Build lists of Nodes that have particular rules, since this shouldn't
+        # change once set (I think)?
         if self.is_outer:
             # Path Nodes with "must-travel" hexagons
             self.must_travel_nodes = frozenset(
                 {n.key() for n in self.values() if n.must_travel})
-            
+
             self.must_travel_edges = frozenset(
                 {frozenset([n.key() for n in e]) for e in self.edges.values() if e.must_travel})
-            
+
             self.rule_color_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.rule_color})
             self.rule_shape_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.rule_shape})
             self.rule_sun_nodes = frozenset(
                 {n for n in self.inner_grid.values() if n.sun_color})
-            
+
     def prepare_for_partitioning(self):
         self.partitions = []
         self.reset()
@@ -316,7 +326,7 @@ class RectGridGraph(Graph):
         if to_obj:
             # TODO: make path a set based class with ordering
             # self.paths.add(new_path)
-            
+
             self.paths.add(new_path)
             if not len(self.paths) % 10000:
                 print(len(self.paths))
@@ -349,7 +359,7 @@ class RectGridGraph(Graph):
 
     def travel(self, n, path):
         ''' Depth-first traversal of all possible paths
-        
+
         TODO: Name is too generic, need other traversal algorithms
         TODO: Path should be Edges not Nodes'''
         # A node cannot be entered twice
@@ -491,7 +501,7 @@ class RectGridGraph(Graph):
 
     def generate_partition(self, n):
         '''Return the Partition that contains this GridSquare.
-        
+
         PRE: The Partition belonging to n has NOT been generated.'''
         if not self.partitions:
             self.partitions = []
@@ -508,13 +518,14 @@ class RectGridGraph(Graph):
         # Find the partition that contains this Node (for now just GridSquares)
         found_partition = None
 
-        found_partitions=[ p for p in self.partitions if n.key() in p ]
+        found_partitions = [p for p in self.partitions if n.key() in p]
         if len(found_partitions) == 1:
             return found_partitions[0]
         elif not found_partitions:
             return self.generate_partition(n)
         else:
-            raise Exception('Bad number of Partitions returned: %s', found_partitions)
+            raise Exception(
+                'Bad number of Partitions returned: %s', found_partitions)
         for p in self.partitions:
             if n.key() in p:
                 found_partition = p
@@ -528,15 +539,12 @@ class RectGridGraph(Graph):
 
 
 if __name__ == '__main__':
-    
+
     rgg = RectGridGraph(10, 10, auto_assign_edges=False)
     rgg.finalize()
     print(rgg.render_both())
-    
-    
+
     for k, e in rgg.edges.items():
         print('e', e, e.state_str())
         if e.inner_edge:
             print('    e.inner_edge', e.inner_edge, e.inner_edge.state_str())
-
-    
